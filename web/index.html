@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="GhostRoll - Martial Arts Training Journal">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>GhostRoll</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    body {
+      background: #111;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+    #splash {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      width: 100vw;
+      background: #111;
+    }
+    #splash img {
+      width: clamp(180px, 40vw, 420px);
+      height: clamp(180px, 40vw, 420px);
+      max-width: 80vw;
+      max-height: 80vh;
+      margin-bottom: 0;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div id="splash">
+    <img src="assets/images/ghostroll_logo.png" alt="GhostRoll logo">
+  </div>
+  <script>
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        document.getElementById('splash').style.display = 'none';
+      }, 3000); // Show splash for at least 3 seconds
+    });
+  </script>
+  <script src="main.dart.js" type="application/javascript"></script>
+</body>
+</html>
