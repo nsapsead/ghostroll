@@ -1,102 +1,179 @@
-# GhostRoll
+# GhostRoll - Martial Arts Training Journal
 
-A mobile-first Flutter app for tracking martial arts training sessions with a clean, minimal dark theme UI.
+A modern, dark-themed Flutter app designed to help martial artists track their training progress, log sessions, and manage their martial arts journey.
 
-## Features
+![GhostRoll Logo](assets/images/ghostroll_logo.png)
 
-- **Quick Log Screen**: Large centered ghost button for easy session logging
-- **Journal Timeline**: View all past training sessions in a clean timeline
-- **Log Session Form**: Comprehensive form for recording training details
-- **Session Detail View**: Detailed view of individual training sessions
+## 🥋 Features
 
-## Screens
+### 📱 Core Functionality
+- **Quick Log**: Fast session logging with body diagram for injury tracking
+- **Journal Timeline**: Chronological view of all training sessions
+- **Session Form**: Detailed session logging with structured forms
+- **Profile Management**: Comprehensive martial artist profiles
 
-1. **Quick Log Screen**
-   - Dark theme with large ghost button
-   - One-tap access to log new sessions
+### 🎯 Profile System
+- **Personal Information**: Name, age, gender, weight, height, experience
+- **Martial Arts Styles**: Support for multiple styles including:
+  - Brazilian Jiu-Jitsu (BJJ) with stripe tracking
+  - Karate with customizable belt orders
+  - Judo, Taekwondo, Muay Thai, Boxing, Wrestling, Kickboxing, Krav Maga, Aikido
+- **Belt Rank Tracking**: 
+  - BJJ: White → Blue → Purple → Brown → Black (with 0-4 stripes per belt)
+  - Karate: Customizable belt progression systems
+  - Other styles: Standard belt systems
 
-2. **Journal Timeline Screen**
-   - List of past sessions with key information
-   - Date, class type, focus area, and rounds display
-   - Technique chips for quick overview
+### 🎨 Design
+- **Dark Theme**: Modern, sleek dark UI with gradient backgrounds
+- **Responsive Design**: Optimized for various screen sizes
+- **Smooth Animations**: Fluid transitions and interactions
+- **Custom Branding**: GhostRoll logo integration throughout the app
 
-3. **Log Session Form**
-   - Date selector (defaults to today)
-   - Class type toggle buttons (Gi, No-Gi, Striking)
-   - Focus area text input
-   - Multi-select techniques using chips
-   - Optional sparring notes and reflection fields
-
-4. **Session Detail View**
-   - Complete session information display
-   - Techniques shown as chips
-   - Sparring notes and reflection sections
-   - Edit button for future functionality
-
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
-
-- Flutter SDK (3.0.0 or higher)
+- Flutter SDK (latest stable version)
 - Dart SDK
-- Android Studio / VS Code with Flutter extensions
+- Android Studio / VS Code
+- iOS Simulator (for iOS development) or Android Emulator
 
 ### Installation
 
-1. Clone the repository:
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/YOUR_USERNAME/GhostRoll.git
+   cd GhostRoll
+   ```
+
+2. **Install dependencies**
+   ```bash
+   flutter pub get
+   ```
+
+3. **Run the app**
+   ```bash
+   flutter run
+   ```
+
+### Building for Production
+
+**Android APK:**
 ```bash
-git clone <repository-url>
-cd GhostRoll
+flutter build apk --release
 ```
 
-2. Install dependencies:
+**iOS:**
 ```bash
-flutter pub get
+flutter build ios --release
 ```
 
-3. Run the app:
+**Web:**
 ```bash
-flutter run
+flutter build web --release
 ```
 
-## App Structure
+## 📁 Project Structure
 
 ```
 lib/
-├── main.dart                 # App entry point and theme configuration
-├── models/
-│   └── session.dart         # Session data model
-└── screens/
-    ├── quick_log_screen.dart      # Quick log interface
-    ├── journal_timeline_screen.dart # Session timeline
-    ├── log_session_form.dart      # Session logging form
-    └── session_detail_view.dart   # Session detail display
+├── main.dart                 # App entry point and navigation
+├── screens/
+│   ├── quick_log_screen.dart     # Quick session logging
+│   ├── journal_timeline_screen.dart  # Training history
+│   ├── log_session_form.dart     # Detailed session form
+│   └── profile_screen.dart       # User profile management
+└── widgets/                  # Reusable UI components
+
+assets/
+├── images/
+│   └── ghostroll_logo.png    # App logo
+└── icons/                    # Custom app icons
 ```
 
-## Design Features
+## 🎯 Usage Guide
 
-- **Dark Theme**: Black background with white/gray accents
-- **Mobile-First**: Optimized for one-hand use
-- **Minimal UI**: Clean, uncluttered interface
-- **Modular Components**: Easy to style and extend
-- **Bottom Navigation**: Quick access between main screens
+### Quick Log
+- Tap the "+" button to quickly log a training session
+- Use the body diagram to mark areas of focus or injury
+- Add quick notes about your session
 
-## Future Enhancements
+### Journal Timeline
+- View all your training sessions in chronological order
+- Tap on any session to view details
+- Filter and search through your training history
 
-- Data persistence (local storage/database)
-- Session editing functionality
-- Statistics and progress tracking
-- Photo/video attachments
-- Social sharing features
-- Training schedule integration
+### Session Form
+- Complete detailed session logging with structured forms
+- Track techniques practiced, sparring partners, and performance
+- Add notes and observations for future reference
 
-## Dependencies
+### Profile Management
+- Complete your personal information and martial arts background
+- Select multiple martial arts styles you practice
+- Customize belt orders for Karate styles
+- Track BJJ stripes for each belt level
 
-- `flutter`: Core Flutter framework
-- `intl`: Internationalization and date formatting
-- `cupertino_icons`: iOS-style icons
-- `flutter_svg`: SVG icon support
+## 🛠️ Technical Details
 
-## Development
+### Dependencies
+- **Flutter**: Latest stable version
+- **flutter_svg**: For SVG icon support
+- **Standard Flutter packages**: Material Design, Cupertino
 
-The app is built with Flutter and follows standard Flutter conventions. All UI components are modular and can be easily customized. The dark theme is consistently applied throughout the app for a cohesive user experience. 
+### Architecture
+- **State Management**: Flutter's built-in StatefulWidget
+- **Navigation**: Bottom navigation with tab-based routing
+- **UI Framework**: Material Design 3 with custom dark theme
+- **Asset Management**: Organized asset structure with proper pubspec.yaml configuration
+
+### Platform Support
+- ✅ Android
+- ✅ iOS
+- ✅ Web
+- ✅ macOS (with additional configuration)
+
+## 🎨 Customization
+
+### Adding New Martial Arts Styles
+1. Edit the `_martialArtsStyles` list in `profile_screen.dart`
+2. Add the style name, belt progression, and flags for stripes/customization
+3. Update the UI logic as needed
+
+### Modifying the Theme
+1. Edit the `_buildFantasticTheme()` method in `main.dart`
+2. Customize colors, typography, and component styles
+3. Update gradient definitions throughout the app
+
+### Adding New Features
+1. Create new screen files in the `screens/` directory
+2. Add navigation routes in `main.dart`
+3. Update the bottom navigation if needed
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Flutter team for the amazing framework
+- Material Design team for the design system
+- Martial arts community for inspiration and feedback
+
+## 📞 Support
+
+If you have any questions or need help with the app, please:
+- Open an issue on GitHub
+- Check the documentation
+- Review the code comments
+
+---
+
+**GhostRoll** - Track your martial arts journey with style and precision. 🥋👻 
