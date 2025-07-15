@@ -1,54 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-// import 'package:firebase_core/firebase_core.dart';
-// import 'firebase_options.dart';
-import 'screens/auth/auth_wrapper.dart';
-import 'screens/quick_log_screen.dart';
-import 'screens/journal_timeline_screen.dart';
-import 'screens/log_session_form.dart';
-import 'screens/profile_screen.dart';
-import 'theme/app_theme.dart';
-
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  
-  // Initialize Firebase with platform-specific options
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
-  
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarColor: Colors.black,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ),
-  );
-  runApp(const GhostRollApp());
-}
-
-class GhostRollApp extends StatelessWidget {
-  const GhostRollApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'GhostRoll',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      home: const AuthWrapper(),
-      routes: {
-        '/quick-log': (context) => const QuickLogScreen(),
-        '/journal-timeline': (context) => const JournalTimelineScreen(),
-        '/log-session': (context) => const LogSessionForm(),
-        '/profile': (context) => const ProfileScreen(),
-      },
-    );
-  }
-
-
-}
+import 'quick_log_screen.dart';
+import 'journal_timeline_screen.dart';
+import 'goals_screen.dart';
+import 'profile_screen.dart';
+import '../services/auth_service.dart';
+import '../theme/app_theme.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -59,13 +15,15 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen>
     with TickerProviderStateMixin {
-  int _selectedIndex = 0;
+  
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  int _selectedIndex = 0;
 
   final List<Widget> _screens = [
     const QuickLogScreen(),
     const JournalTimelineScreen(),
+    const GoalsScreen(),
     const ProfileScreen(),
   ];
 
@@ -95,6 +53,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: _screens[_selectedIndex],
@@ -110,13 +69,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Colors.black.withOpacity(0.8),
-            Colors.black,
+            AppTheme.primaryColor.withOpacity(0.8),
+            AppTheme.primaryColor,
           ],
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: AppTheme.primaryColor.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -124,13 +83,14 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingLg, vertical: AppTheme.spacingMd),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(0, Icons.add_circle_outline, Icons.add_circle, 'Quick Log'),
               _buildNavItem(1, Icons.history_outlined, Icons.history, 'Journal'),
-              _buildNavItem(2, Icons.person_outline, Icons.person, 'Profile'),
+              _buildNavItem(2, Icons.flag_outlined, Icons.flag, 'Goals'),
+              _buildNavItem(3, Icons.person_outline, Icons.person, 'Profile'),
             ],
           ),
         ),
@@ -150,18 +110,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+        padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingLg, vertical: AppTheme.spacingMd),
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
-                  colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.1)],
+                  colors: [AppTheme.white.withOpacity(0.2), AppTheme.white.withOpacity(0.1)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 )
               : null,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
           border: isSelected
-              ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+              ? Border.all(color: AppTheme.white.withOpacity(0.3), width: 1)
               : null,
         ),
         child: Column(
@@ -169,16 +129,15 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
           children: [
             Icon(
               isSelected ? activeIcon : icon,
-              color: isSelected ? Colors.white : Colors.grey[600],
+              color: isSelected ? AppTheme.white : AppTheme.textSecondary,
               size: 24,
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: AppTheme.spacingXs),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 12,
+              style: AppTheme.textStyleBodySmall.copyWith(
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.grey[600],
+                color: isSelected ? AppTheme.white : AppTheme.textSecondary,
               ),
             ),
           ],

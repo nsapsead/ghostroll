@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/session.dart';
+import '../theme/app_theme.dart';
+import '../components/gradient_card.dart';
 
 class SessionDetailView extends StatefulWidget {
   final Session session;
@@ -63,16 +65,12 @@ class _SessionDetailViewState extends State<SessionDetailView>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF0A0A0A),
-              const Color(0xFF1A1A1A),
-              const Color(0xFF0F0F0F),
-            ],
-            stops: const [0.0, 0.5, 1.0],
+            colors: AppColors.primaryGradient,
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: SafeArea(
@@ -85,22 +83,22 @@ class _SessionDetailViewState extends State<SessionDetailView>
                   child: SlideTransition(
                     position: _slideAnimation,
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(AppSpacing.lg),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildFantasticHeaderCard(),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: AppSpacing.lg),
                           _buildFantasticTechniquesCard(),
                           if (widget.session.sparringNotes != null) ...[
-                            const SizedBox(height: 20),
+                            const SizedBox(height: AppSpacing.lg),
                             _buildFantasticSparringNotesCard(),
                           ],
                           if (widget.session.reflection != null) ...[
-                            const SizedBox(height: 20),
+                            const SizedBox(height: AppSpacing.lg),
                             _buildFantasticReflectionCard(),
                           ],
-                          const SizedBox(height: 40),
+                          const SizedBox(height: AppSpacing.xxl),
                         ],
                       ),
                     ),
@@ -115,14 +113,14 @@ class _SessionDetailViewState extends State<SessionDetailView>
   }
 
   Widget _buildFantasticAppBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
       child: Row(
         children: [
           GestureDetector(
             onTap: () => Navigator.pop(context),
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -130,7 +128,7 @@ class _SessionDetailViewState extends State<SessionDetailView>
                     Colors.white.withOpacity(0.05),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.2),
                   width: 1,
@@ -138,26 +136,20 @@ class _SessionDetailViewState extends State<SessionDetailView>
               ),
               child: const Icon(
                 Icons.arrow_back,
-                color: Colors.white,
+                color: AppColors.textPrimary,
                 size: 20,
               ),
             ),
           ),
           const Spacer(),
           Container(
-            height: 40,
+            height: 64,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.1),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                ),
-              ],
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              boxShadow: AppShadows.small,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
               child: Image.asset(
                 'assets/images/ghostroll_logo.png',
                 fit: BoxFit.contain,
@@ -179,7 +171,7 @@ class _SessionDetailViewState extends State<SessionDetailView>
               );
             },
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -187,7 +179,7 @@ class _SessionDetailViewState extends State<SessionDetailView>
                     Colors.white.withOpacity(0.05),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppRadius.md),
                 border: Border.all(
                   color: Colors.white.withOpacity(0.2),
                   width: 1,
@@ -195,7 +187,7 @@ class _SessionDetailViewState extends State<SessionDetailView>
               ),
               child: const Icon(
                 Icons.edit,
-                color: Colors.white,
+                color: AppColors.textPrimary,
                 size: 20,
               ),
             ),
@@ -206,30 +198,20 @@ class _SessionDetailViewState extends State<SessionDetailView>
   }
 
   Widget _buildFantasticHeaderCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1A1A1A),
-            const Color(0xFF2A2A2A),
-            const Color(0xFF1F1F1F),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+    return GradientCard(
+      gradient: AppTheme.headerGradient,
+      borderRadius: 24,
+      border: Border.all(
+        color: AppTheme.headerBorderColor,
+        width: 1,
       ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.3),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        ),
+      ],
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -244,21 +226,12 @@ class _SessionDetailViewState extends State<SessionDetailView>
                     children: [
                       Text(
                         DateFormat('EEEE, MMMM dd, yyyy').format(widget.session.date),
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: -0.5,
-                        ),
+                        style: AppTheme.headerDateTextStyle,
                       ),
                       const SizedBox(height: 4),
                       Text(
                         DateFormat('h:mm a').format(widget.session.date),
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[400],
-                          fontWeight: FontWeight.w500,
-                        ),
+                        style: AppTheme.headerTimeTextStyle,
                       ),
                     ],
                   ),
@@ -286,11 +259,7 @@ class _SessionDetailViewState extends State<SessionDetailView>
                   ),
                   child: Text(
                     widget.session.classTypeDisplay,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
+                    style: AppTheme.headerClassTypeTextStyle,
                   ),
                 ),
               ],
@@ -312,18 +281,14 @@ class _SessionDetailViewState extends State<SessionDetailView>
                   child: Icon(
                     Icons.center_focus_strong,
                     size: 20,
-                    color: Colors.grey[300],
+                    color: AppTheme.headerIconColor,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     widget.session.focusArea,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
+                    style: AppTheme.headerFocusAreaTextStyle,
                   ),
                 ),
               ],
@@ -345,17 +310,13 @@ class _SessionDetailViewState extends State<SessionDetailView>
                   child: Icon(
                     Icons.timer,
                     size: 20,
-                    color: Colors.grey[300],
+                    color: AppTheme.headerIconColor,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   '${widget.session.rounds} rounds',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey[300],
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: AppTheme.headerRoundsTextStyle,
                 ),
               ],
             ),
@@ -366,30 +327,20 @@ class _SessionDetailViewState extends State<SessionDetailView>
   }
 
   Widget _buildFantasticTechniquesCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1A1A1A),
-            const Color(0xFF2A2A2A),
-            const Color(0xFF1F1F1F),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+    return GradientCard(
+      gradient: AppTheme.techniquesGradient,
+      borderRadius: 24,
+      border: Border.all(
+        color: AppTheme.techniquesBorderColor,
+        width: 1,
       ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.3),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        ),
+      ],
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -411,17 +362,13 @@ class _SessionDetailViewState extends State<SessionDetailView>
                   child: Icon(
                     Icons.sports_martial_arts,
                     size: 20,
-                    color: Colors.grey[300],
+                    color: AppTheme.techniquesIconColor,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Techniques Learned',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                  style: AppTheme.techniquesTitleTextStyle,
                 ),
               ],
             ),
@@ -445,17 +392,13 @@ class _SessionDetailViewState extends State<SessionDetailView>
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.2),
+                        color: AppTheme.techniquesBorderColor,
                         width: 1,
                       ),
                     ),
                     child: Text(
                       technique,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
+                      style: AppTheme.techniquesTechniqueTextStyle,
                     ),
                   );
                 }).toList(),
@@ -472,7 +415,7 @@ class _SessionDetailViewState extends State<SessionDetailView>
                   ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.1),
+                    color: AppTheme.techniquesBorderColor,
                     width: 1,
                   ),
                 ),
@@ -481,16 +424,12 @@ class _SessionDetailViewState extends State<SessionDetailView>
                     Icon(
                       Icons.info_outline,
                       size: 20,
-                      color: Colors.grey[500],
+                      color: AppTheme.techniquesIconColor,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       'No techniques recorded',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.grey[500],
-                        fontStyle: FontStyle.italic,
-                      ),
+                      style: AppTheme.techniquesNoTechniquesTextStyle,
                     ),
                   ],
                 ),
@@ -502,30 +441,20 @@ class _SessionDetailViewState extends State<SessionDetailView>
   }
 
   Widget _buildFantasticSparringNotesCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1A1A1A),
-            const Color(0xFF2A2A2A),
-            const Color(0xFF1F1F1F),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+    return GradientCard(
+      gradient: AppTheme.sparringNotesGradient,
+      borderRadius: 24,
+      border: Border.all(
+        color: AppTheme.sparringNotesBorderColor,
+        width: 1,
       ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.3),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        ),
+      ],
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -547,17 +476,13 @@ class _SessionDetailViewState extends State<SessionDetailView>
                   child: Icon(
                     Icons.sports_martial_arts,
                     size: 20,
-                    color: Colors.grey[300],
+                    color: AppTheme.sparringNotesIconColor,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Sparring Notes',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                  style: AppTheme.sparringNotesTitleTextStyle,
                 ),
               ],
             ),
@@ -573,17 +498,13 @@ class _SessionDetailViewState extends State<SessionDetailView>
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: AppTheme.sparringNotesBorderColor,
                   width: 1,
                 ),
               ),
               child: Text(
                 widget.session.sparringNotes!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  height: 1.6,
-                ),
+                style: AppTheme.sparringNotesTextStyle,
               ),
             ),
           ],
@@ -593,30 +514,20 @@ class _SessionDetailViewState extends State<SessionDetailView>
   }
 
   Widget _buildFantasticReflectionCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF1A1A1A),
-            const Color(0xFF2A2A2A),
-            const Color(0xFF1F1F1F),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.1),
-          width: 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
+    return GradientCard(
+      gradient: AppTheme.reflectionGradient,
+      borderRadius: 24,
+      border: Border.all(
+        color: AppTheme.reflectionBorderColor,
+        width: 1,
       ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.3),
+          blurRadius: 20,
+          offset: const Offset(0, 10),
+        ),
+      ],
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -638,17 +549,13 @@ class _SessionDetailViewState extends State<SessionDetailView>
                   child: Icon(
                     Icons.psychology,
                     size: 20,
-                    color: Colors.grey[300],
+                    color: AppTheme.reflectionIconColor,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
+                Text(
                   'Reflection',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
+                  style: AppTheme.reflectionTitleTextStyle,
                 ),
               ],
             ),
@@ -664,17 +571,13 @@ class _SessionDetailViewState extends State<SessionDetailView>
                 ),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.1),
+                  color: AppTheme.reflectionBorderColor,
                   width: 1,
                 ),
               ),
               child: Text(
                 widget.session.reflection!,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: Colors.white,
-                  height: 1.6,
-                ),
+                style: AppTheme.reflectionTextStyle,
               ),
             ),
           ],

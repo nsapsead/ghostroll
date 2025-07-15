@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'log_session_form.dart';
+import '../theme/app_theme.dart';
+import '../widgets/common/app_components.dart';
 
 class QuickLogScreen extends StatefulWidget {
   const QuickLogScreen({super.key});
@@ -20,30 +22,25 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   @override
   void initState() {
     super.initState();
-    
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
     )..repeat(reverse: true);
-    
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-
     _pulseAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.1,
+      end: 1.08,
     ).animate(CurvedAnimation(
       parent: _pulseController,
       curve: Curves.easeInOut,
     ));
-
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -51,7 +48,6 @@ class _QuickLogScreenState extends State<QuickLogScreen>
       parent: _fadeController,
       curve: Curves.easeOut,
     ));
-
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -59,7 +55,6 @@ class _QuickLogScreenState extends State<QuickLogScreen>
       parent: _slideController,
       curve: Curves.easeOutCubic,
     ));
-
     _fadeController.forward();
     _slideController.forward();
   }
@@ -76,16 +71,12 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF0A0A0A),
-              const Color(0xFF1A1A1A),
-              const Color(0xFF0F0F0F),
-            ],
-            stops: const [0.0, 0.5, 1.0],
+            colors: AppColors.primaryGradient,
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: SafeArea(
@@ -97,7 +88,10 @@ class _QuickLogScreenState extends State<QuickLogScreen>
                   opacity: _fadeAnimation,
                   child: SlideTransition(
                     position: _slideAnimation,
-                    child: _buildFantasticContent(),
+                    child: ResponsiveContainer(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                      child: _buildFantasticContent(),
+                    ),
                   ),
                 ),
               ),
@@ -109,24 +103,18 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   }
 
   Widget _buildFantasticAppBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
       child: Row(
         children: [
           Container(
-            height: 40,
+            height: 64,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.1),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                ),
-              ],
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              boxShadow: AppShadows.small,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
               child: Image.asset(
                 'assets/images/ghostroll_logo.png',
                 fit: BoxFit.contain,
@@ -134,27 +122,13 @@ class _QuickLogScreenState extends State<QuickLogScreen>
             ),
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: const Text(
+          GradientCard(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
+            child: Text(
               'Training Journal',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: AppColors.textSecondary,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -164,17 +138,15 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   }
 
   Widget _buildFantasticContent() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
       child: Column(
         children: [
-          const Spacer(flex: 2),
           _buildFantasticMainButton(),
-          const SizedBox(height: 40),
+          const SizedBox(height: AppSpacing.xl),
           _buildFantasticTextContent(),
-          const Spacer(flex: 2),
+          const SizedBox(height: AppSpacing.xl),
           _buildFantasticStats(),
-          const SizedBox(height: 40),
         ],
       ),
     );
@@ -212,51 +184,14 @@ class _QuickLogScreenState extends State<QuickLogScreen>
         builder: (context, child) {
           return Transform.scale(
             scale: _pulseAnimation.value,
-            child: Container(
+            child: AppButton(
+              text: 'Quick Log',
+              icon: Icons.add,
               width: 220,
-              height: 220,
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  colors: [
-                    Colors.white.withOpacity(0.9),
-                    Colors.white.withOpacity(0.7),
-                    Colors.white.withOpacity(0.5),
-                  ],
-                  stops: const [0.0, 0.7, 1.0],
-                ),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.3),
-                    blurRadius: 30,
-                    spreadRadius: 10,
-                  ),
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.1),
-                    blurRadius: 60,
-                    spreadRadius: 20,
-                  ),
-                ],
-              ),
-              child: Container(
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.white,
-                      Colors.grey[100]!,
-                    ],
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.add,
-                  size: 80,
-                  color: Colors.black,
-                ),
-              ),
+              height: 80,
+              onPressed: null, // GestureDetector handles onTap
+              backgroundColor: Colors.white,
+              textColor: AppColors.primary,
             ),
           );
         },
@@ -267,36 +202,17 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   Widget _buildFantasticTextContent() {
     return Column(
       children: [
-        const Text(
+        Text(
           'Log a Session',
-          style: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: -0.5,
-          ),
+          style: Theme.of(context).textTheme.displayLarge,
         ),
-        const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.white.withOpacity(0.1),
-                Colors.white.withOpacity(0.05),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.2),
-              width: 1,
-            ),
-          ),
+        const SizedBox(height: AppSpacing.sm),
+        GradientCard(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
           child: Text(
             'Tap to record your training session',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[300],
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+              color: AppColors.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -306,23 +222,8 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   }
 
   Widget _buildFantasticStats() {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-          width: 1,
-        ),
-      ),
+    return GradientCard(
+      padding: const EdgeInsets.all(AppSpacing.xl),
       child: Column(
         children: [
           Row(
@@ -333,13 +234,13 @@ class _QuickLogScreenState extends State<QuickLogScreen>
               _buildStatItem('Hours', '24', Icons.timer),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.md),
           Container(
             width: double.infinity,
             height: 4,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(2),
-              color: Colors.white.withOpacity(0.1),
+              color: AppColors.overlayDark,
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
@@ -347,20 +248,19 @@ class _QuickLogScreenState extends State<QuickLogScreen>
               child: Container(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.white, Colors.grey[300]!],
+                    colors: [AppColors.accent, AppColors.accentLight],
                   ),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'Track your progress, techniques, and insights',
             textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[400],
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.textTertiary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -373,36 +273,34 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                Colors.white.withOpacity(0.2),
-                Colors.white.withOpacity(0.1),
+                AppColors.accent.withOpacity(0.2),
+                AppColors.accentLight.withOpacity(0.1),
               ],
             ),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           child: Icon(
             icon,
-            color: Colors.white,
+            color: AppColors.accent,
             size: 24,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpacing.xs),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 18,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            color: AppColors.textPrimary,
             fontWeight: FontWeight.bold,
-            color: Colors.white,
           ),
         ),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[400],
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.textTertiary,
             fontWeight: FontWeight.w500,
           ),
         ),

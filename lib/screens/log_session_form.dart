@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+import '../components/app_text_field.dart';
+import '../components/app_button.dart';
+import '../components/gradient_card.dart';
 
 class LogSessionForm extends StatefulWidget {
   const LogSessionForm({super.key});
@@ -163,16 +167,12 @@ class _LogSessionFormState extends State<LogSessionForm>
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         body: Container(
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF0A0A0A),
-                const Color(0xFF1A1A1A),
-                const Color(0xFF0F0F0F),
-              ],
-              stops: const [0.0, 0.5, 1.0],
+              colors: AppColors.primaryGradient,
+              stops: [0.0, 0.5, 1.0],
             ),
           ),
           child: SafeArea(
@@ -187,147 +187,92 @@ class _LogSessionFormState extends State<LogSessionForm>
                       child: Form(
                         key: _formKey,
                         child: ListView(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(AppSpacing.lg),
                           children: [
                             _buildFantasticSectionTitle('My breakdown of the class:'),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: AppSpacing.md),
                             _buildFantasticLabeledField(
                               label: 'Instructor:',
                               controller: _instructorController,
-                              validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                              hintText: 'Who taught the class?',
                             ),
-                            const SizedBox(height: 20),
-                            _buildFantasticOutlinedBlock([
-                              _buildFantasticBlockLabel('What was the seed idea/concept?'),
-                              _buildFantasticTextFormField(
-                                controller: _seedIdeaController,
-                                minLines: 2,
-                                maxLines: 4,
-                                hintText: 'Describe the main concept...',
-                                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildFantasticBlockLabel('What techniques came from this?'),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(child: _buildFantasticNumberedField(1, _techniqueControllers[0])),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: _buildFantasticNumberedField(3, _techniqueControllers[2])),
-                                ],
-                              ),
-                              const SizedBox(height: 12),
-                              Row(
-                                children: [
-                                  Expanded(child: _buildFantasticNumberedField(2, _techniqueControllers[1])),
-                                  const SizedBox(width: 12),
-                                  Expanded(child: _buildFantasticNumberedField(4, _techniqueControllers[3])),
-                                ],
-                              ),
-                            ]),
-                            const SizedBox(height: 20),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Expanded(
-                                  child: _buildFantasticOutlinedBlock([
-                                    _buildFantasticBlockLabel('What was my key take away?'),
-                                    _buildFantasticTextFormField(
-                                      controller: _keyTakeawayController,
-                                      minLines: 2,
-                                      maxLines: 3,
-                                      hintText: 'Main lesson or insight...',
-                                      validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-                                    ),
-                                  ]),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: _buildFantasticOutlinedBlock([
-                                    _buildFantasticBlockLabel('What was I using/attacking?'),
-                                    const SizedBox(height: 16),
-                                    _buildFantasticBodyDiagram(),
-                                  ]),
-                                ),
-                              ],
+                            const SizedBox(height: AppSpacing.md),
+                            _buildFantasticLabeledField(
+                              label: 'Seed idea:',
+                              controller: _seedIdeaController,
+                              hintText: 'What was the main concept or technique?',
                             ),
-                            const SizedBox(height: 20),
-                            _buildFantasticOutlinedBlock([
-                              _buildFantasticBlockLabel('What is my comfort level with these technique(s)?'),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                children: [
-                                  _buildFantasticComfortIcon(
-                                    value: 0,
-                                    icon: Icons.sentiment_satisfied_alt,
-                                    tooltip: 'Happy',
-                                    groupValue: _comfortLevel,
-                                    onChanged: (v) => setState(() => _comfortLevel = v),
-                                  ),
-                                  _buildFantasticComfortIcon(
-                                    value: 1,
-                                    icon: Icons.sentiment_neutral,
-                                    tooltip: 'Neutral',
-                                    groupValue: _comfortLevel,
-                                    onChanged: (v) => setState(() => _comfortLevel = v),
-                                  ),
-                                  _buildFantasticComfortIcon(
-                                    value: 2,
-                                    icon: Icons.sentiment_dissatisfied,
-                                    tooltip: 'Uncomfortable',
-                                    groupValue: _comfortLevel,
-                                    onChanged: (v) => setState(() => _comfortLevel = v),
-                                  ),
-                                ],
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFantasticSectionTitle('Techniques I learned:'),
+                            const SizedBox(height: AppSpacing.md),
+                            ...List.generate(4, (index) => Padding(
+                              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                              child: _buildFantasticLabeledField(
+                                label: 'Technique ${index + 1}:',
+                                controller: _techniqueControllers[index],
+                                hintText: 'Describe the technique',
                               ),
-                            ]),
-                            const SizedBox(height: 32),
-                            _buildFantasticSectionTitle('Self reflection:'),
-                            const SizedBox(height: 16),
-                            _buildFantasticOutlinedBlock([
-                              _buildFantasticBlockLabel('What was my mood coming into class?'),
-                              _buildFantasticTextFormField(
-                                controller: _moodController,
-                                minLines: 1,
-                                maxLines: 2,
-                                hintText: 'Describe your mood...',
-                                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
+                            )),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFantasticSectionTitle('Key takeaway:'),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildFantasticLabeledField(
+                              label: 'What I learned:',
+                              controller: _keyTakeawayController,
+                              hintText: 'The most important thing I learned today',
+                              minLines: 2,
+                              maxLines: 3,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFantasticSectionTitle('How I felt:'),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildMoodSelector(),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildFantasticLabeledField(
+                              label: 'Mood notes:',
+                              controller: _moodController,
+                              hintText: 'Additional thoughts about how I felt',
+                              minLines: 2,
+                              maxLines: 3,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFantasticSectionTitle('Body areas worked:'),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildBodyDiagram(),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFantasticSectionTitle('My wins:'),
+                            const SizedBox(height: AppSpacing.md),
+                            ...List.generate(3, (index) => Padding(
+                              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                              child: _buildFantasticLabeledField(
+                                label: 'Win ${index + 1}:',
+                                controller: _winsControllers[index],
+                                hintText: 'Something I did well',
                               ),
-                            ]),
-                            const SizedBox(height: 16),
-                            _buildFantasticOutlinedBlock([
-                              _buildFantasticBlockLabel('What 3 wins did I take away from this class?'),
-                              const SizedBox(height: 12),
-                              _buildFantasticNumberedField(1, _winsControllers[0]),
-                              const SizedBox(height: 12),
-                              _buildFantasticNumberedField(2, _winsControllers[1]),
-                              const SizedBox(height: 12),
-                              _buildFantasticNumberedField(3, _winsControllers[2]),
-                            ]),
-                            const SizedBox(height: 16),
-                            _buildFantasticOutlinedBlock([
-                              _buildFantasticBlockLabel('Where did I get stuck?'),
-                              _buildFantasticTextFormField(
-                                controller: _stuckController,
-                                minLines: 1,
-                                maxLines: 2,
-                                hintText: 'Describe any challenges...',
-                              ),
-                            ]),
-                            const SizedBox(height: 16),
-                            _buildFantasticOutlinedBlock([
-                              _buildFantasticBlockLabel('What questions did I ask?'),
-                              _buildFantasticTextFormField(
-                                controller: _questionsController,
-                                minLines: 1,
-                                maxLines: 2,
-                                hintText: 'List your questions...',
-                              ),
-                            ]),
-                            const SizedBox(height: 40),
-                            _buildFantasticSaveButton(),
-                            const SizedBox(height: 40),
+                            )),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFantasticSectionTitle('Where I got stuck:'),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildFantasticLabeledField(
+                              label: 'Struggles:',
+                              controller: _stuckController,
+                              hintText: 'What was challenging or where I got stuck',
+                              minLines: 2,
+                              maxLines: 3,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildFantasticSectionTitle('Questions:'),
+                            const SizedBox(height: AppSpacing.md),
+                            _buildFantasticLabeledField(
+                              label: 'Questions:',
+                              controller: _questionsController,
+                              hintText: 'What questions do I have?',
+                              minLines: 2,
+                              maxLines: 3,
+                            ),
+                            const SizedBox(height: AppSpacing.xxl),
+                            _buildSaveButton(),
+                            const SizedBox(height: AppSpacing.xxl),
                           ],
                         ),
                       ),
@@ -373,7 +318,7 @@ class _LogSessionFormState extends State<LogSessionForm>
           ),
           const Spacer(),
           Container(
-            height: 40,
+            height: 80,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
@@ -457,6 +402,9 @@ class _LogSessionFormState extends State<LogSessionForm>
     required String label,
     required TextEditingController controller,
     String? Function(String?)? validator,
+    int minLines = 1,
+    int maxLines = 1,
+    required String hintText,
   }) {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -491,12 +439,14 @@ class _LogSessionFormState extends State<LogSessionForm>
             child: TextFormField(
               controller: controller,
               style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 border: InputBorder.none,
-                hintText: '',
-                hintStyle: TextStyle(color: Colors.grey),
+                hintText: hintText,
+                hintStyle: TextStyle(color: Colors.grey[500]),
               ),
               validator: validator,
+              minLines: minLines,
+              maxLines: maxLines,
             ),
           ),
         ],
@@ -784,6 +734,50 @@ class _LogSessionFormState extends State<LogSessionForm>
         ),
       ),
     );
+  }
+
+  Widget _buildMoodSelector() {
+    return _buildFantasticOutlinedBlock([
+      _buildFantasticBlockLabel('What was my mood coming into class?'),
+      Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          _buildFantasticComfortIcon(
+            value: 0,
+            icon: Icons.sentiment_satisfied_alt,
+            tooltip: 'Happy',
+            groupValue: _comfortLevel,
+            onChanged: (v) => setState(() => _comfortLevel = v),
+          ),
+          _buildFantasticComfortIcon(
+            value: 1,
+            icon: Icons.sentiment_neutral,
+            tooltip: 'Neutral',
+            groupValue: _comfortLevel,
+            onChanged: (v) => setState(() => _comfortLevel = v),
+          ),
+          _buildFantasticComfortIcon(
+            value: 2,
+            icon: Icons.sentiment_dissatisfied,
+            tooltip: 'Uncomfortable',
+            groupValue: _comfortLevel,
+            onChanged: (v) => setState(() => _comfortLevel = v),
+          ),
+        ],
+      ),
+    ]);
+  }
+
+  Widget _buildBodyDiagram() {
+    return _buildFantasticOutlinedBlock([
+      _buildFantasticBlockLabel('Body areas worked:'),
+      const SizedBox(height: AppSpacing.md),
+      _buildFantasticBodyDiagram(),
+    ]);
+  }
+
+  Widget _buildSaveButton() {
+    return _buildFantasticSaveButton();
   }
 }
 

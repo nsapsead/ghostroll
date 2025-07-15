@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/session.dart';
+import '../theme/app_theme.dart';
+import '../widgets/common/app_components.dart';
 import 'session_detail_view.dart';
 
 class JournalTimelineScreen extends StatefulWidget {
@@ -50,17 +52,14 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   @override
   void initState() {
     super.initState();
-    
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
@@ -68,7 +67,6 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
       parent: _fadeController,
       curve: Curves.easeOut,
     ));
-
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -76,7 +74,6 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
       parent: _slideController,
       curve: Curves.easeOutCubic,
     ));
-
     _fadeController.forward();
     _slideController.forward();
   }
@@ -92,16 +89,12 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF0A0A0A),
-              const Color(0xFF1A1A1A),
-              const Color(0xFF0F0F0F),
-            ],
-            stops: const [0.0, 0.5, 1.0],
+            colors: AppColors.primaryGradient,
+            stops: [0.0, 0.5, 1.0],
           ),
         ),
         child: SafeArea(
@@ -115,7 +108,10 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                     position: _slideAnimation,
                     child: _sessions.isEmpty
                         ? _buildFantasticEmptyState()
-                        : _buildFantasticTimeline(),
+                        : ResponsiveContainer(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: _buildFantasticTimeline(),
+                          ),
                   ),
                 ),
               ),
@@ -127,24 +123,18 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   }
 
   Widget _buildFantasticAppBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
       child: Row(
         children: [
           Container(
-            height: 40,
+            height: 64,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.1),
-                  blurRadius: 10,
-                  spreadRadius: 0,
-                ),
-              ],
+              borderRadius: BorderRadius.circular(AppRadius.lg),
+              boxShadow: AppShadows.small,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppRadius.lg),
               child: Image.asset(
                 'assets/images/ghostroll_logo.png',
                 fit: BoxFit.contain,
@@ -152,36 +142,22 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
             ),
           ),
           const Spacer(),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1,
-              ),
-            ),
+          GradientCard(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.history,
                   size: 16,
-                  color: Colors.grey[300],
+                  color: AppColors.textTertiary,
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: AppSpacing.xs),
                 Text(
                   '${_sessions.length} Sessions',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[300],
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -193,74 +169,19 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   }
 
   Widget _buildFantasticEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
-                ],
-              ),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: Icon(
-              Icons.history,
-              size: 60,
-              color: Colors.grey[400],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'No sessions yet',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[300],
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white.withOpacity(0.1),
-                  Colors.white.withOpacity(0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: Text(
-              'Log your first training session to get started',
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey[400],
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return EmptyState(
+      icon: Icons.history,
+      title: 'No sessions yet',
+      subtitle: 'Log your first training session to get started',
+      actionText: 'Log Session',
+      onAction: () {
+        // Navigate to log session form
+      },
     );
   }
 
   Widget _buildFantasticTimeline() {
     return ListView.builder(
-      padding: const EdgeInsets.all(20),
       itemCount: _sessions.length,
       itemBuilder: (context, index) {
         final session = _sessions[index];
@@ -282,7 +203,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
 
   Widget _buildFantasticSessionCard(Session session, int index) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 20),
+      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
       child: GestureDetector(
         onTap: () {
           Navigator.push(
@@ -306,209 +227,177 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
             ),
           );
         },
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                const Color(0xFF1A1A1A),
-                const Color(0xFF2A2A2A),
-                const Color(0xFF1F1F1F),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 20,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                _getClassTypeColor(session.classType).withOpacity(0.2),
-                                _getClassTypeColor(session.classType).withOpacity(0.1),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: _getClassTypeColor(session.classType).withOpacity(0.3),
-                              width: 1,
-                            ),
+        child: GradientCard(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              _getClassTypeColor(session.classType).withOpacity(0.2),
+                              _getClassTypeColor(session.classType).withOpacity(0.1),
+                            ],
                           ),
-                          child: Icon(
-                            _getClassTypeIcon(session.classType),
-                            color: _getClassTypeColor(session.classType),
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              DateFormat('MMM dd, yyyy').format(session.date),
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              DateFormat('EEEE').format(session.date),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey[400],
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            _getClassTypeColor(session.classType),
-                            _getClassTypeColor(session.classType).withOpacity(0.8),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: [
-                          BoxShadow(
+                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          border: Border.all(
                             color: _getClassTypeColor(session.classType).withOpacity(0.3),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          _getClassTypeIcon(session.classType),
+                          color: _getClassTypeColor(session.classType),
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.sm),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            DateFormat('MMM dd, yyyy').format(session.date),
+                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                              color: AppColors.textPrimary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('EEEE').format(session.date),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: AppColors.textTertiary,
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                         ],
                       ),
-                      child: Text(
-                        session.classTypeDisplay,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  session.focusArea,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    letterSpacing: -0.5,
+                    ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.white.withOpacity(0.2),
-                            Colors.white.withOpacity(0.1),
-                          ],
-                        ),
-                        borderRadius: BorderRadius.circular(8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          _getClassTypeColor(session.classType),
+                          _getClassTypeColor(session.classType).withOpacity(0.8),
+                        ],
                       ),
-                      child: Icon(
-                        Icons.timer,
-                        size: 16,
-                        color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _getClassTypeColor(session.classType).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      session.classTypeDisplay,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${session.rounds} rounds',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[300],
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                session.focusArea,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.5,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.overlayMedium,
+                          AppColors.overlayLight,
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                    ),
+                    child: Icon(
+                      Icons.timer,
+                      size: 16,
+                      color: AppColors.textTertiary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.xs),
+                  Text(
+                    '${session.rounds} rounds',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textTertiary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+              if (session.techniquesLearned.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: session.techniquesLearned
+                      .take(3)
+                      .map((technique) => Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.sm,
+                              vertical: AppSpacing.xs,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  AppColors.overlayLight,
+                                  AppColors.overlayMedium,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              border: Border.all(
+                                color: AppColors.overlayMedium,
+                                width: 1,
+                              ),
+                            ),
+                            child: Text(
+                              technique,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                          ))
+                      .toList(),
+                ),
+                if (session.techniquesLearned.length > 3)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.xs),
+                    child: Text(
+                      '+${session.techniquesLearned.length - 3} more techniques',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textTertiary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ],
-                ),
-                if (session.techniquesLearned.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: session.techniquesLearned
-                        .take(3)
-                        .map((technique) => Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Colors.white.withOpacity(0.1),
-                                    Colors.white.withOpacity(0.05),
-                                  ],
-                                ),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.2),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                technique,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.white,
-                                ),
-                              ),
-                            ))
-                        .toList(),
                   ),
-                  if (session.techniquesLearned.length > 3)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 8),
-                      child: Text(
-                        '+${session.techniquesLearned.length - 3} more techniques',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[500],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                ],
               ],
-            ),
+            ],
           ),
         ),
       ),
@@ -518,11 +407,11 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   Color _getClassTypeColor(ClassType classType) {
     switch (classType) {
       case ClassType.gi:
-        return const Color(0xFF3B82F6);
+        return AppColors.info;
       case ClassType.noGi:
-        return const Color(0xFF8B5CF6);
+        return AppColors.accent;
       case ClassType.striking:
-        return const Color(0xFFEF4444);
+        return AppColors.error;
     }
   }
 
