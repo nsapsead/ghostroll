@@ -4,6 +4,25 @@ import '../components/app_text_field.dart';
 import '../components/app_button.dart';
 import '../components/gradient_card.dart';
 
+// Body area data class
+class BodyAreaData {
+  final String name;
+  final String displayName;
+  final Color color;
+  final IconData icon;
+  final String description;
+  final List<String> commonTechniques;
+
+  const BodyAreaData({
+    required this.name,
+    required this.displayName,
+    required this.color,
+    required this.icon,
+    required this.description,
+    required this.commonTechniques,
+  });
+}
+
 class LogSessionForm extends StatefulWidget {
   const LogSessionForm({super.key});
 
@@ -16,14 +35,14 @@ class _LogSessionFormState extends State<LogSessionForm>
   final _formKey = GlobalKey<FormState>();
   final _instructorController = TextEditingController();
   final _seedIdeaController = TextEditingController();
-  final _techniqueControllers = List.generate(4, (_) => TextEditingController());
+  final List<TextEditingController> _techniqueControllers = [TextEditingController()];
   final _keyTakeawayController = TextEditingController();
   int _comfortLevel = 1; // 0: happy, 1: neutral, 2: sad
   final _moodController = TextEditingController();
   final _winsControllers = List.generate(3, (_) => TextEditingController());
   final _stuckController = TextEditingController();
   final _questionsController = TextEditingController();
-  final Set<String> _selectedBodyAreas = {};
+  final Map<String, BodyAreaData> _selectedBodyAreas = {};
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -96,68 +115,104 @@ class _LogSessionFormState extends State<LogSessionForm>
     }
   }
 
-  void _handleBodyTap(Offset position, Size size) {
-    final headRadius = size.width * 0.12;
-    final headCenter = Offset(size.width * 0.5, headRadius + 8);
-    final headRect = Rect.fromCircle(center: headCenter, radius: headRadius);
-    
-    final neckWidth = size.width * 0.06;
-    final neckHeight = size.height * 0.06;
-    final neckTop = headCenter.dy + headRadius;
-    final neckLeft = size.width * 0.5 - neckWidth / 2;
-    final neckRect = Rect.fromLTWH(neckLeft, neckTop, neckWidth, neckHeight);
-    
-    final torsoWidth = size.width * 0.5;
-    final torsoHeight = size.height * 0.35;
-    final torsoTop = neckTop + neckHeight;
-    final torsoLeft = size.width * 0.5 - torsoWidth / 2;
-    final torsoRect = Rect.fromLTWH(torsoLeft, torsoTop, torsoWidth, torsoHeight);
-    
-    final armWidth = size.width * 0.06;
-    final armHeight = size.height * 0.2;
-    
-    final leftArmLeft = torsoLeft - armWidth;
-    final leftArmTop = torsoTop + torsoHeight * 0.1;
-    final leftArmRect = Rect.fromLTWH(leftArmLeft, leftArmTop, armWidth, armHeight);
-    
-    final rightArmLeft = torsoLeft + torsoWidth;
-    final rightArmTop = torsoTop + torsoHeight * 0.1;
-    final rightArmRect = Rect.fromLTWH(rightArmLeft, rightArmTop, armWidth, armHeight);
-    
-    final legWidth = size.width * 0.1;
-    final legHeight = size.height * 0.2;
-    final legTop = torsoTop + torsoHeight;
-    
-    final leftLegLeft = size.width * 0.5 - legWidth - size.width * 0.04;
-    final leftLegRect = Rect.fromLTWH(leftLegLeft, legTop, legWidth, legHeight);
-    
-    final rightLegLeft = size.width * 0.5 + size.width * 0.04;
-    final rightLegRect = Rect.fromLTWH(rightLegLeft, legTop, legWidth, legHeight);
-    
+  // Body area definitions
+  static const Map<String, BodyAreaData> _bodyAreas = {
+    'head': BodyAreaData(
+      name: 'head',
+      displayName: 'Head',
+      color: Colors.blue,
+      icon: Icons.face,
+      description: 'Head strikes, defense, and positioning',
+      commonTechniques: ['Jab', 'Cross', 'Hook', 'Uppercut', 'Head movement', 'Blocking'],
+    ),
+    'neck': BodyAreaData(
+      name: 'neck',
+      displayName: 'Neck',
+      color: Colors.cyan,
+      icon: Icons.accessibility,
+      description: 'Neck control and chokes',
+      commonTechniques: ['Guillotine', 'Rear naked choke', 'Triangle', 'Neck control'],
+    ),
+    'shoulders': BodyAreaData(
+      name: 'shoulders',
+      displayName: 'Shoulders',
+      color: Colors.indigo,
+      icon: Icons.accessibility_new,
+      description: 'Shoulder strikes and control',
+      commonTechniques: ['Shoulder strikes', 'Shoulder control', 'Takedowns'],
+    ),
+    'chest': BodyAreaData(
+      name: 'chest',
+      displayName: 'Chest',
+      color: Colors.green,
+      icon: Icons.favorite,
+      description: 'Chest strikes and control',
+      commonTechniques: ['Body shots', 'Chest control', 'Pressure'],
+    ),
+    'core': BodyAreaData(
+      name: 'core',
+      displayName: 'Core',
+      color: Colors.teal,
+      icon: Icons.fitness_center,
+      description: 'Core strength and control',
+      commonTechniques: ['Core control', 'Hip movement', 'Balance'],
+    ),
+    'leftArm': BodyAreaData(
+      name: 'leftArm',
+      displayName: 'Left Arm',
+      color: Colors.orange,
+      icon: Icons.pan_tool,
+      description: 'Left arm techniques and control',
+      commonTechniques: ['Left jab', 'Left hook', 'Arm control', 'Grips'],
+    ),
+    'rightArm': BodyAreaData(
+      name: 'rightArm',
+      displayName: 'Right Arm',
+      color: Colors.deepOrange,
+      icon: Icons.pan_tool_alt,
+      description: 'Right arm techniques and control',
+      commonTechniques: ['Right cross', 'Right hook', 'Arm control', 'Grips'],
+    ),
+    'leftLeg': BodyAreaData(
+      name: 'leftLeg',
+      displayName: 'Left Leg',
+      color: Colors.purple,
+      icon: Icons.directions_walk,
+      description: 'Left leg techniques and movement',
+      commonTechniques: ['Left kick', 'Left knee', 'Footwork', 'Balance'],
+    ),
+    'rightLeg': BodyAreaData(
+      name: 'rightLeg',
+      displayName: 'Right Leg',
+      color: Colors.deepPurple,
+      icon: Icons.directions_run,
+      description: 'Right leg techniques and movement',
+      commonTechniques: ['Right kick', 'Right knee', 'Footwork', 'Balance'],
+    ),
+  };
+
+  void _toggleBodyArea(String area) {
     setState(() {
-      if (headRect.contains(position)) {
-        _toggleBodyArea('head');
-      } else if (neckRect.contains(position)) {
-        _toggleBodyArea('neck');
-      } else if (torsoRect.contains(position)) {
-        _toggleBodyArea('torso');
-      } else if (leftArmRect.contains(position)) {
-        _toggleBodyArea('leftArm');
-      } else if (rightArmRect.contains(position)) {
-        _toggleBodyArea('rightArm');
-      } else if (leftLegRect.contains(position)) {
-        _toggleBodyArea('leftLeg');
-      } else if (rightLegRect.contains(position)) {
-        _toggleBodyArea('rightLeg');
+      if (_selectedBodyAreas.containsKey(area)) {
+        _selectedBodyAreas.remove(area);
+      } else {
+        _selectedBodyAreas[area] = _bodyAreas[area]!;
       }
     });
   }
 
-  void _toggleBodyArea(String area) {
-    if (_selectedBodyAreas.contains(area)) {
-      _selectedBodyAreas.remove(area);
-    } else {
-      _selectedBodyAreas.add(area);
+  void _addTechnique() {
+    setState(() {
+      _techniqueControllers.add(TextEditingController());
+    });
+  }
+
+  void _removeTechnique(int index) {
+    if (_techniqueControllers.length > 1) {
+      setState(() {
+        _techniqueControllers[index].dispose();
+        _techniqueControllers.removeAt(index);
+      });
     }
   }
 
@@ -199,20 +254,93 @@ class _LogSessionFormState extends State<LogSessionForm>
                             const SizedBox(height: AppSpacing.md),
                             _buildFantasticLabeledField(
                               label: 'Seed idea:',
-                              controller: _seedIdeaController,
+                                controller: _seedIdeaController,
                               hintText: 'What was the main concept or technique?',
                             ),
                             const SizedBox(height: AppSpacing.lg),
                             _buildFantasticSectionTitle('Techniques I learned:'),
                             const SizedBox(height: AppSpacing.md),
-                            ...List.generate(4, (index) => Padding(
+                            ...List.generate(_techniqueControllers.length, (index) => Padding(
                               padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                              child: _buildFantasticLabeledField(
-                                label: 'Technique ${index + 1}:',
-                                controller: _techniqueControllers[index],
-                                hintText: 'Describe the technique',
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildFantasticLabeledField(
+                                      label: 'Technique ${index + 1}:',
+                                      controller: _techniqueControllers[index],
+                                      hintText: 'Describe the technique',
+                                    ),
+                                  ),
+                                  if (_techniqueControllers.length > 1) ...[
+                                    const SizedBox(width: AppSpacing.sm),
+                                    GestureDetector(
+                                      onTap: () => _removeTechnique(index),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.red.withOpacity(0.2),
+                                              Colors.red.withOpacity(0.1),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(
+                                            color: Colors.red.withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.remove,
+                                          color: Colors.red,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             )),
+                            const SizedBox(height: AppSpacing.sm),
+                            GestureDetector(
+                              onTap: _addTechnique,
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.white.withOpacity(0.1),
+                                      Colors.white.withOpacity(0.05),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.white.withOpacity(0.2),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                    Icon(
+                                      Icons.add_circle_outline,
+                                      color: Colors.white.withOpacity(0.8),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: AppSpacing.xs),
+                                    Text(
+                                      'Add Technique',
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(0.8),
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                  ),
+                                ],
+                              ),
+                              ),
+                            ),
                             const SizedBox(height: AppSpacing.lg),
                             _buildFantasticSectionTitle('Key takeaway:'),
                             const SizedBox(height: AppSpacing.md),
@@ -230,7 +358,7 @@ class _LogSessionFormState extends State<LogSessionForm>
                             const SizedBox(height: AppSpacing.md),
                             _buildFantasticLabeledField(
                               label: 'Mood notes:',
-                              controller: _moodController,
+                                controller: _moodController,
                               hintText: 'Additional thoughts about how I felt',
                               minLines: 2,
                               maxLines: 3,
@@ -238,7 +366,7 @@ class _LogSessionFormState extends State<LogSessionForm>
                             const SizedBox(height: AppSpacing.lg),
                             _buildFantasticSectionTitle('Body areas worked:'),
                             const SizedBox(height: AppSpacing.md),
-                            _buildBodyDiagram(),
+                            _buildSimpleBodySection(),
                             const SizedBox(height: AppSpacing.lg),
                             _buildFantasticSectionTitle('My wins:'),
                             const SizedBox(height: AppSpacing.md),
@@ -255,7 +383,7 @@ class _LogSessionFormState extends State<LogSessionForm>
                             const SizedBox(height: AppSpacing.md),
                             _buildFantasticLabeledField(
                               label: 'Struggles:',
-                              controller: _stuckController,
+                                controller: _stuckController,
                               hintText: 'What was challenging or where I got stuck',
                               minLines: 2,
                               maxLines: 3,
@@ -265,7 +393,7 @@ class _LogSessionFormState extends State<LogSessionForm>
                             const SizedBox(height: AppSpacing.md),
                             _buildFantasticLabeledField(
                               label: 'Questions:',
-                              controller: _questionsController,
+                                controller: _questionsController,
                               hintText: 'What questions do I have?',
                               minLines: 2,
                               maxLines: 3,
@@ -591,67 +719,7 @@ class _LogSessionFormState extends State<LogSessionForm>
     );
   }
 
-  Widget _buildFantasticBodyDiagram() {
-    return Container(
-      height: 140,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.white.withOpacity(0.05),
-            Colors.white.withOpacity(0.02),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.2),
-          width: 2,
-        ),
-      ),
-      child: GestureDetector(
-        onTapDown: (details) {
-          final RenderBox renderBox = context.findRenderObject() as RenderBox;
-          final localPosition = renderBox.globalToLocal(details.globalPosition);
-          _handleBodyTap(localPosition, renderBox.size);
-        },
-        child: CustomPaint(
-          painter: BodyOutlinePainter(selectedAreas: _selectedBodyAreas),
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.touch_app,
-                  size: 24,
-                  color: Colors.white54,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Tap body areas',
-                  style: TextStyle(
-                    color: Colors.white54,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                if (_selectedBodyAreas.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_selectedBodyAreas.length} selected',
-                    style: TextStyle(
-                      color: Colors.red.withOpacity(0.8),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildFantasticComfortIcon({
     required int value,
@@ -768,136 +836,216 @@ class _LogSessionFormState extends State<LogSessionForm>
     ]);
   }
 
-  Widget _buildBodyDiagram() {
-    return _buildFantasticOutlinedBlock([
-      _buildFantasticBlockLabel('Body areas worked:'),
-      const SizedBox(height: AppSpacing.md),
-      _buildFantasticBodyDiagram(),
-    ]);
+  Widget _buildSimpleBodySection() {
+    return Column(
+      children: [
+        // Simple body selection
+        _buildSimpleBodySelection(),
+        const SizedBox(height: AppSpacing.lg),
+        // Selected areas display
+        if (_selectedBodyAreas.isNotEmpty) ...[
+          _buildSelectedAreasDisplay(),
+          const SizedBox(height: AppSpacing.lg),
+        ],
+      ],
+    );
   }
+
+  Widget _buildSimpleBodySelection() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Select body areas worked:',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: _bodyAreas.entries.map((entry) {
+              final area = entry.value;
+              final isSelected = _selectedBodyAreas.containsKey(area.name);
+              
+              return GestureDetector(
+                onTap: () => _toggleBodyArea(area.name),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                      ? LinearGradient(
+                          colors: [
+                            area.color.withOpacity(0.3),
+                            area.color.withOpacity(0.1),
+                          ],
+                        )
+                      : LinearGradient(
+                          colors: [
+                            Colors.white.withOpacity(0.1),
+                            Colors.white.withOpacity(0.05),
+                          ],
+                        ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isSelected 
+                        ? area.color.withOpacity(0.6)
+                        : Colors.white.withOpacity(0.2),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        area.icon,
+                        color: isSelected ? area.color : Colors.white.withOpacity(0.6),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        area.displayName,
+                        style: TextStyle(
+                          color: isSelected ? area.color : Colors.white.withOpacity(0.6),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (isSelected) ...[
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.check_circle,
+                          color: area.color,
+                          size: 16,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedAreasDisplay() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Colors.white.withOpacity(0.1),
+            Colors.white.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.check_circle,
+                color: Colors.green.withOpacity(0.8),
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Selected areas (${_selectedBodyAreas.length})',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _selectedBodyAreas.values.map((area) {
+              return Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: area.color.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: area.color.withOpacity(0.5),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      area.icon,
+                      color: area.color,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      area.displayName,
+                      style: TextStyle(
+                        color: area.color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    GestureDetector(
+                      onTap: () => _toggleBodyArea(area.name),
+                      child: Icon(
+                        Icons.close,
+                        color: area.color,
+                        size: 14,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+
 
   Widget _buildSaveButton() {
     return _buildFantasticSaveButton();
   }
 }
 
-class BodyOutlinePainter extends CustomPainter {
-  final Set<String> selectedAreas;
-  
-  BodyOutlinePainter({this.selectedAreas = const {}});
-  
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(0.3)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    final selectedPaint = Paint()
-      ..color = Colors.red.withOpacity(0.6)
-      ..style = PaintingStyle.fill;
-
-    final selectedStrokePaint = Paint()
-      ..color = Colors.red
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0;
-
-    // Head
-    final headRadius = size.width * 0.12;
-    final headCenter = Offset(size.width * 0.5, headRadius + 8);
-    final headRect = Rect.fromCircle(center: headCenter, radius: headRadius);
-    
-    if (selectedAreas.contains('head')) {
-      canvas.drawOval(headRect, selectedPaint);
-      canvas.drawOval(headRect, selectedStrokePaint);
-    } else {
-      canvas.drawOval(headRect, paint);
-    }
-    
-    // Neck
-    final neckWidth = size.width * 0.06;
-    final neckHeight = size.height * 0.06;
-    final neckTop = headCenter.dy + headRadius;
-    final neckLeft = size.width * 0.5 - neckWidth / 2;
-    final neckRect = Rect.fromLTWH(neckLeft, neckTop, neckWidth, neckHeight);
-    
-    if (selectedAreas.contains('neck')) {
-      canvas.drawRect(neckRect, selectedPaint);
-      canvas.drawRect(neckRect, selectedStrokePaint);
-    } else {
-      canvas.drawRect(neckRect, paint);
-    }
-    
-    // Torso
-    final torsoWidth = size.width * 0.5;
-    final torsoHeight = size.height * 0.35;
-    final torsoTop = neckTop + neckHeight;
-    final torsoLeft = size.width * 0.5 - torsoWidth / 2;
-    final torsoRect = Rect.fromLTWH(torsoLeft, torsoTop, torsoWidth, torsoHeight);
-    
-    if (selectedAreas.contains('torso')) {
-      canvas.drawRect(torsoRect, selectedPaint);
-      canvas.drawRect(torsoRect, selectedStrokePaint);
-    } else {
-      canvas.drawRect(torsoRect, paint);
-    }
-    
-    // Arms
-    final armWidth = size.width * 0.06;
-    final armHeight = size.height * 0.2;
-    
-    // Left arm
-    final leftArmLeft = torsoLeft - armWidth;
-    final leftArmTop = torsoTop + torsoHeight * 0.1;
-    final leftArmRect = Rect.fromLTWH(leftArmLeft, leftArmTop, armWidth, armHeight);
-    
-    if (selectedAreas.contains('leftArm')) {
-      canvas.drawRect(leftArmRect, selectedPaint);
-      canvas.drawRect(leftArmRect, selectedStrokePaint);
-    } else {
-      canvas.drawRect(leftArmRect, paint);
-    }
-    
-    // Right arm
-    final rightArmLeft = torsoLeft + torsoWidth;
-    final rightArmTop = torsoTop + torsoHeight * 0.1;
-    final rightArmRect = Rect.fromLTWH(rightArmLeft, rightArmTop, armWidth, armHeight);
-    
-    if (selectedAreas.contains('rightArm')) {
-      canvas.drawRect(rightArmRect, selectedPaint);
-      canvas.drawRect(rightArmRect, selectedStrokePaint);
-    } else {
-      canvas.drawRect(rightArmRect, paint);
-    }
-    
-    // Legs
-    final legWidth = size.width * 0.1;
-    final legHeight = size.height * 0.2;
-    final legTop = torsoTop + torsoHeight;
-    
-    // Left leg
-    final leftLegLeft = size.width * 0.5 - legWidth - size.width * 0.04;
-    final leftLegRect = Rect.fromLTWH(leftLegLeft, legTop, legWidth, legHeight);
-    
-    if (selectedAreas.contains('leftLeg')) {
-      canvas.drawRect(leftLegRect, selectedPaint);
-      canvas.drawRect(leftLegRect, selectedStrokePaint);
-    } else {
-      canvas.drawRect(leftLegRect, paint);
-    }
-    
-    // Right leg
-    final rightLegLeft = size.width * 0.5 + size.width * 0.04;
-    final rightLegRect = Rect.fromLTWH(rightLegLeft, legTop, legWidth, legHeight);
-    
-    if (selectedAreas.contains('rightLeg')) {
-      canvas.drawRect(rightLegRect, selectedPaint);
-      canvas.drawRect(rightLegRect, selectedStrokePaint);
-    } else {
-      canvas.drawRect(rightLegRect, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-} 
+ 

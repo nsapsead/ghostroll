@@ -23,7 +23,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   void initState() {
     super.initState();
     _pulseController = AnimationController(
-      duration: const Duration(seconds: 2),
+      duration: const Duration(seconds: 3),
       vsync: this,
     )..repeat(reverse: true);
     _fadeController = AnimationController(
@@ -36,7 +36,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     );
     _pulseAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.08,
+      end: 1.03,
     ).animate(CurvedAnimation(
       parent: _pulseController,
       curve: Curves.easeInOut,
@@ -83,6 +83,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
           child: Column(
             children: [
               _buildFantasticAppBar(),
+              _buildUpcomingClassesSection(),
               Expanded(
                 child: FadeTransition(
                   opacity: _fadeAnimation,
@@ -137,6 +138,51 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     );
   }
 
+  Widget _buildUpcomingClassesSection() {
+    // TODO: Connect to real schedule data
+    final upcoming = [
+      {'day': 'Monday', 'time': '18:00', 'type': 'BJJ'},
+      {'day': 'Wednesday', 'time': '19:00', 'type': 'Muay Thai'},
+    ];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      margin: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Upcoming Classes',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          ...upcoming.map((c) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Icon(Icons.calendar_today, color: Colors.white70, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  '${c['day']} - ${c['type']} @ ${c['time']}',
+                  style: const TextStyle(color: Colors.white, fontSize: 15),
+                ),
+              ],
+            ),
+          )),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFantasticContent() {
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
@@ -184,14 +230,86 @@ class _QuickLogScreenState extends State<QuickLogScreen>
         builder: (context, child) {
           return Transform.scale(
             scale: _pulseAnimation.value,
-            child: AppButton(
-              text: 'Quick Log',
-              icon: Icons.add,
-              width: 220,
-              height: 80,
-              onPressed: null, // GestureDetector handles onTap
-              backgroundColor: Colors.white,
-              textColor: AppColors.primary,
+            child: Container(
+              width: 280,
+              height: 100,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.white,
+                    Colors.grey[100]!,
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withOpacity(0.3 * _pulseAnimation.value),
+                    blurRadius: 25 + (5 * _pulseAnimation.value),
+                    offset: const Offset(0, 12),
+                    spreadRadius: 3,
+                  ),
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    _pulseController.stop();
+                    Navigator.push(
+                      context,
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const LogSessionForm(),
+                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          return SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(0, 1),
+                              end: Offset.zero,
+                            ).animate(CurvedAnimation(
+                              parent: animation,
+                              curve: Curves.easeOutCubic,
+                            )),
+                            child: child,
+                          );
+                        },
+                        transitionDuration: const Duration(milliseconds: 400),
+                      ),
+                    ).then((_) {
+                      _pulseController.repeat(reverse: true);
+                    });
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.add_circle,
+                          color: AppColors.primary,
+                          size: 32,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'QUICK LOG',
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             ),
           );
         },
@@ -205,17 +323,6 @@ class _QuickLogScreenState extends State<QuickLogScreen>
         Text(
           'Log a Session',
           style: Theme.of(context).textTheme.displayLarge,
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        GradientCard(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-          child: Text(
-            'Tap to record your training session',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
         ),
       ],
     );

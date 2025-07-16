@@ -5,6 +5,7 @@ import 'goals_screen.dart';
 import 'profile_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/app_theme.dart';
+import 'training_calendar_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -23,6 +24,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
   final List<Widget> _screens = [
     const QuickLogScreen(),
     const JournalTimelineScreen(),
+    const TrainingCalendarScreen(),
     const GoalsScreen(),
     const ProfileScreen(),
   ];
@@ -89,8 +91,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
             children: [
               _buildNavItem(0, Icons.add_circle_outline, Icons.add_circle, 'Quick Log'),
               _buildNavItem(1, Icons.history_outlined, Icons.history, 'Journal'),
-              _buildNavItem(2, Icons.flag_outlined, Icons.flag, 'Goals'),
-              _buildNavItem(3, Icons.person_outline, Icons.person, 'Profile'),
+              _buildNavItem(2, Icons.calendar_today_outlined, Icons.calendar_today, 'Calendar'),
+              _buildNavItem(3, Icons.flag_outlined, Icons.flag, 'Goals'),
+              _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile'),
             ],
           ),
         ),
