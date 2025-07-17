@@ -302,7 +302,7 @@ class _RegisterScreenState extends State<RegisterScreen>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.lg),
                     child: Image.asset(
-                      'assets/images/ghostroll_logo.png',
+                      'assets/images/GhostRollBeltMascot.png',
                       fit: BoxFit.contain,
                     ),
                   ),

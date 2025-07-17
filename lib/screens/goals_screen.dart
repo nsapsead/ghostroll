@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-import '../components/gradient_card.dart';
-import '../components/app_button.dart';
-import '../components/app_text_field.dart';
+import '../theme/ghostroll_theme.dart';
+import '../widgets/common/glow_text.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -43,20 +41,20 @@ class _GoalsScreenState extends State<GoalsScreen>
     super.initState();
     
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     
     _slideController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
-
+    
     _pulseController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
-    )..repeat(reverse: true);
-
+    );
+    
     _staggerController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -91,14 +89,13 @@ class _GoalsScreenState extends State<GoalsScreen>
       end: 1.0,
     ).animate(CurvedAnimation(
       parent: _staggerController,
-      curve: Curves.easeOutCubic,
+      curve: Curves.easeOut,
     ));
 
     _fadeController.forward();
     _slideController.forward();
+    _pulseController.repeat(reverse: true);
     _staggerController.forward();
-    
-    _loadGoals();
   }
 
   @override
@@ -115,680 +112,473 @@ class _GoalsScreenState extends State<GoalsScreen>
     super.dispose();
   }
 
-  Future<void> _loadGoals() async {
-    // TODO: Load goals from storage
-    // For now, we'll use placeholder data
-  }
-
   void _saveGoals() {
     if (_formKey.currentState?.validate() ?? false) {
-      // TODO: Save goals to storage
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              Icon(
-                Icons.check_circle,
-                color: Colors.green[300],
-                size: 20,
-              ),
-              const SizedBox(width: AppSpacing.sm),
-              const Text(
-                'Goals saved successfully!',
-                style: TextStyle(fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          backgroundColor: Colors.green.withOpacity(0.1),
+          content: const Text('Goals saved successfully!'),
+          backgroundColor: GhostRollTheme.flowBlue.withOpacity(0.9),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          duration: const Duration(seconds: 3),
         ),
       );
     }
   }
 
-  void _toggleGoalCompletion(String goalType) {
+  void _toggleGoalCompletion(String goalKey) {
     setState(() {
-      _goalCompletion[goalType] = !(_goalCompletion[goalType] ?? false);
+      _goalCompletion[goalKey] = !(_goalCompletion[goalKey] ?? false);
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: AppColors.primaryGradient,
-            stops: [0.0, 0.5, 1.0],
+      body: Stack(
+        children: [
+          // Ghost watermark background
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.03,
+              child: Image.asset(
+                'assets/images/GhostRollBeltMascot.png',
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildAppBar(),
-              Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        children: [
-                          _buildGoalsHeader(),
-                          const SizedBox(height: AppSpacing.xl),
-                          _buildGoalsOverview(),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildSectionCard(
-                            title: 'Short-term Goals (3-6 months)',
-                            icon: Icons.schedule,
-                            child: _buildShortTermGoalsSection(),
+          
+          // Main content
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: GhostRollTheme.primaryGradient,
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildAppBar(),
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildHeader(),
+                                const SizedBox(height: 24),
+                                _buildGoalsSection(),
+                                const SizedBox(height: 24),
+                                _buildProgressSection(),
+                                const SizedBox(height: 24),
+                                _buildSaveButton(),
+                                const SizedBox(height: 24),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildSectionCard(
-                            title: 'Long-term Goals (1-2 years)',
-                            icon: Icons.timeline,
-                            child: _buildLongTermGoalsSection(),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildSectionCard(
-                            title: 'Competition Goals',
-                            icon: Icons.emoji_events,
-                            child: _buildCompetitionGoalsSection(),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildSectionCard(
-                            title: 'Skill Development Goals',
-                            icon: Icons.sports_martial_arts,
-                            child: _buildSkillGoalsSection(),
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          _buildSectionCard(
-                            title: 'Fitness & Conditioning Goals',
-                            icon: Icons.fitness_center,
-                            child: _buildFitnessGoalsSection(),
-                          ),
-                          const SizedBox(height: AppSpacing.xxl),
-                          _buildSaveButton(),
-                          const SizedBox(height: AppSpacing.xxl),
-                        ],
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildAppBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
           Container(
             height: 64,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              boxShadow: AppShadows.small,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: GhostRollTheme.medium,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              child: Image.asset(
-                'assets/images/ghostroll_logo.png',
-                fit: BoxFit.contain,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                  child: GlowText(
+                    text: 'GhostRoll',
+                    fontSize: 20,
+                    textColor: Colors.white,
+                    glowColor: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),
           const Spacer(),
-          GradientCard(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-            child: Text(
-              'Training Goals',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildGoalsHeader() {
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _pulseAnimation.value,
-          child: GradientCard(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.lg),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.white.withOpacity(0.2),
-                        Colors.white.withOpacity(0.1),
-                        Colors.white.withOpacity(0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.flag,
-                    size: 48,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Text(
-                  'Your Training Journey',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'Define your path to martial arts excellence',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textSecondary,
-                    letterSpacing: 0.3,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppSpacing.md),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.green.withOpacity(0.2),
-                        Colors.blue.withOpacity(0.2),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.1),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    'Set • Track • Achieve',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textSecondary,
-                      letterSpacing: 1.0,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+  Widget _buildHeader() {
+    return ScaleTransition(
+      scale: _pulseAnimation,
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: GhostRollTheme.card,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: GhostRollTheme.glow,
+          border: Border.all(
+            color: GhostRollTheme.textSecondary.withOpacity(0.1),
+            width: 1,
           ),
-        );
-      },
-    );
-  }
-
-  Widget _buildGoalsOverview() {
-    return AnimatedBuilder(
-      animation: _staggerAnimation,
-      builder: (context, child) {
-        return Transform.translate(
-          offset: Offset(0, 20 * (1 - _staggerAnimation.value)),
-          child: Opacity(
-            opacity: _staggerAnimation.value,
-            child: GradientCard(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.2),
-                              Colors.white.withOpacity(0.1),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                        ),
-                        child: Icon(
-                          Icons.insights,
-                          color: AppColors.textPrimary,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Text(
-                        'Goals Overview',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildOverviewCard(
-                          icon: Icons.schedule,
-                          title: 'Short-term',
-                          count: '3-6 months',
-                          color: Colors.blue[300]!,
-                          delay: 0.1,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: _buildOverviewCard(
-                          icon: Icons.timeline,
-                          title: 'Long-term',
-                          count: '1-2 years',
-                          color: Colors.green[300]!,
-                          delay: 0.2,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _buildOverviewCard(
-                          icon: Icons.emoji_events,
-                          title: 'Competition',
-                          count: 'Tournaments',
-                          color: Colors.orange[300]!,
-                          delay: 0.3,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: _buildOverviewCard(
-                          icon: Icons.fitness_center,
-                          title: 'Fitness',
-                          count: 'Conditioning',
-                          color: Colors.purple[300]!,
-                          delay: 0.4,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: GhostRollTheme.flowGradient,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: GhostRollTheme.small,
+              ),
+              child: Icon(
+                Icons.flag,
+                size: 48,
+                color: GhostRollTheme.text,
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildOverviewCard({
-    required IconData icon,
-    required String title,
-    required String count,
-    required Color color,
-    double delay = 0.0,
-  }) {
-    return AnimatedBuilder(
-      animation: _staggerAnimation,
-      builder: (context, child) {
-        final animationValue = (_staggerAnimation.value - delay).clamp(0.0, 1.0);
-        return Transform.translate(
-          offset: Offset(0, 30 * (1 - animationValue)),
-          child: Opacity(
-            opacity: animationValue,
-            child: Container(
-              padding: const EdgeInsets.all(AppSpacing.md),
+            const SizedBox(height: 16),
+            Text(
+              'Your Training Journey',
+              style: GhostRollTheme.headlineLarge.copyWith(
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Define your path to martial arts excellence',
+              style: GhostRollTheme.bodyMedium.copyWith(
+                color: GhostRollTheme.textSecondary,
+                letterSpacing: 0.3,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    color.withOpacity(0.15),
-                    color.withOpacity(0.08),
-                    color.withOpacity(0.03),
-                  ],
+                gradient: const LinearGradient(
+                  colors: [GhostRollTheme.recoveryGreen, GhostRollTheme.flowBlue],
                 ),
-                borderRadius: BorderRadius.circular(AppRadius.md),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: color.withOpacity(0.3),
+                  color: GhostRollTheme.textSecondary.withOpacity(0.2),
                   width: 1,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: color.withOpacity(0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
               ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.sm),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          color.withOpacity(0.2),
-                          color.withOpacity(0.1),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadius.sm),
-                    ),
-                    child: Icon(
-                      icon,
-                      color: color,
-                      size: 24,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      letterSpacing: 0.3,
-                    ),
-                  ),
-                  Text(
-                    count,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+              child: Text(
+                'Set • Track • Achieve',
+                style: GhostRollTheme.labelSmall.copyWith(
+                  color: GhostRollTheme.text,
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: 1.0,
+                ),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildSectionCard({required String title, required IconData icon, required Widget child}) {
-    return AnimatedBuilder(
-      animation: _staggerAnimation,
-      builder: (context, childWidget) {
-        return Transform.translate(
-          offset: Offset(0, 25 * (1 - _staggerAnimation.value)),
-          child: Opacity(
-            opacity: _staggerAnimation.value,
-            child: GradientCard(
-              padding: const EdgeInsets.all(AppSpacing.lg),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Colors.white.withOpacity(0.2),
-                              Colors.white.withOpacity(0.1),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(AppRadius.md),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.white.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          icon,
-                          color: AppColors.textPrimary,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      Expanded(
-                        child: Text(
-                          title,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                            letterSpacing: 0.3,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => _toggleGoalCompletion(title.toLowerCase().replaceAll(' ', '')),
-                        child: Container(
-                          padding: const EdgeInsets.all(AppSpacing.xs),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.green.withOpacity(0.2),
-                                Colors.green.withOpacity(0.1),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(AppRadius.sm),
-                            border: Border.all(
-                              color: Colors.green.withOpacity(0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Icon(
-                            _goalCompletion[title.toLowerCase().replaceAll(' ', '')] == true
-                                ? Icons.check_circle
-                                : Icons.radio_button_unchecked,
-                            color: _goalCompletion[title.toLowerCase().replaceAll(' ', '')] == true
-                                ? Colors.green[300]
-                                : AppColors.textSecondary,
-                            size: 16,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  child,
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildShortTermGoalsSection() {
-    return _buildEnhancedTextField(
-      controller: _shortTermGoalsController,
-      label: 'Short-term Goals',
-      hintText: 'e.g., Master basic takedowns, Improve cardio, Learn 3 new submissions',
-      minLines: 3,
-      maxLines: 4,
-      icon: Icons.schedule,
-      color: Colors.blue[300]!,
-    );
-  }
-
-  Widget _buildLongTermGoalsSection() {
-    return _buildEnhancedTextField(
-      controller: _longTermGoalsController,
-      label: 'Long-term Goals',
-      hintText: 'e.g., Earn blue belt, Compete in tournaments, Open my own school',
-      minLines: 3,
-      maxLines: 4,
-      icon: Icons.timeline,
-      color: Colors.green[300]!,
-    );
-  }
-
-  Widget _buildCompetitionGoalsSection() {
-    return _buildEnhancedTextField(
-      controller: _competitionGoalsController,
-      label: 'Competition Goals',
-      hintText: 'e.g., Win local tournament, Compete at nationals, Achieve podium finish',
-      minLines: 2,
-      maxLines: 3,
-      icon: Icons.emoji_events,
-      color: Colors.orange[300]!,
-    );
-  }
-
-  Widget _buildSkillGoalsSection() {
-    return _buildEnhancedTextField(
-      controller: _skillGoalsController,
-      label: 'Skill Development Goals',
-      hintText: 'e.g., Improve guard passing, Master triangle choke, Better takedown defense',
-      minLines: 2,
-      maxLines: 3,
-      icon: Icons.sports_martial_arts,
-      color: Colors.purple[300]!,
-    );
-  }
-
-  Widget _buildFitnessGoalsSection() {
-    return _buildEnhancedTextField(
-      controller: _fitnessGoalsController,
-      label: 'Fitness & Conditioning Goals',
-      hintText: 'e.g., Increase strength, Improve flexibility, Better endurance',
-      minLines: 2,
-      maxLines: 3,
-      icon: Icons.fitness_center,
-      color: Colors.red[300]!,
-    );
-  }
-
-  Widget _buildEnhancedTextField({
-    required TextEditingController controller,
-    required String label,
-    required String hintText,
-    required IconData icon,
-    required Color color,
-    int minLines = 1,
-    int maxLines = 1,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withOpacity(0.1),
-            color.withOpacity(0.05),
-            Colors.white.withOpacity(0.02),
           ],
         ),
-        borderRadius: BorderRadius.circular(AppRadius.md),
+      ),
+    );
+  }
+
+  Widget _buildGoalsSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Training Goals',
+          style: GhostRollTheme.titleLarge,
+        ),
+        const SizedBox(height: 16),
+        _buildGoalCard(
+          title: 'Short-term Goals (3-6 months)',
+          icon: Icons.schedule,
+          controller: _shortTermGoalsController,
+          goalKey: 'shortTerm',
+          color: GhostRollTheme.flowBlue,
+        ),
+        const SizedBox(height: 16),
+        _buildGoalCard(
+          title: 'Long-term Goals (1-2 years)',
+          icon: Icons.timeline,
+          controller: _longTermGoalsController,
+          goalKey: 'longTerm',
+          color: GhostRollTheme.recoveryGreen,
+        ),
+        const SizedBox(height: 16),
+        _buildGoalCard(
+          title: 'Competition Goals',
+          icon: Icons.emoji_events,
+          controller: _competitionGoalsController,
+          goalKey: 'competition',
+          color: GhostRollTheme.grindRed,
+        ),
+        const SizedBox(height: 16),
+        _buildGoalCard(
+          title: 'Skill Development Goals',
+          icon: Icons.sports_martial_arts,
+          controller: _skillGoalsController,
+          goalKey: 'skill',
+          color: GhostRollTheme.recoveryGreen,
+        ),
+        const SizedBox(height: 16),
+        _buildGoalCard(
+          title: 'Fitness & Conditioning Goals',
+          icon: Icons.fitness_center,
+          controller: _fitnessGoalsController,
+          goalKey: 'fitness',
+          color: GhostRollTheme.flowBlue,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGoalCard({
+    required String title,
+    required IconData icon,
+    required TextEditingController controller,
+    required String goalKey,
+    required Color color,
+  }) {
+    final isCompleted = _goalCompletion[goalKey] ?? false;
+    
+    return Container(
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: GhostRollTheme.medium,
         border: Border.all(
-          color: color.withOpacity(0.2),
+          color: isCompleted 
+              ? color.withOpacity(0.5)
+              : GhostRollTheme.textSecondary.withOpacity(0.1),
           width: 1,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: color.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isCompleted 
+                  ? color.withOpacity(0.2)
+                  : GhostRollTheme.overlayDark,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.xs),
+                  padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        color.withOpacity(0.2),
-                        color.withOpacity(0.1),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.sm),
+                    color: color.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     icon,
                     color: color,
-                    size: 16,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: AppSpacing.sm),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
-                    letterSpacing: 0.3,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => _toggleGoalCompletion(goalKey),
+                  child: Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: isCompleted ? color : GhostRollTheme.textSecondary.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isCompleted ? color : GhostRollTheme.textSecondary.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: isCompleted
+                        ? Icon(
+                            Icons.check,
+                            color: GhostRollTheme.text,
+                            size: 16,
+                          )
+                        : null,
                   ),
                 ),
               ],
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(AppSpacing.md, 0, AppSpacing.md, AppSpacing.md),
+            padding: const EdgeInsets.all(16),
             child: TextFormField(
               controller: controller,
-              minLines: minLines,
-              maxLines: maxLines,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 14,
-                letterSpacing: 0.2,
-              ),
+              maxLines: 3,
               decoration: InputDecoration(
-                border: InputBorder.none,
-                hintText: hintText,
-                hintStyle: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 13,
-                  letterSpacing: 0.2,
+                hintText: 'Describe your goals...',
+                hintStyle: TextStyle(color: GhostRollTheme.textTertiary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
                 ),
-                contentPadding: const EdgeInsets.all(AppSpacing.sm),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide(color: color),
+                ),
+                filled: true,
+                fillColor: GhostRollTheme.overlayDark,
               ),
+              style: TextStyle(color: GhostRollTheme.text),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressSection() {
+    final completedGoals = _goalCompletion.values.where((completed) => completed).length;
+    final totalGoals = _goalCompletion.length;
+    final progress = totalGoals > 0 ? completedGoals / totalGoals : 0.0;
+    
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: GhostRollTheme.medium,
+        border: Border.all(
+          color: GhostRollTheme.textSecondary.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.trending_up,
+                color: GhostRollTheme.recoveryGreen,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Progress Overview',
+                style: GhostRollTheme.titleLarge,
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Completed Goals',
+                      style: GhostRollTheme.bodyMedium.copyWith(
+                        color: GhostRollTheme.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$completedGoals of $totalGoals',
+                      style: GhostRollTheme.headlineSmall.copyWith(
+                        color: GhostRollTheme.recoveryGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 80,
+                height: 80,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    colors: GhostRollTheme.flowGradient,
+                  ),
+                  boxShadow: GhostRollTheme.small,
+                ),
+                child: Center(
+                  child: Text(
+                    '${(progress * 100).round()}%',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      color: GhostRollTheme.text,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            width: double.infinity,
+            height: 8,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: GhostRollTheme.overlayDark,
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: progress,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: GhostRollTheme.flowGradient,
+                  ),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            progress >= 1.0 
+                ? '🎉 All goals completed! Amazing work!'
+                : progress >= 0.8
+                    ? '🔥 Almost there! Keep pushing!'
+                    : progress >= 0.5
+                        ? '💪 Halfway there! Stay focused!'
+                        : '🚀 Great start! Keep going!',
+            style: GhostRollTheme.bodyMedium.copyWith(
+              color: GhostRollTheme.textSecondary,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],
@@ -797,38 +587,29 @@ class _GoalsScreenState extends State<GoalsScreen>
   }
 
   Widget _buildSaveButton() {
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _pulseAnimation.value,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Colors.white,
-                  Colors.grey[100]!,
-                ],
-              ),
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.white.withOpacity(0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: AppButton(
-              text: 'Save Goals',
-              onPressed: _saveGoals,
-              backgroundColor: Colors.transparent,
-              textColor: AppColors.primary,
-              height: 56,
-            ),
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _saveGoals,
+        icon: const Icon(Icons.save, size: 24),
+        label: Text(
+          'Save Goals',
+          style: GhostRollTheme.labelLarge.copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
           ),
-        );
-      },
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: GhostRollTheme.flowBlue,
+          foregroundColor: GhostRollTheme.text,
+          elevation: 12,
+          shadowColor: GhostRollTheme.flowBlue.withOpacity(0.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        ),
+      ),
     );
   }
 } 

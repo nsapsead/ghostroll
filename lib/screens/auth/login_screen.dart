@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/common/app_components.dart';
+import '../../theme/ghostroll_theme.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
@@ -176,71 +174,78 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: AppColors.primaryGradient,
-            stops: [0.0, 0.5, 1.0],
+      body: Stack(
+        children: [
+          // Ghost watermark background
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.03,
+              child: Image.asset(
+                'assets/images/GhostRollBeltMascot.png',
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: ResponsiveContainer(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: AppSpacing.xxl),
-                      _buildLogo(),
-                      const SizedBox(height: AppSpacing.xxl),
-                      _buildWelcomeText(),
-                      const SizedBox(height: AppSpacing.xxl),
-                      _buildLoginForm(),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildSocialAuthSection(),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildForgotPassword(),
-                      const SizedBox(height: AppSpacing.lg),
-                      _buildSignUpLink(),
-                      const SizedBox(height: AppSpacing.xxl),
-                    ],
+          
+          // Main content
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: GhostRollTheme.primaryGradient,
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: SafeArea(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 48),
+                        _buildLogo(),
+                        const SizedBox(height: 48),
+                        _buildWelcomeText(),
+                        const SizedBox(height: 48),
+                        _buildLoginForm(),
+                        const SizedBox(height: 24),
+                        _buildSocialLoginButtons(),
+                        const SizedBox(height: 24),
+                        _buildSignUpLink(),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildLogo() {
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _pulseAnimation.value,
-          child: Container(
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              boxShadow: AppShadows.medium,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              child: Image.asset(
-                'assets/images/ghostroll_logo.png',
-                fit: BoxFit.contain,
-              ),
-            ),
+    return ScaleTransition(
+      scale: _pulseAnimation,
+      child: Container(
+        height: 120,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: GhostRollTheme.glow,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.asset(
+            'assets/images/GhostRollBeltMascot.png',
+            fit: BoxFit.contain,
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -249,15 +254,22 @@ class _LoginScreenState extends State<LoginScreen>
       children: [
         Text(
           'Welcome Back',
-          style: Theme.of(context).textTheme.displayLarge,
+          style: GhostRollTheme.headlineLarge,
         ),
-        const SizedBox(height: AppSpacing.sm),
-        GradientCard(
-          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: GhostRollTheme.flowGradient,
+            ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: GhostRollTheme.small,
+          ),
           child: Text(
             'Sign in to continue your training journey',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: AppColors.textSecondary,
+            style: GhostRollTheme.bodyMedium.copyWith(
+              color: GhostRollTheme.text,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -267,69 +279,185 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Widget _buildLoginForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          AppTextField(
-            label: 'Email',
-            hint: 'Enter your email',
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            prefixIcon: const Icon(Icons.email_outlined, color: AppColors.textTertiary),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          AppTextField(
-            label: 'Password',
-            hint: 'Enter your password',
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            prefixIcon: const Icon(Icons.lock_outline, color: AppColors.textTertiary),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                color: AppColors.textTertiary,
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: GhostRollTheme.medium,
+        border: Border.all(
+          color: GhostRollTheme.textSecondary.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sign In',
+              style: GhostRollTheme.titleLarge,
+            ),
+            const SizedBox(height: 24),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                prefixIcon: Icon(Icons.email_outlined, color: GhostRollTheme.textSecondary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: GhostRollTheme.flowBlue),
+                ),
+                filled: true,
+                fillColor: GhostRollTheme.overlayDark,
               ),
-              onPressed: () {
-                setState(() {
-                  _obscurePassword = !_obscurePassword;
-                });
+              style: TextStyle(color: GhostRollTheme.text),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                  return 'Please enter a valid email';
+                }
+                return null;
               },
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
-              return null;
-            },
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          if (_errorMessage.isNotEmpty) _buildErrorMessage(),
-          const SizedBox(height: AppSpacing.lg),
-          AppButton(
-            text: 'Sign In',
-            onPressed: _signIn,
-            isLoading: _isLoading,
-            width: double.infinity,
-          ),
-        ],
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                prefixIcon: Icon(Icons.lock_outline, color: GhostRollTheme.textSecondary),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                    color: GhostRollTheme.textTertiary,
+                  ),
+                  onPressed: () {
+                    setState(() {
+                      _obscurePassword = !_obscurePassword;
+                    });
+                  },
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: GhostRollTheme.flowBlue),
+                ),
+                filled: true,
+                fillColor: GhostRollTheme.overlayDark,
+              ),
+              style: TextStyle(color: GhostRollTheme.text),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters';
+                }
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                  );
+                },
+                child: Text(
+                  'Forgot Password?',
+                  style: GhostRollTheme.bodyMedium.copyWith(
+                    color: GhostRollTheme.flowBlue,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ),
+            if (_errorMessage.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: GhostRollTheme.grindRed.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: GhostRollTheme.grindRed.withOpacity(0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: GhostRollTheme.grindRed,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        _errorMessage,
+                        style: GhostRollTheme.bodyMedium.copyWith(
+                          color: GhostRollTheme.grindRed,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _signIn,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: GhostRollTheme.flowBlue,
+                  foregroundColor: GhostRollTheme.text,
+                  elevation: 12,
+                  shadowColor: GhostRollTheme.flowBlue.withOpacity(0.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(GhostRollTheme.text),
+                        ),
+                      )
+                    : Text(
+                        'Sign In',
+                        style: GhostRollTheme.labelLarge.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSocialAuthSection() {
+  Widget _buildSocialLoginButtons() {
     return Column(
       children: [
         Row(
@@ -337,118 +465,101 @@ class _LoginScreenState extends State<LoginScreen>
             Expanded(
               child: Container(
                 height: 1,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      AppColors.textTertiary.withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
+                color: GhostRollTheme.textSecondary.withOpacity(0.3),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
-                'or continue with',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textTertiary,
+                'Or continue with',
+                style: GhostRollTheme.bodyMedium.copyWith(
+                  color: GhostRollTheme.textSecondary,
                 ),
               ),
             ),
             Expanded(
               child: Container(
                 height: 1,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      AppColors.textTertiary.withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
+                color: GhostRollTheme.textSecondary.withOpacity(0.3),
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.lg),
-        SocialAuthButton(
-          text: 'Continue with Google',
-          provider: 'google',
-          onPressed: _signInWithGoogle,
-          isLoading: _isGoogleLoading,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        SocialAuthButton(
-          text: 'Continue with Apple',
-          provider: 'apple',
-          onPressed: _signInWithApple,
-          isLoading: _isAppleLoading,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        SocialAuthButton(
-          text: 'Continue with Facebook',
-          provider: 'facebook',
-          onPressed: _signInWithFacebook,
-          isLoading: _isFacebookLoading,
+        const SizedBox(height: 24),
+        Row(
+          children: [
+            Expanded(
+              child: _buildSocialButton(
+                icon: Icons.g_mobiledata,
+                label: 'Google',
+                isLoading: _isGoogleLoading,
+                onPressed: _signInWithGoogle,
+                color: Colors.red,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSocialButton(
+                icon: Icons.apple,
+                label: 'Apple',
+                isLoading: _isAppleLoading,
+                onPressed: _signInWithApple,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _buildSocialButton(
+                icon: Icons.facebook,
+                label: 'Facebook',
+                isLoading: _isFacebookLoading,
+                onPressed: _signInWithFacebook,
+                color: Colors.blue,
+              ),
+            ),
+          ],
         ),
       ],
     );
   }
 
-  Widget _buildErrorMessage() {
-    return GradientCard(
-      padding: const EdgeInsets.all(AppSpacing.md),
-      child: Row(
-        children: [
-          Icon(Icons.error_outline, color: AppColors.error, size: 20),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text(
-              _errorMessage,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.error,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
+  Widget _buildSocialButton({
+    required IconData icon,
+    required String label,
+    required bool isLoading,
+    required VoidCallback onPressed,
+    required Color color,
+  }) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: GhostRollTheme.textSecondary.withOpacity(0.2),
+        ),
+        boxShadow: GhostRollTheme.small,
       ),
-    );
-  }
-
-  Widget _buildForgotPassword() {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const ForgotPasswordScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
-            },
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        );
-      },
-      child: GradientCard(
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
-        child: Text(
-          'Forgot Password?',
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppColors.textSecondary,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isLoading ? null : onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Center(
+            child: isLoading
+                ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  )
+                : Icon(
+                    icon,
+                    color: color,
+                    size: 24,
+                  ),
           ),
         ),
       ),
@@ -461,41 +572,22 @@ class _LoginScreenState extends State<LoginScreen>
       children: [
         Text(
           "Don't have an account? ",
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textTertiary,
+          style: GhostRollTheme.bodyMedium.copyWith(
+            color: GhostRollTheme.textSecondary,
           ),
         ),
-        GestureDetector(
-          onTap: () {
+        TextButton(
+          onPressed: () {
             Navigator.push(
               context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    const RegisterScreen(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 1),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    )),
-                    child: child,
-                  );
-                },
-                transitionDuration: const Duration(milliseconds: 400),
-              ),
+              MaterialPageRoute(builder: (context) => const RegisterScreen()),
             );
           },
-          child: GradientCard(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-            child: Text(
-              'Sign Up',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+          child: Text(
+            'Sign Up',
+            style: GhostRollTheme.bodyMedium.copyWith(
+              color: GhostRollTheme.flowBlue,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),

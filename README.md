@@ -2,7 +2,7 @@
 
 A modern, dark-themed Flutter app designed to help martial artists track their training progress, log sessions, and manage their martial arts journey.
 
-![GhostRoll Logo](assets/images/ghostroll_logo.png)
+![GhostRoll Logo](assets/images/GhostRollBeltMascot.png)
 
 ## 🥋 Features
 
@@ -86,7 +86,7 @@ lib/
 
 assets/
 ├── images/
-│   └── ghostroll_logo.png    # App logo
+│   └── GhostRollBeltMascot.png    # App logo
 └── icons/                    # Custom app icons
 ```
 

@@ -4,8 +4,10 @@ import 'journal_timeline_screen.dart';
 import 'goals_screen.dart';
 import 'profile_screen.dart';
 import '../services/auth_service.dart';
-import '../theme/app_theme.dart';
+import '../theme/ghostroll_theme.dart';
 import 'training_calendar_screen.dart';
+import '../widgets/ghost_confetti.dart';
+import '../services/notification_service.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -20,6 +22,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   int _selectedIndex = 0;
+  bool _showConfetti = false;
 
   final List<Widget> _screens = [
     const QuickLogScreen(),
@@ -54,30 +57,41 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: _screens[_selectedIndex],
-      ),
-      bottomNavigationBar: _buildFantasticBottomNav(),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: GhostRollTheme.background,
+          body: Stack(
+            children: [
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: _screens[_selectedIndex],
+              ),
+
+            ],
+          ),
+          bottomNavigationBar: _buildFantasticBottomNav(),
+        ),
+        // Confetti overlay
+        if (_showConfetti)
+          GhostConfetti(
+            onComplete: () => setState(() => _showConfetti = false),
+          ),
+      ],
     );
   }
 
   Widget _buildFantasticBottomNav() {
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            AppTheme.primaryColor.withOpacity(0.8),
-            AppTheme.primaryColor,
-          ],
+          colors: GhostRollTheme.primaryGradient,
         ),
         boxShadow: [
           BoxShadow(
-            color: AppTheme.primaryColor.withOpacity(0.3),
+            color: GhostRollTheme.flowBlue.withOpacity(0.3),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -85,7 +99,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       ),
       child: SafeArea(
         child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingLg, vertical: AppTheme.spacingMd),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -113,18 +127,18 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(horizontal: AppTheme.spacingLg, vertical: AppTheme.spacingMd),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         decoration: BoxDecoration(
           gradient: isSelected
               ? LinearGradient(
-                  colors: [AppTheme.white.withOpacity(0.2), AppTheme.white.withOpacity(0.1)],
+                  colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.1)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 )
               : null,
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          borderRadius: BorderRadius.circular(16),
           border: isSelected
-              ? Border.all(color: AppTheme.white.withOpacity(0.3), width: 1)
+              ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
               : null,
         ),
         child: Column(
@@ -132,15 +146,16 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
           children: [
             Icon(
               isSelected ? activeIcon : icon,
-              color: isSelected ? AppTheme.white : AppTheme.textSecondary,
+              color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
               size: 24,
             ),
-            SizedBox(height: AppTheme.spacingXs),
+            const SizedBox(height: 4),
             Text(
               label,
-              style: AppTheme.textStyleBodySmall.copyWith(
+              style: TextStyle(
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? AppTheme.white : AppTheme.textSecondary,
+                color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
               ),
             ),
           ],
@@ -148,4 +163,6 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
       ),
     );
   }
+
+
 } 

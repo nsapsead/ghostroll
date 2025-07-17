@@ -1,5 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+// Mood-based color themes
+enum GhostTheme {
+  flow,      // Blue - calm, technical training
+  hardRounds, // Red - intense, competitive
+  recovery,   // Green - light, restorative
+  ghost,      // Purple - mysterious, advanced
+  sunrise,    // Orange - morning energy
+  midnight    // Dark - late night sessions
+}
+
+class GhostThemeData {
+  final String name;
+  final String description;
+  final Color primary;
+  final Color secondary;
+  final Color accent;
+  final Color background;
+  final Color surface;
+  final Color text;
+  final Color textSecondary;
+  final LinearGradient gradient;
+  final String emoji;
+
+  const GhostThemeData({
+    required this.name,
+    required this.description,
+    required this.primary,
+    required this.secondary,
+    required this.accent,
+    required this.background,
+    required this.surface,
+    required this.text,
+    required this.textSecondary,
+    required this.gradient,
+    required this.emoji,
+  });
+}
 
 class AppColors {
   // Primary colors
@@ -108,24 +147,6 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
   );
-  
-  static const TextStyle headlineSmall = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-  );
-  
-  static const TextStyle headlineMedium = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-  );
-  
-  static const TextStyle headlineLarge = TextStyle(
-    fontSize: 22,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-  );
 }
 
 class AppShadows {
@@ -163,325 +184,232 @@ class AppShadows {
 }
 
 class AppTheme {
-  // Static properties for direct access
-  static const Color backgroundColor = AppColors.primary;
-  static const Color primaryColor = AppColors.primary;
-  static const Color white = AppColors.textPrimary;
-  static const Color textSecondary = AppColors.textSecondary;
+  static const String _themeKey = 'ghost_theme';
   
-  // Spacing constants
-  static const double spacingXs = AppSpacing.xs;
-  static const double spacingSm = AppSpacing.sm;
-  static const double spacingMd = AppSpacing.md;
-  static const double spacingLg = AppSpacing.lg;
-  static const double spacingXl = AppSpacing.xl;
-  static const double spacingXxl = AppSpacing.xxl;
-  static const double spacingXxxl = AppSpacing.xxxl;
-  static const double spacingHuge = AppSpacing.huge;
-  
-  // Border radius constants
-  static const double radiusXs = AppRadius.xs;
-  static const double radiusSm = AppRadius.sm;
-  static const double radiusMd = AppRadius.md;
-  static const double radiusLg = AppRadius.lg;
-  static const double radiusXl = AppRadius.xl;
-  static const double radiusXxl = AppRadius.xxl;
-  static const double radiusRound = AppRadius.round;
-  
-  // Text style constants
-  static const TextStyle textStyleBodySmall = AppTextStyles.bodySmall;
-  static const TextStyle textStyleBodyMedium = AppTextStyles.bodyMedium;
-  static const TextStyle textStyleBodyLarge = AppTextStyles.bodyLarge;
-  static const TextStyle textStyleTitleSmall = AppTextStyles.titleSmall;
-  static const TextStyle textStyleTitleMedium = AppTextStyles.titleMedium;
-  static const TextStyle textStyleTitleLarge = AppTextStyles.titleLarge;
-  static const TextStyle textStyleHeadlineSmall = AppTextStyles.headlineSmall;
-  static const TextStyle textStyleHeadlineMedium = AppTextStyles.headlineMedium;
-  static const TextStyle textStyleHeadlineLarge = AppTextStyles.headlineLarge;
-  
-  // Gradients for different sections
-  static const LinearGradient headerGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF1A1A1A),
-      Color(0xFF2A2A2A),
-      Color(0xFF1F1F1F),
-    ],
-  );
-  
-  static const LinearGradient techniquesGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF1A1A1A),
-      Color(0xFF2A2A2A),
-      Color(0xFF1F1F1F),
-    ],
-  );
-  
-  static const LinearGradient sparringNotesGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF1A1A1A),
-      Color(0xFF2A2A2A),
-      Color(0xFF1F1F1F),
-    ],
-  );
-  
-  static const LinearGradient reflectionGradient = LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [
-      Color(0xFF1A1A1A),
-      Color(0xFF2A2A2A),
-      Color(0xFF1F1F1F),
-    ],
-  );
-  
-  // Border colors
-  static const Color headerBorderColor = Color(0x1AFFFFFF);
-  static const Color techniquesBorderColor = Color(0x1AFFFFFF);
-  static const Color sparringNotesBorderColor = Color(0x1AFFFFFF);
-  static const Color reflectionBorderColor = Color(0x1AFFFFFF);
-  
-  // Icon colors
-  static const Color headerIconColor = Color(0xFFD1D5DB);
-  static const Color techniquesIconColor = Color(0xFFD1D5DB);
-  static const Color sparringNotesIconColor = Color(0xFFD1D5DB);
-  static const Color reflectionIconColor = Color(0xFFD1D5DB);
-  
-  // Text styles for different sections
-  static const TextStyle headerDateTextStyle = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.bold,
-    color: Colors.white,
-    letterSpacing: -0.5,
-  );
-  
-  static const TextStyle headerTimeTextStyle = TextStyle(
-    fontSize: 14,
-    color: Color(0xFF9CA3AF),
-    fontWeight: FontWeight.w500,
-  );
-  
-  static const TextStyle headerClassTypeTextStyle = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: Colors.black,
-  );
-  
-  static const TextStyle headerFocusAreaTextStyle = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: Colors.white,
-  );
-  
-  static const TextStyle headerRoundsTextStyle = TextStyle(
-    fontSize: 16,
-    color: Color(0xFFD1D5DB),
-    fontWeight: FontWeight.w500,
-  );
-  
-  static const TextStyle techniquesTitleTextStyle = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: Colors.white,
-  );
-  
-  static const TextStyle techniquesTechniqueTextStyle = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w500,
-    color: Colors.white,
-  );
-  
-  static const TextStyle techniquesNoTechniquesTextStyle = TextStyle(
-    fontSize: 16,
-    color: Color(0xFF6B7280),
-    fontStyle: FontStyle.italic,
-  );
-  
-  static const TextStyle sparringNotesTitleTextStyle = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: Colors.white,
-  );
-  
-  static const TextStyle sparringNotesTextStyle = TextStyle(
-    fontSize: 16,
-    color: Colors.white,
-    height: 1.6,
-  );
-  
-  static const TextStyle reflectionTitleTextStyle = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-    color: Colors.white,
-  );
-  
-  static const TextStyle reflectionTextStyle = TextStyle(
-    fontSize: 16,
-    color: Colors.white,
-    height: 1.6,
-  );
+  static final Map<GhostTheme, GhostThemeData> themes = {
+    GhostTheme.flow: GhostThemeData(
+      name: 'Flow',
+      description: 'Smooth, technical training',
+      primary: Color(0xFF1E3A8A),
+      secondary: Color(0xFF3B82F6),
+      accent: Color(0xFF60A5FA),
+      background: Color(0xFF1F2937),
+      surface: Color(0xFF374151),
+      text: Color(0xFFF9FAFB),
+      textSecondary: Color(0xFFD1D5DB),
+      gradient: LinearGradient(
+        colors: [Color(0xFF1E3A8A), Color(0xFF3B82F6), Color(0xFF60A5FA)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      emoji: '🌊',
+    ),
+    GhostTheme.hardRounds: GhostThemeData(
+      name: 'Hard Rounds',
+      description: 'Intense, competitive training',
+      primary: Color(0xFF991B1B),
+      secondary: Color(0xFFDC2626),
+      accent: Color(0xFFEF4444),
+      background: Color(0xFF171717),
+      surface: Color(0xFF262626),
+      text: Color(0xFFF9FAFB),
+      textSecondary: Color(0xFF9CA3AF),
+      gradient: LinearGradient(
+        colors: [Color(0xFF991B1B), Color(0xFFDC2626), Color(0xFFEF4444)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      emoji: '🔥',
+    ),
+    GhostTheme.recovery: GhostThemeData(
+      name: 'Recovery',
+      description: 'Light, restorative training',
+      primary: Color(0xFF166534),
+      secondary: Color(0xFF16A34A),
+      accent: Color(0xFF4ADE80),
+      background: Color(0xFF1F2937),
+      surface: Color(0xFF374151),
+      text: Color(0xFFF9FAFB),
+      textSecondary: Color(0xFFD1D5DB),
+      gradient: LinearGradient(
+        colors: [Color(0xFF166534), Color(0xFF16A34A), Color(0xFF4ADE80)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      emoji: '🌱',
+    ),
+    GhostTheme.ghost: GhostThemeData(
+      name: 'Ghost',
+      description: 'Mysterious, advanced training',
+      primary: Color(0xFF581C87),
+      secondary: Color(0xFF7C3ED),
+      accent: Color(0xFFA78BFA),
+      background: Color(0xFF232736),
+      surface: Color(0xFF313847),
+      text: Color(0xFFF9FAFB),
+      textSecondary: Color(0xFFD1D5DB),
+      gradient: LinearGradient(
+        colors: [Color(0xFF581C87), Color(0xFF7C3ED), Color(0xFFA78BFA)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      emoji: '👻',
+    ),
+    GhostTheme.sunrise: GhostThemeData(
+      name: 'Sunrise',
+      description: 'Morning energy training',
+      primary: Color(0xFFC2410C),
+      secondary: Color(0xFFEA580C),
+      accent: Color(0xFFFB923C),
+      background: Color(0xFF171717),
+      surface: Color(0xFF262626),
+      text: Color(0xFFF9FAFB),
+      textSecondary: Color(0xFFD1D5DB),
+      gradient: LinearGradient(
+        colors: [Color(0xFFC2410C), Color(0xFFEA580C), Color(0xFFFB923C)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      emoji: '🌅',
+    ),
+    GhostTheme.midnight: GhostThemeData(
+      name: 'Midnight',
+      description: 'Late night sessions',
+      primary: Color(0xFF1F2937),
+      secondary: Color(0xFF374151),
+      accent: Color(0xFF6B7280),
+      background: Color(0xFF000000),
+      surface: Color(0xFF111827),
+      text: Color(0xFFF9FAFB),
+      textSecondary: Color(0xFFD1D5DB),
+      gradient: LinearGradient(
+        colors: [Color(0xFF1F2937), Color(0xFF374151), Color(0xFF6B7280)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      emoji: '🌙',
+    ),
+  };
 
+  static GhostTheme _currentTheme = GhostTheme.ghost;
+
+  static GhostTheme get currentTheme => _currentTheme;
+  static GhostThemeData get currentThemeData => themes[_currentTheme]!;
+
+  // Initialize theme from preferences
+  static Future<void> initializeTheme() async {
+    final prefs = await SharedPreferences.getInstance();
+    final themeIndex = prefs.getInt(_themeKey) ?? GhostTheme.ghost.index;
+    _currentTheme = GhostTheme.values[themeIndex];
+  }
+
+  // Save theme to preferences
+  static Future<void> setTheme(GhostTheme theme) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_themeKey, theme.index);
+    _currentTheme = theme;
+  }
+
+  // Get theme data
+  static GhostThemeData getThemeData(GhostTheme theme) => themes[theme]!;
+
+  // Main app theme
   static ThemeData get darkTheme {
+    final themeData = currentThemeData;
+    
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      scaffoldBackgroundColor: AppColors.primary,
-      
-      // Color scheme
-      colorScheme: const ColorScheme.dark(
-        primary: AppColors.textPrimary,
-        secondary: AppColors.accent,
-        surface: AppColors.surface,
-        background: AppColors.primary,
-        onPrimary: AppColors.primary,
-        onSecondary: AppColors.textPrimary,
-        onSurface: AppColors.textPrimary,
-        onBackground: AppColors.textPrimary,
-        error: AppColors.error,
-        onError: AppColors.textPrimary,
+      colorScheme: ColorScheme.dark(
+        primary: themeData.primary,
+        secondary: themeData.secondary,
+        surface: themeData.surface,
+        background: themeData.background,
+        onPrimary: themeData.text,
+        onSecondary: themeData.text,
+        onSurface: themeData.text,
+        onBackground: themeData.text,
       ),
-      
-      // App bar theme
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-        titleTextStyle: TextStyle(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+      scaffoldBackgroundColor: themeData.background,
+      cardTheme: CardThemeData(
+        color: themeData.surface,
+        elevation: 8,
+        shadowColor: themeData.primary.withOpacity(0.3),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
         ),
       ),
-      
-      // Text theme
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         displayLarge: TextStyle(
+          color: themeData.text,
           fontSize: 32,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.5,
         ),
         displayMedium: TextStyle(
+          color: themeData.text,
           fontSize: 28,
           fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
-          letterSpacing: -0.25,
         ),
         displaySmall: TextStyle(
+          color: themeData.text,
           fontSize: 24,
-          fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
+          fontWeight: FontWeight.bold,
         ),
         headlineLarge: TextStyle(
+          color: themeData.text,
           fontSize: 22,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
         ),
         headlineMedium: TextStyle(
+          color: themeData.text,
           fontSize: 20,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
         ),
         headlineSmall: TextStyle(
+          color: themeData.text,
           fontSize: 18,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
         ),
         titleLarge: TextStyle(
+          color: themeData.text,
           fontSize: 16,
           fontWeight: FontWeight.w600,
-          color: AppColors.textPrimary,
         ),
         titleMedium: TextStyle(
+          color: themeData.text,
           fontSize: 14,
           fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
         ),
         titleSmall: TextStyle(
+          color: themeData.textSecondary,
           fontSize: 12,
           fontWeight: FontWeight.w500,
-          color: AppColors.textSecondary,
         ),
         bodyLarge: TextStyle(
+          color: themeData.text,
           fontSize: 16,
-          color: AppColors.textPrimary,
         ),
         bodyMedium: TextStyle(
+          color: themeData.text,
           fontSize: 14,
-          color: AppColors.textPrimary,
         ),
         bodySmall: TextStyle(
+          color: themeData.textSecondary,
           fontSize: 12,
-          color: AppColors.textSecondary,
-        ),
-        labelLarge: TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textPrimary,
-        ),
-        labelMedium: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textSecondary,
-        ),
-        labelSmall: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w500,
-          color: AppColors.textTertiary,
         ),
       ),
-      
-      // Input decoration theme
-      inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: AppColors.overlayLight,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.overlayMedium),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.overlayMedium),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.accent, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error),
-        ),
-        focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppRadius.md),
-          borderSide: const BorderSide(color: AppColors.error, width: 2),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.md,
-          vertical: AppSpacing.md,
-        ),
-        hintStyle: const TextStyle(
-          color: AppColors.textTertiary,
-          fontSize: 16,
-        ),
-      ),
-      
-      // Elevated button theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
-          foregroundColor: AppColors.textPrimary,
-          elevation: 0,
-          padding: const EdgeInsets.symmetric(
+          backgroundColor: themeData.primary,
+          foregroundColor: themeData.text,
+          elevation: 4,
+          shadowColor: themeData.primary.withOpacity(0.3),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.xl,
             vertical: AppSpacing.md,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppRadius.md),
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -489,11 +417,9 @@ class AppTheme {
           ),
         ),
       ),
-      
-      // Text button theme
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: AppColors.accent,
+          foregroundColor: themeData.accent,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
             vertical: AppSpacing.sm,
@@ -503,27 +429,46 @@ class AppTheme {
           ),
         ),
       ),
-      
-      // Card theme
-      cardTheme: CardThemeData(
-        color: AppColors.surface,
-        elevation: 0,
-        shape: RoundedRectangleBorder(
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: themeData.surface,
+        border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: themeData.primary.withOpacity(0.3)),
         ),
-        margin: EdgeInsets.zero,
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: themeData.primary.withOpacity(0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: themeData.accent, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: AppColors.error),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppRadius.md),
+          borderSide: BorderSide(color: AppColors.error, width: 2),
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.md,
+        ),
+        hintStyle: TextStyle(
+          color: themeData.textSecondary.withOpacity(0.7),
+          fontSize: 16,
+        ),
+        labelStyle: TextStyle(color: themeData.textSecondary),
       ),
-      
-      // Dialog theme
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.surface,
+        backgroundColor: themeData.surface,
         elevation: 8,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.lg),
         ),
       ),
-      
-      // Bottom navigation bar theme
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         backgroundColor: Colors.transparent,
         selectedItemColor: AppColors.textPrimary,

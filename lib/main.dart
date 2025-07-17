@@ -8,7 +8,7 @@ import 'screens/quick_log_screen.dart';
 import 'screens/journal_timeline_screen.dart';
 import 'screens/log_session_form.dart';
 import 'screens/profile_screen.dart';
-import 'theme/app_theme.dart';
+import 'theme/ghostroll_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,7 +37,7 @@ class GhostRollApp extends StatelessWidget {
     return MaterialApp(
       title: 'GhostRoll',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: GhostRollTheme.dark,
       home: const MainNavigationScreen(), // TEMP: bypass auth for now
       routes: {
         '/quick-log': (context) => const QuickLogScreen(),
@@ -47,6 +47,4 @@ class GhostRollApp extends StatelessWidget {
       },
     );
   }
-
-
 } 

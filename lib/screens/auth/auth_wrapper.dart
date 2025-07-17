@@ -59,7 +59,7 @@ class AuthWrapper extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(20),
                   child: Image.asset(
-                    'assets/images/ghostroll_logo.png',
+                    'assets/images/GhostRollBeltMascot.png',
                     fit: BoxFit.contain,
                   ),
                 ),

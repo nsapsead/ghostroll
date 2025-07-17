@@ -1,7 +1,105 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter/services.dart';
 import 'log_session_form.dart';
-import '../theme/app_theme.dart';
-import '../widgets/common/app_components.dart';
+import '../theme/ghostroll_theme.dart';
+import '../widgets/ghost_confetti.dart';
+import '../widgets/common/glow_text.dart';
+import '../services/calendar_service.dart';
+import '../services/profile_service.dart';
+
+// Custom clipper for radical button shape
+class RadicalButtonClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    
+    // Start from top-left with a curve
+    path.moveTo(30, 0);
+    
+    // Top edge with wave
+    path.quadraticBezierTo(size.width * 0.3, -10, size.width * 0.7, 15);
+    path.quadraticBezierTo(size.width * 0.9, 25, size.width - 20, 0);
+    
+    // Right edge with angular cut
+    path.lineTo(size.width, 20);
+    path.lineTo(size.width - 15, size.height * 0.6);
+    path.lineTo(size.width, size.height - 10);
+    
+    // Bottom edge with reverse wave
+    path.quadraticBezierTo(size.width * 0.8, size.height + 5, size.width * 0.4, size.height - 8);
+    path.quadraticBezierTo(size.width * 0.2, size.height - 15, 40, size.height);
+    
+    // Left edge with curve
+    path.lineTo(0, size.height - 25);
+    path.quadraticBezierTo(-5, size.height * 0.5, 15, size.height * 0.3);
+    path.quadraticBezierTo(25, size.height * 0.1, 30, 0);
+    
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+// Custom clipper for accent overlay
+class AccentShapeClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    
+    path.moveTo(0, size.height * 0.3);
+    path.quadraticBezierTo(size.width * 0.3, 0, size.width, size.height * 0.2);
+    path.lineTo(size.width, size.height * 0.8);
+    path.quadraticBezierTo(size.width * 0.7, size.height, 0, size.height * 0.7);
+    path.close();
+    
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+// Custom border for ink well
+class RadicalButtonBorder extends ShapeBorder {
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
+    return getOuterPath(rect, textDirection: textDirection);
+  }
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    Size size = rect.size;
+    Path path = Path();
+    
+    // Same shape as RadicalButtonClipper
+    path.moveTo(rect.left + 30, rect.top);
+    path.quadraticBezierTo(rect.left + size.width * 0.3, rect.top - 10, rect.left + size.width * 0.7, rect.top + 15);
+    path.quadraticBezierTo(rect.left + size.width * 0.9, rect.top + 25, rect.right - 20, rect.top);
+    path.lineTo(rect.right, rect.top + 20);
+    path.lineTo(rect.right - 15, rect.top + size.height * 0.6);
+    path.lineTo(rect.right, rect.bottom - 10);
+    path.quadraticBezierTo(rect.left + size.width * 0.8, rect.bottom + 5, rect.left + size.width * 0.4, rect.bottom - 8);
+    path.quadraticBezierTo(rect.left + size.width * 0.2, rect.bottom - 15, rect.left + 40, rect.bottom);
+    path.lineTo(rect.left, rect.bottom - 25);
+    path.quadraticBezierTo(rect.left - 5, rect.top + size.height * 0.5, rect.left + 15, rect.top + size.height * 0.3);
+    path.quadraticBezierTo(rect.left + 25, rect.top + size.height * 0.1, rect.left + 30, rect.top);
+    path.close();
+    
+    return path;
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {}
+
+  @override
+  ShapeBorder scale(double t) => this;
+}
 
 class QuickLogScreen extends StatefulWidget {
   const QuickLogScreen({super.key});
@@ -18,6 +116,10 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   late Animation<double> _pulseAnimation;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  bool _showConfetti = false;
+  List<Map<String, dynamic>> _upcomingClasses = [];
+  bool _isLoadingClasses = true;
 
   @override
   void initState() {
@@ -57,6 +159,15 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     ));
     _fadeController.forward();
     _slideController.forward();
+    
+    _loadUpcomingClasses();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh upcoming classes when screen becomes visible
+    _loadUpcomingClasses();
   }
 
   @override
@@ -67,242 +178,329 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     super.dispose();
   }
 
+  Future<void> _loadUpcomingClasses() async {
+    try {
+      final selectedStyles = await ProfileService.loadSelectedStyles();
+      final upcomingClasses = await CalendarService.getUpcomingClasses();
+      
+      // Filter classes based on selected martial arts styles
+      final filteredClasses = upcomingClasses.where((c) => 
+        _matchesSelectedStyle(c['classType'], selectedStyles)).toList();
+      
+      setState(() {
+        _upcomingClasses = filteredClasses.take(5).toList(); // Limit to 5 classes
+        _isLoadingClasses = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoadingClasses = false;
+      });
+    }
+  }
+
+  bool _matchesSelectedStyle(String classType, List<String> selectedStyles) {
+    if (selectedStyles.isEmpty) return true; // Show all if none selected
+    
+    // Mapping from class types to martial arts styles
+    final classTypeToStyleMapping = {
+      'BJJ': 'Brazilian Jiu-Jitsu (BJJ)',
+      'Brazilian Jiu-Jitsu': 'Brazilian Jiu-Jitsu (BJJ)',
+      'Muay Thai': 'Muay Thai',
+      'Boxing': 'Boxing',
+      'Wrestling': 'Wrestling',
+      'Judo': 'Judo',
+      'Karate': 'Karate',
+      'Taekwondo': 'Taekwondo',
+      'Kickboxing': 'Kickboxing',
+      'Krav Maga': 'Krav Maga',
+      'Aikido': 'Aikido',
+    };
+    
+    final matchingStyle = classTypeToStyleMapping[classType];
+    return matchingStyle != null && selectedStyles.contains(matchingStyle);
+  }
+
+  String _getDayName(int dayOfWeek) {
+    return CalendarService.getDayName(dayOfWeek);
+  }
+
+  String _formatTime(String timeString) {
+    return CalendarService.formatTime(timeString);
+  }
+
+
+  void _onLogSession() {
+    setState(() => _showConfetti = true);
+    HapticFeedback.mediumImpact();
+    
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LogSessionForm()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: AppColors.primaryGradient,
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildFantasticAppBar(),
-              _buildUpcomingClassesSection(),
-              Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: ResponsiveContainer(
-                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
-                      child: _buildFantasticContent(),
+      body: Stack(
+        children: [
+          // Main content
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: GhostRollTheme.primaryGradient,
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildAppBar(),
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 20),
+                              _buildWelcomeSection(),
+                              const SizedBox(height: 40),
+                              _buildMainLogButton(),
+                              const SizedBox(height: 40),
+                              _buildUpcomingClassesSection(),
+                              const SizedBox(height: 40),
+                              _buildStatsCard(),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          
+          // Confetti overlay
+          if (_showConfetti)
+            GhostConfetti(
+              onComplete: () => setState(() => _showConfetti = false),
+            ),
+        ],
       ),
     );
   }
 
-  Widget _buildFantasticAppBar() {
+  Widget _buildAppBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         children: [
           Container(
             height: 64,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              boxShadow: AppShadows.small,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: GhostRollTheme.medium,
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              child: Image.asset(
-                'assets/images/ghostroll_logo.png',
-                fit: BoxFit.contain,
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                  child: GlowText(
+                    text: 'GhostRoll',
+                    fontSize: 20,
+                    textColor: Colors.white,
+                    glowColor: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),
           const Spacer(),
-          GradientCard(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-            child: Text(
-              'Training Journal',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
         ],
       ),
     );
   }
 
-  Widget _buildUpcomingClassesSection() {
-    // TODO: Connect to real schedule data
-    final upcoming = [
-      {'day': 'Monday', 'time': '18:00', 'type': 'BJJ'},
-      {'day': 'Wednesday', 'time': '19:00', 'type': 'Muay Thai'},
-    ];
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      margin: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Upcoming Classes',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 8),
-          ...upcoming.map((c) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(Icons.calendar_today, color: Colors.white70, size: 18),
-                const SizedBox(width: 8),
-                Text(
-                  '${c['day']} - ${c['type']} @ ${c['time']}',
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
-                ),
-              ],
-            ),
-          )),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFantasticContent() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.xxl),
-      child: Column(
-        children: [
-          _buildFantasticMainButton(),
-          const SizedBox(height: AppSpacing.xl),
-          _buildFantasticTextContent(),
-          const SizedBox(height: AppSpacing.xl),
-          _buildFantasticStats(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFantasticMainButton() {
-    return GestureDetector(
-      onTap: () {
-        _pulseController.stop();
-        Navigator.push(
-          context,
-          PageRouteBuilder(
-            pageBuilder: (context, animation, secondaryAnimation) =>
-                const LogSessionForm(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return SlideTransition(
-                position: Tween<Offset>(
-                  begin: const Offset(0, 1),
-                  end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: animation,
-                  curve: Curves.easeOutCubic,
-                )),
-                child: child,
-              );
+  Widget _buildWelcomeSection() {
+    return Column(
+      children: [
+        ScaleTransition(
+          scale: _pulseAnimation,
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              // Ghost mascot tap effect
             },
-            transitionDuration: const Duration(milliseconds: 400),
-          ),
-        ).then((_) {
-          _pulseController.repeat(reverse: true);
-        });
-      },
-      child: AnimatedBuilder(
-        animation: _pulseAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _pulseAnimation.value,
             child: Container(
-              width: 280,
-              height: 100,
+              width: 120,
+              height: 120,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.white,
-                    Colors.grey[100]!,
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: Stack(
+                  children: [
+                    // Tight glow layer - positioned slightly offset to create edge glow
+                    Positioned(
+                      left: 2,
+                      top: 2,
+                      right: 2,
+                      bottom: 2,
+                      child: Image.asset(
+                        'assets/images/GhostRollBeltMascot.png',
+                        fit: BoxFit.contain,
+                        color: Colors.white.withOpacity(0.4),
+                      ),
+                    ),
+                    // Main image layer
+                    Positioned.fill(
+                      child: Image.asset(
+                        'assets/images/GhostRollBeltMascot.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ],
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withOpacity(0.3 * _pulseAnimation.value),
-                    blurRadius: 25 + (5 * _pulseAnimation.value),
-                    offset: const Offset(0, 12),
-                    spreadRadius: 3,
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
               ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          "Welcome back, Ghost 👻",
+          style: GhostRollTheme.headlineLarge.copyWith(
+            fontSize: 28,
+            fontWeight: FontWeight.bold,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          "Ready to log your training session?",
+          style: GhostRollTheme.titleMedium.copyWith(
+            color: GhostRollTheme.textSecondary,
+            fontSize: 18,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMainLogButton() {
+    return ScaleTransition(
+      scale: _pulseAnimation,
+      child: Container(
+        width: double.infinity,
+        height: 80,
+        child: Stack(
+          children: [
+            // Background with radical shape
+            ClipPath(
+              clipper: RadicalButtonClipper(),
+              child: Container(
+                width: double.infinity,
+                height: 80,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      Color(0xFF00D4FF), // Bright cyan
+                      Color(0xFF0099CC), // Deeper blue
+                      Color(0xFF006699), // Even deeper blue
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF00D4FF).withOpacity(0.4),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                      offset: const Offset(0, 8),
+                    ),
+                    BoxShadow(
+                      color: const Color(0xFF00D4FF).withOpacity(0.2),
+                      blurRadius: 40,
+                      spreadRadius: 0,
+                      offset: const Offset(0, 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            // Accent overlay with different shape
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: ClipPath(
+                clipper: AccentShapeClipper(),
+                child: Container(
+                  width: 120,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.white.withOpacity(0.2),
+                        Colors.white.withOpacity(0.1),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            // Interactive area
+            Positioned.fill(
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
-                  onTap: () {
-                    _pulseController.stop();
-                    Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            const LogSessionForm(),
-                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                          return SlideTransition(
-                            position: Tween<Offset>(
-                              begin: const Offset(0, 1),
-                              end: Offset.zero,
-                            ).animate(CurvedAnimation(
-                              parent: animation,
-                              curve: Curves.easeOutCubic,
-                            )),
-                            child: child,
-                          );
-                        },
-                        transitionDuration: const Duration(milliseconds: 400),
-                      ),
-                    ).then((_) {
-                      _pulseController.repeat(reverse: true);
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(20),
+                  onTap: _onLogSession,
+                  customBorder: RadicalButtonBorder(),
                   child: Center(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(
-                          Icons.add_circle,
-                          color: AppColors.primary,
-                          size: 32,
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.25),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.4),
+                              width: 2,
+                            ),
+                          ),
+                          child: const Icon(
+                            Icons.flash_on,
+                            color: Colors.white,
+                            size: 28,
+                          ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: 20),
                         Text(
-                          'QUICK LOG',
-                          style: TextStyle(
-                            color: AppColors.primary,
-                            fontSize: 24,
+                          'Log a Class',
+                          style: GhostRollTheme.headlineSmall.copyWith(
+                            color: Colors.white,
                             fontWeight: FontWeight.bold,
+                            fontSize: 24,
                             letterSpacing: 1.2,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.3),
+                                offset: const Offset(0, 2),
+                                blurRadius: 4,
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -311,63 +509,341 @@ class _QuickLogScreenState extends State<QuickLogScreen>
                 ),
               ),
             ),
-          );
-        },
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildFantasticTextContent() {
-    return Column(
-      children: [
-        Text(
-          'Log a Session',
-          style: Theme.of(context).textTheme.displayLarge,
+  Widget _buildUpcomingClassesSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: GhostRollTheme.medium,
+        border: Border.all(
+          color: GhostRollTheme.textSecondary.withOpacity(0.1),
+          width: 1,
         ),
-      ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: GhostRollTheme.flowGradient,
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.schedule,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Upcoming Classes',
+                style: GhostRollTheme.titleLarge.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_isLoadingClasses)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: CircularProgressIndicator(
+                  color: GhostRollTheme.flowBlue,
+                  strokeWidth: 2,
+                ),
+              ),
+            )
+          else if (_upcomingClasses.isEmpty)
+            Column(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: GhostRollTheme.overlayDark,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.calendar_today_outlined,
+                        color: GhostRollTheme.textSecondary,
+                        size: 32,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'No upcoming classes found',
+                        style: GhostRollTheme.titleMedium.copyWith(
+                          color: GhostRollTheme.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Add classes in Training Calendar or select martial arts styles in Profile',
+                        style: GhostRollTheme.bodySmall.copyWith(
+                          color: GhostRollTheme.textTertiary,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                GestureDetector(
+                  onTap: () {
+                    setState(() => _isLoadingClasses = true);
+                    _loadUpcomingClasses();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: GhostRollTheme.flowBlue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: GhostRollTheme.flowBlue.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.refresh,
+                          color: GhostRollTheme.flowBlue,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Refresh',
+                          style: GhostRollTheme.bodyMedium.copyWith(
+                            color: GhostRollTheme.flowBlue,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            )
+          else
+            Column(
+              children: _upcomingClasses.map((c) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: GhostRollTheme.overlayDark,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: GhostRollTheme.textSecondary.withOpacity(0.1),
+                    width: 1,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: _getClassTypeGradient(c['classType']),
+                        ),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        _getClassTypeIcon(c['classType']),
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            c['classType'],
+                            style: GhostRollTheme.titleMedium.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: GhostRollTheme.text,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.schedule,
+                                color: GhostRollTheme.textSecondary,
+                                size: 14,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                '${_getDayName(c['dayOfWeek'])} @ ${_formatTime(c['startTime'])}',
+                                style: GhostRollTheme.bodyMedium.copyWith(
+                                  color: GhostRollTheme.textSecondary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      color: GhostRollTheme.textTertiary,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              )).toList(),
+            ),
+        ],
+      ),
     );
   }
 
-  Widget _buildFantasticStats() {
-    return GradientCard(
-      padding: const EdgeInsets.all(AppSpacing.xl),
+  IconData _getClassTypeIcon(String classType) {
+    switch (classType.toLowerCase()) {
+      case 'bjj':
+      case 'brazilian jiu-jitsu':
+        return Icons.sports_martial_arts;
+      case 'muay thai':
+      case 'boxing':
+        return Icons.sports_mma;
+      case 'wrestling':
+        return Icons.fitness_center;
+      case 'judo':
+        return Icons.self_improvement;
+      case 'karate':
+      case 'taekwondo':
+        return Icons.sports_kabaddi;
+      case 'kickboxing':
+        return Icons.sports_martial_arts;
+      case 'krav maga':
+        return Icons.security;
+      case 'aikido':
+        return Icons.self_improvement;
+      default:
+        return Icons.sports_martial_arts;
+    }
+  }
+
+  List<Color> _getClassTypeGradient(String classType) {
+    switch (classType.toLowerCase()) {
+      case 'bjj':
+      case 'brazilian jiu-jitsu':
+        return [Colors.purple.shade600, Colors.purple.shade800];
+      case 'muay thai':
+        return [Colors.red.shade600, Colors.red.shade800];
+      case 'boxing':
+        return [Colors.orange.shade600, Colors.orange.shade800];
+      case 'wrestling':
+        return [Colors.blue.shade600, Colors.blue.shade800];
+      case 'judo':
+        return [Colors.green.shade600, Colors.green.shade800];
+      case 'karate':
+        return [Colors.amber.shade600, Colors.amber.shade800];
+      case 'taekwondo':
+        return [Colors.indigo.shade600, Colors.indigo.shade800];
+      case 'kickboxing':
+        return [Colors.teal.shade600, Colors.teal.shade800];
+      case 'krav maga':
+        return [Colors.grey.shade600, Colors.grey.shade800];
+      case 'aikido':
+        return [Colors.cyan.shade600, Colors.cyan.shade800];
+      default:
+        return GhostRollTheme.flowGradient;
+    }
+  }
+
+  Widget _buildStatsCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: GhostRollTheme.medium,
+        border: Border.all(
+          color: GhostRollTheme.textSecondary.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildStatItem('Sessions', '12', Icons.fitness_center),
-              _buildStatItem('Streak', '5 days', Icons.local_fire_department),
-              _buildStatItem('Hours', '24', Icons.timer),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: GhostRollTheme.grindGradient,
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  Icons.trending_up,
+                  color: Colors.white,
+                  size: 16,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Progress',
+                style: GhostRollTheme.titleMedium.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: AppSpacing.md),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem('Sessions', '12', Icons.fitness_center, GhostRollTheme.flowGradient),
+              _buildStatItem('Streak', '5', Icons.local_fire_department, GhostRollTheme.grindGradient),
+              _buildStatItem('Hours', '24', Icons.timer, GhostRollTheme.recoveryGradient),
+            ],
+          ),
+          const SizedBox(height: 16),
           Container(
             width: double.infinity,
-            height: 4,
+            height: 6,
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(2),
-              color: AppColors.overlayDark,
+              borderRadius: BorderRadius.circular(3),
+              color: GhostRollTheme.overlayDark,
             ),
             child: FractionallySizedBox(
               alignment: Alignment.centerLeft,
               widthFactor: 0.7,
               child: Container(
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [AppColors.accent, AppColors.accentLight],
+                  gradient: const LinearGradient(
+                    colors: GhostRollTheme.flowGradient,
                   ),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(3),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: 8),
           Text(
-            'Track your progress, techniques, and insights',
+            '70% to weekly goal',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textTertiary,
+            style: GhostRollTheme.bodySmall.copyWith(
+              color: GhostRollTheme.textSecondary,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -376,39 +852,42 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     );
   }
 
-  Widget _buildStatItem(String label, String value, IconData icon) {
+  Widget _buildStatItem(String label, String value, IconData icon, List<Color> gradient) {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppColors.accent.withOpacity(0.2),
-                AppColors.accentLight.withOpacity(0.1),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(AppRadius.md),
+            gradient: LinearGradient(colors: gradient),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: gradient[0].withOpacity(0.3),
+                blurRadius: 4,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Icon(
             icon,
-            color: AppColors.accent,
-            size: 24,
+            color: Colors.white,
+            size: 16,
           ),
         ),
-        const SizedBox(height: AppSpacing.xs),
+        const SizedBox(height: 6),
         Text(
           value,
-          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-            color: AppColors.textPrimary,
+          style: GhostRollTheme.titleSmall.copyWith(
             fontWeight: FontWeight.bold,
+            color: GhostRollTheme.text,
           ),
         ),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.textTertiary,
+          style: GhostRollTheme.bodySmall.copyWith(
             fontWeight: FontWeight.w500,
+            color: GhostRollTheme.textSecondary,
+            fontSize: 11,
           ),
         ),
       ],

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/session.dart';
-import '../theme/app_theme.dart';
-import '../widgets/common/app_components.dart';
+import '../theme/ghostroll_theme.dart';
 import 'session_detail_view.dart';
+import '../widgets/common/glow_text.dart';
 
 class JournalTimelineScreen extends StatefulWidget {
   const JournalTimelineScreen({super.key});
@@ -88,79 +88,49 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: AppColors.primaryGradient,
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              _buildFantasticAppBar(),
-              Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                    child: _sessions.isEmpty
-                        ? _buildFantasticEmptyState()
-                        : ResponsiveContainer(
-                            padding: const EdgeInsets.all(AppSpacing.lg),
-                            child: _buildFantasticTimeline(),
-                          ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFantasticAppBar() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
-      child: Row(
+      body: Stack(
         children: [
-          Container(
-            height: 64,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
-              boxShadow: AppShadows.small,
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppRadius.lg),
+          // Ghost watermark background
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.03,
               child: Image.asset(
-                'assets/images/ghostroll_logo.png',
-                fit: BoxFit.contain,
+                'assets/images/GhostRollBeltMascot.png',
+                fit: BoxFit.cover,
               ),
             ),
           ),
-          const Spacer(),
-          GradientCard(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.history,
-                  size: 16,
-                  color: AppColors.textTertiary,
-                ),
-                const SizedBox(width: AppSpacing.xs),
-                Text(
-                  '${_sessions.length} Sessions',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: AppColors.textSecondary,
-                    fontWeight: FontWeight.w600,
+          
+          // Main content
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: GhostRollTheme.primaryGradient,
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: SafeArea(
+              child: Column(
+                children: [
+                  _buildAppBar(),
+                  Expanded(
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: _sessions.isEmpty
+                            ? _buildEmptyState()
+                            : SingleChildScrollView(
+                                padding: const EdgeInsets.all(24),
+                                child: _buildTimeline(),
+                              ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -168,42 +138,117 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
     );
   }
 
-  Widget _buildFantasticEmptyState() {
-    return EmptyState(
-      icon: Icons.history,
-      title: 'No sessions yet',
-      subtitle: 'Log your first training session to get started',
-      actionText: 'Log Session',
-      onAction: () {
-        // Navigate to log session form
-      },
-    );
-  }
-
-  Widget _buildFantasticTimeline() {
-    return ListView.builder(
-      itemCount: _sessions.length,
-      itemBuilder: (context, index) {
-        final session = _sessions[index];
-        return AnimatedBuilder(
-          animation: _fadeController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, 20 * (1 - _fadeAnimation.value)),
-              child: Opacity(
-                opacity: _fadeAnimation.value,
-                child: _buildFantasticSessionCard(session, index),
+  Widget _buildAppBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            height: 64,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: GhostRollTheme.medium,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                  child: GlowText(
+                    text: 'GhostRoll',
+                    fontSize: 20,
+                    textColor: Colors.white,
+                    glowColor: Colors.white,
+                  ),
+                ),
               ),
-            );
-          },
-        );
-      },
+            ),
+          ),
+          const Spacer(),
+        ],
+      ),
     );
   }
 
-  Widget _buildFantasticSessionCard(Session session, int index) {
+  Widget _buildEmptyState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(48),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: GhostRollTheme.flowGradient,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: GhostRollTheme.glow,
+              ),
+              child: Icon(
+                Icons.history,
+                size: 64,
+                color: GhostRollTheme.text,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No sessions yet',
+              style: GhostRollTheme.headlineLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Log your first training session to get started',
+              style: GhostRollTheme.bodyMedium.copyWith(
+                color: GhostRollTheme.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () {
+                // Navigate to log session form
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Log Session'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: GhostRollTheme.flowBlue,
+                foregroundColor: GhostRollTheme.text,
+                elevation: 12,
+                shadowColor: GhostRollTheme.flowBlue.withOpacity(0.5),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(32),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeline() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Training History',
+          style: GhostRollTheme.headlineLarge.copyWith(
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 24),
+        ..._sessions.map((session) => _buildSessionCard(session)),
+      ],
+    );
+  }
+
+  Widget _buildSessionCard(Session session) {
     return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+      margin: const EdgeInsets.only(bottom: 16),
       child: GestureDetector(
         onTap: () {
           Navigator.push(
@@ -227,8 +272,17 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
             ),
           );
         },
-        child: GradientCard(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: GhostRollTheme.card,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: GhostRollTheme.medium,
+            border: Border.all(
+              color: GhostRollTheme.textSecondary.withOpacity(0.1),
+              width: 1,
+            ),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -238,7 +292,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                   Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -246,7 +300,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                               _getClassTypeColor(session.classType).withOpacity(0.1),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(AppRadius.sm),
+                          borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: _getClassTypeColor(session.classType).withOpacity(0.3),
                             width: 1,
@@ -258,21 +312,20 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                           size: 20,
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.sm),
+                      const SizedBox(width: 12),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             DateFormat('MMM dd, yyyy').format(session.date),
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              color: AppColors.textPrimary,
+                            style: GhostRollTheme.titleLarge.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             DateFormat('EEEE').format(session.date),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppColors.textTertiary,
+                            style: GhostRollTheme.bodySmall.copyWith(
+                              color: GhostRollTheme.textTertiary,
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -282,8 +335,8 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.sm,
-                      vertical: AppSpacing.xs,
+                      horizontal: 12,
+                      vertical: 6,
                     ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
@@ -292,7 +345,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                           _getClassTypeColor(session.classType).withOpacity(0.8),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(AppRadius.md),
+                      borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
                           color: _getClassTypeColor(session.classType).withOpacity(0.3),
@@ -303,7 +356,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                     ),
                     child: Text(
                       session.classTypeDisplay,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: GhostRollTheme.bodySmall.copyWith(
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
                       ),
@@ -311,75 +364,63 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                   ),
                 ],
               ),
-              const SizedBox(height: AppSpacing.md),
+              const SizedBox(height: 16),
               Text(
                 session.focusArea,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: AppColors.textPrimary,
+                style: GhostRollTheme.headlineMedium.copyWith(
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: AppSpacing.sm),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(AppSpacing.xs),
+                    padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.overlayMedium,
-                          AppColors.overlayLight,
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(AppRadius.xs),
+                      color: GhostRollTheme.overlayDark,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Icon(
                       Icons.timer,
                       size: 16,
-                      color: AppColors.textTertiary,
+                      color: GhostRollTheme.textTertiary,
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.xs),
+                  const SizedBox(width: 8),
                   Text(
                     '${session.rounds} rounds',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textTertiary,
+                    style: GhostRollTheme.bodyMedium.copyWith(
+                      color: GhostRollTheme.textTertiary,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
               if (session.techniquesLearned.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: 16),
                 Wrap(
-                  spacing: AppSpacing.xs,
-                  runSpacing: AppSpacing.xs,
+                  spacing: 8,
+                  runSpacing: 8,
                   children: session.techniquesLearned
                       .take(3)
                       .map((technique) => Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.xs,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  AppColors.overlayLight,
-                                  AppColors.overlayMedium,
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(AppRadius.md),
+                              color: GhostRollTheme.overlayDark,
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: AppColors.overlayMedium,
+                                color: GhostRollTheme.textSecondary.withOpacity(0.2),
                                 width: 1,
                               ),
                             ),
                             child: Text(
                               technique,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: GhostRollTheme.bodySmall.copyWith(
                                 fontWeight: FontWeight.w500,
-                                color: AppColors.textPrimary,
                               ),
                             ),
                           ))
@@ -387,11 +428,11 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                 ),
                 if (session.techniquesLearned.length > 3)
                   Padding(
-                    padding: const EdgeInsets.only(top: AppSpacing.xs),
+                    padding: const EdgeInsets.only(top: 8),
                     child: Text(
                       '+${session.techniquesLearned.length - 3} more techniques',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textTertiary,
+                      style: GhostRollTheme.bodySmall.copyWith(
+                        color: GhostRollTheme.textTertiary,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -407,11 +448,11 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   Color _getClassTypeColor(ClassType classType) {
     switch (classType) {
       case ClassType.gi:
-        return AppColors.info;
+        return GhostRollTheme.flowBlue;
       case ClassType.noGi:
-        return AppColors.accent;
+        return GhostRollTheme.grindRed;
       case ClassType.striking:
-        return AppColors.error;
+        return GhostRollTheme.recoveryGreen;
     }
   }
 
