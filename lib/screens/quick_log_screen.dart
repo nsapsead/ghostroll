@@ -102,7 +102,9 @@ class RadicalButtonBorder extends ShapeBorder {
 }
 
 class QuickLogScreen extends StatefulWidget {
-  const QuickLogScreen({super.key});
+  final VoidCallback? onNavigateToProfile;
+  
+  const QuickLogScreen({super.key, this.onNavigateToProfile});
 
   @override
   State<QuickLogScreen> createState() => _QuickLogScreenState();
@@ -120,6 +122,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   bool _showConfetti = false;
   List<Map<String, dynamic>> _upcomingClasses = [];
   bool _isLoadingClasses = true;
+  String _userName = 'Guest'; // Default to Guest
 
   @override
   void initState() {
@@ -161,6 +164,32 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     _slideController.forward();
     
     _loadUpcomingClasses();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    try {
+      final profileData = await ProfileService.loadProfileData();
+      setState(() {
+        String firstName = '';
+        
+        // Try to get firstName directly
+        if (profileData['firstName'] != null && profileData['firstName'].toString().trim().isNotEmpty) {
+          firstName = profileData['firstName'];
+        } 
+        // Fall back to splitting existing 'name' field for backward compatibility
+        else if (profileData['name'] != null && profileData['name'].toString().trim().isNotEmpty) {
+          final nameParts = profileData['name'].toString().trim().split(' ');
+          firstName = nameParts.isNotEmpty ? nameParts.first : '';
+        }
+        
+        _userName = firstName.isNotEmpty ? firstName : 'Guest';
+      });
+    } catch (e) {
+      setState(() {
+        _userName = 'Guest';
+      });
+    }
   }
 
   @override
@@ -168,6 +197,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     super.didChangeDependencies();
     // Refresh upcoming classes when screen becomes visible
     _loadUpcomingClasses();
+    _loadUserName(); // Also refresh user name
   }
 
   @override
@@ -271,10 +301,8 @@ class _QuickLogScreenState extends State<QuickLogScreen>
                               _buildWelcomeSection(),
                               const SizedBox(height: 40),
                               _buildMainLogButton(),
-                              const SizedBox(height: 40),
+                              const SizedBox(height: 60),
                               _buildUpcomingClassesSection(),
-                              const SizedBox(height: 40),
-                              _buildStatsCard(),
                               const SizedBox(height: 24),
                             ],
                           ),
@@ -340,8 +368,8 @@ class _QuickLogScreenState extends State<QuickLogScreen>
               // Ghost mascot tap effect
             },
             child: Container(
-              width: 120,
-              height: 120,
+              width: 160,
+              height: 160,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -375,17 +403,39 @@ class _QuickLogScreenState extends State<QuickLogScreen>
           ),
         ),
         const SizedBox(height: 24),
-        Text(
-          "Welcome back, Ghost 👻",
-          style: GhostRollTheme.headlineLarge.copyWith(
-            fontSize: 28,
-            fontWeight: FontWeight.bold,
+        GestureDetector(
+          onTap: _userName == 'Guest' ? () {
+            // Use callback to navigate to profile tab
+            widget.onNavigateToProfile?.call();
+          } : null,
+          child: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: GhostRollTheme.headlineLarge.copyWith(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+              children: [
+                TextSpan(text: "Welcome back, "),
+                TextSpan(
+                  text: _userName,
+                  style: _userName == 'Guest' 
+                    ? GhostRollTheme.headlineLarge.copyWith(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: GhostRollTheme.flowBlue,
+                        decoration: TextDecoration.underline,
+                        decorationColor: GhostRollTheme.flowBlue,
+                      )
+                    : null,
+                ),
+              ],
+            ),
           ),
-          textAlign: TextAlign.center,
         ),
         const SizedBox(height: 8),
         Text(
-          "Ready to log your training session?",
+          "Track the invisible work!",
           style: GhostRollTheme.titleMedium.copyWith(
             color: GhostRollTheme.textSecondary,
             fontSize: 18,
@@ -401,7 +451,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
       scale: _pulseAnimation,
       child: Container(
         width: double.infinity,
-        height: 80,
+        height: 120,
         child: Stack(
           children: [
             // Background with radical shape
@@ -409,7 +459,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
               clipper: RadicalButtonClipper(),
               child: Container(
                 width: double.infinity,
-                height: 80,
+                height: 120,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
@@ -466,45 +516,60 @@ class _QuickLogScreenState extends State<QuickLogScreen>
                 child: InkWell(
                   onTap: _onLogSession,
                   customBorder: RadicalButtonBorder(),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.25),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.4),
-                              width: 2,
-                            ),
-                          ),
-                          child: const Icon(
-                            Icons.flash_on,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 20),
-                        Text(
-                          'Log a Class',
-                          style: GhostRollTheme.headlineSmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                            letterSpacing: 1.2,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withOpacity(0.3),
-                                offset: const Offset(0, 2),
-                                blurRadius: 4,
+                  child: Stack(
+                    children: [
+                      // Centered horizontal layout with plus icon and text
+                      Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Plus icon on the left
+                            Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.25),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withOpacity(0.4),
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
+                              child: const Icon(
+                                Icons.add,
+                                color: Colors.white,
+                                size: 50,
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            // Text beside the icon
+                            Text(
+                              'Log a Class',
+                              style: GhostRollTheme.headlineSmall.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 28,
+                                letterSpacing: 1.2,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.4),
+                                    offset: const Offset(0, 2),
+                                    blurRadius: 6,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -767,130 +832,5 @@ class _QuickLogScreenState extends State<QuickLogScreen>
       default:
         return GhostRollTheme.flowGradient;
     }
-  }
-
-  Widget _buildStatsCard() {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: GhostRollTheme.card,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: GhostRollTheme.medium,
-        border: Border.all(
-          color: GhostRollTheme.textSecondary.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: GhostRollTheme.grindGradient,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.trending_up,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Progress',
-                style: GhostRollTheme.titleMedium.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildStatItem('Sessions', '12', Icons.fitness_center, GhostRollTheme.flowGradient),
-              _buildStatItem('Streak', '5', Icons.local_fire_department, GhostRollTheme.grindGradient),
-              _buildStatItem('Hours', '24', Icons.timer, GhostRollTheme.recoveryGradient),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            width: double.infinity,
-            height: 6,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(3),
-              color: GhostRollTheme.overlayDark,
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: 0.7,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: GhostRollTheme.flowGradient,
-                  ),
-                  borderRadius: BorderRadius.circular(3),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            '70% to weekly goal',
-            textAlign: TextAlign.center,
-            style: GhostRollTheme.bodySmall.copyWith(
-              color: GhostRollTheme.textSecondary,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(String label, String value, IconData icon, List<Color> gradient) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(colors: gradient),
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: gradient[0].withOpacity(0.3),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Icon(
-            icon,
-            color: Colors.white,
-            size: 16,
-          ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          value,
-          style: GhostRollTheme.titleSmall.copyWith(
-            fontWeight: FontWeight.bold,
-            color: GhostRollTheme.text,
-          ),
-        ),
-        Text(
-          label,
-          style: GhostRollTheme.bodySmall.copyWith(
-            fontWeight: FontWeight.w500,
-            color: GhostRollTheme.textSecondary,
-            fontSize: 11,
-          ),
-        ),
-      ],
-    );
   }
 } 

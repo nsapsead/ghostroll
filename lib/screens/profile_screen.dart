@@ -8,7 +8,9 @@ import '../theme/ghostroll_theme.dart';
 import '../widgets/common/glow_text.dart';
 
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({super.key});
+  final bool initialEditMode;
+  
+  const ProfileScreen({super.key, this.initialEditMode = false});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -17,10 +19,10 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
+  final _firstNameController = TextEditingController();
+  final _surnameController = TextEditingController();
   final _weightController = TextEditingController();
   final _heightController = TextEditingController();
-  final _experienceController = TextEditingController();
   
   // Date of birth for auto-calculated age
   DateTime? _dateOfBirth;
@@ -71,6 +73,9 @@ class _ProfileScreenState extends State<ProfileScreen>
   void initState() {
     super.initState();
     
+    // Initialize edit mode based on parameter
+    _isEditMode = widget.initialEditMode;
+    
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -109,10 +114,10 @@ class _ProfileScreenState extends State<ProfileScreen>
   void dispose() {
     _fadeController.dispose();
     _slideController.dispose();
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _surnameController.dispose();
     _weightController.dispose();
     _heightController.dispose();
-    _experienceController.dispose();
     super.dispose();
   }
 
@@ -145,11 +150,20 @@ class _ProfileScreenState extends State<ProfileScreen>
   Future<void> _loadProfileData() async {
     final data = await ProfileService.loadProfileData();
     setState(() {
-      _nameController.text = data['name'] ?? '';
+      // Handle backward compatibility with existing 'name' field
+      if (data['firstName'] != null && data['surname'] != null) {
+        _firstNameController.text = data['firstName'] ?? '';
+        _surnameController.text = data['surname'] ?? '';
+      } else if (data['name'] != null) {
+        // Split existing full name into first and last name
+        final nameParts = data['name'].toString().trim().split(' ');
+        _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
+        _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      }
+      
       _selectedGender = data['gender'] ?? 'Prefer not to say';
       _weightController.text = data['weight'] ?? '';
       _heightController.text = data['height'] ?? '';
-      _experienceController.text = data['experience'] ?? '';
       if (data['dob'] != null) {
         _dateOfBirth = DateTime.tryParse(data['dob']);
       }
@@ -183,12 +197,12 @@ class _ProfileScreenState extends State<ProfileScreen>
   void _saveProfile() {
     if (_formKey.currentState?.validate() ?? false) {
       final data = {
-        'name': _nameController.text,
+        'firstName': _firstNameController.text,
+        'surname': _surnameController.text,
         'gender': _selectedGender,
         'dob': _dateOfBirth?.toIso8601String(),
         'weight': _weightController.text,
         'height': _heightController.text,
-        'experience': _experienceController.text,
         'beltRanks': _beltRanks,
         'bjjStripes': _bjjStripes,
         'bjjInstructor': _bjjInstructor,
@@ -732,20 +746,40 @@ class _ProfileScreenState extends State<ProfileScreen>
             children: [
               Expanded(
                 child: TextFormField(
-                  controller: _nameController,
+                  controller: _firstNameController,
                   decoration: InputDecoration(
-                    labelText: 'Full Name',
+                    labelText: 'First Name',
                     prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary),
                   ),
                   validator: (value) {
                     if (value?.isEmpty ?? true) {
-                      return 'Please enter your name';
+                      return 'Please enter your first name';
                     }
                     return null;
                   },
                 ),
               ),
               const SizedBox(width: 16),
+              Expanded(
+                child: TextFormField(
+                  controller: _surnameController,
+                  decoration: InputDecoration(
+                    labelText: 'Surname',
+                    prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary),
+                  ),
+                  validator: (value) {
+                    if (value?.isEmpty ?? true) {
+                      return 'Please enter your surname';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () async {
@@ -772,6 +806,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  decoration: InputDecoration(
+                    labelText: 'Gender',
+                    prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary),
+                  ),
+                  items: _genderOptions.map((gender) {
+                    return DropdownMenuItem<String>(
+                      value: gender,
+                      child: Text(gender),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedGender = value ?? 'Prefer not to say';
+                    });
+                  },
                 ),
               ),
             ],
@@ -802,34 +857,6 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ],
         ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String>(
-            value: _selectedGender,
-            decoration: InputDecoration(
-              labelText: 'Gender',
-              prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary),
-            ),
-                               items: _genderOptions.map((gender) {
-                     return DropdownMenuItem<String>(
-                       value: gender,
-                       child: Text(gender),
-                     );
-                   }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedGender = value ?? 'Prefer not to say';
-              });
-            },
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _experienceController,
-            decoration: InputDecoration(
-              labelText: 'Years of Training Experience',
-              prefixIcon: Icon(Icons.sports_martial_arts, color: GhostRollTheme.textSecondary),
-            ),
-            keyboardType: TextInputType.number,
-          ),
           const SizedBox(height: 24),
           ] else ...[
             // Display mode
@@ -843,7 +870,11 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildPersonalInfoDisplay() {
     return Column(
       children: [
-        _buildCompactInfoRow('Full Name', _nameController.text.isEmpty ? 'Not specified' : _nameController.text, Icons.person_outline),
+        _buildCompactInfoRow('Full Name', 
+          (_firstNameController.text.isEmpty && _surnameController.text.isEmpty) 
+            ? 'Not specified' 
+            : '${_firstNameController.text} ${_surnameController.text}'.trim(), 
+          Icons.person_outline),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -860,8 +891,6 @@ class _ProfileScreenState extends State<ProfileScreen>
             Expanded(child: _buildCompactInfoRow('Height', _heightController.text.isEmpty ? 'Not specified' : '${_heightController.text} cm', Icons.height)),
           ],
         ),
-        const SizedBox(height: 8),
-        _buildCompactInfoRow('Training Experience', _experienceController.text.isEmpty ? 'Not specified' : '${_experienceController.text} years', Icons.sports_martial_arts),
       ],
     );
   }
@@ -1219,7 +1248,44 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ],
                 ),
                 const SizedBox(height: 8),
-                if (_beltRanksSaved[styleName] == true && _beltEditingMode[styleName] != true) ...[
+                if (!_isEditMode && _beltRanks[styleName] != null && _beltRanks[styleName]!.isNotEmpty) ...[
+                  // Display mode - show saved belt info
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: GhostRollTheme.overlayDark,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: GhostRollTheme.recoveryGreen.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.military_tech,
+                              color: GhostRollTheme.recoveryGreen,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                '${_beltRanks[styleName]}${(_bjjStripes[styleName] ?? 0) > 0 ? ' (${_bjjStripes[styleName]} stripe${(_bjjStripes[styleName] ?? 0) > 1 ? 's' : ''})' : ''}',
+                                style: GhostRollTheme.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        _buildBeltVisualization(styleName, belts),
+                      ],
+                    ),
+                  ),
+                ] else if (_beltRanksSaved[styleName] == true && _beltEditingMode[styleName] != true) ...[
                   // Saved state - show belt info and edit button
                   Container(
                     padding: const EdgeInsets.all(16),

@@ -23,14 +23,33 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
   late Animation<double> _fadeAnimation;
   int _selectedIndex = 0;
   bool _showConfetti = false;
+  bool _profileShouldStartInEditMode = false;
 
-  final List<Widget> _screens = [
-    const QuickLogScreen(),
+  List<Widget> get _screens => [
+    QuickLogScreen(onNavigateToProfile: _navigateToProfileInEditMode),
     const JournalTimelineScreen(),
     const TrainingCalendarScreen(),
     const GoalsScreen(),
-    const ProfileScreen(),
+    ProfileScreen(initialEditMode: _profileShouldStartInEditMode),
   ];
+
+  void _navigateToProfileInEditMode() {
+    setState(() {
+      _profileShouldStartInEditMode = true;
+      _selectedIndex = 4; // Profile tab index
+    });
+    _animationController.reset();
+    _animationController.forward();
+    
+    // Reset the edit mode flag after a brief delay
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (mounted) {
+        setState(() {
+          _profileShouldStartInEditMode = false;
+        });
+      }
+    });
+  }
 
   @override
   void initState() {
