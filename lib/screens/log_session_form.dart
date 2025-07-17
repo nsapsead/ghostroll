@@ -5,6 +5,7 @@ import '../models/session.dart';
 import '../theme/ghostroll_theme.dart';
 import '../services/calendar_service.dart';
 import '../services/profile_service.dart';
+import '../widgets/common/glow_text.dart';
 
 class LogSessionForm extends StatefulWidget {
   const LogSessionForm({super.key});
@@ -246,17 +247,20 @@ class _LogSessionFormState extends State<LogSessionForm>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: GhostRollTheme.background,
-      appBar: AppBar(
-        title: Text(
-          'Log Training Session',
-          style: GhostRollTheme.headlineSmall,
-        ),
-        backgroundColor: GhostRollTheme.background,
-        elevation: 0,
-        iconTheme: const IconThemeData(color: GhostRollTheme.text),
-      ),
       body: Stack(
         children: [
+          // Background gradient
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: GhostRollTheme.primaryGradient,
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+          
           // Ghost watermark background
           Positioned.fill(
             child: Opacity(
@@ -269,34 +273,82 @@ class _LogSessionFormState extends State<LogSessionForm>
           ),
           
           // Main content
-          FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildHeader(),
-                      const SizedBox(height: 32),
-                      _buildClassTypeSelector(),
-                      const SizedBox(height: 24),
-                      if (_isScheduledClass) _buildScheduledClassSection(),
-                      if (!_isScheduledClass) _buildDropInClassSection(),
-                      const SizedBox(height: 24),
-                      _buildSessionDetailsSection(),
-                      const SizedBox(height: 24),
-                      _buildSelfReflectionSection(),
-                      const SizedBox(height: 24),
-                      _buildSaveButton(),
-                      const SizedBox(height: 24),
-                    ],
+          SafeArea(
+            child: Column(
+              children: [
+                _buildAppBar(),
+                Expanded(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,
+                    child: SlideTransition(
+                      position: _slideAnimation,
+                      child: Form(
+                        key: _formKey,
+                        child: SingleChildScrollView(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(height: 12),
+                              _buildClassTypeSelector(),
+                              const SizedBox(height: 24),
+                              if (_isScheduledClass) _buildScheduledClassSection(),
+                              if (!_isScheduledClass) _buildDropInClassSection(),
+                              const SizedBox(height: 24),
+                              _buildSessionDetailsSection(),
+                              const SizedBox(height: 24),
+                              _buildSelfReflectionSection(),
+                              const SizedBox(height: 24),
+                              _buildSaveButton(),
+                              const SizedBox(height: 24),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAppBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      child: Row(
+        children: [
+          Container(
+            height: 64,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: GhostRollTheme.medium,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Center(
+                  child: GlowText(
+                    text: 'GhostRoll',
+                    fontSize: 20,
+                    textColor: Colors.white,
+                    glowColor: Colors.white,
                   ),
                 ),
               ),
+            ),
+          ),
+          const Spacer(),
+          IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(
+              Icons.close,
+              color: Colors.white,
+              size: 28,
             ),
           ),
         ],

@@ -59,4 +59,22 @@ class InstructorService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_instructorsKey);
   }
+
+  // Get instructors for a specific martial arts style
+  static Future<List<Map<String, dynamic>>> getInstructorsForStyle(String style) async {
+    final instructors = await loadInstructors();
+    return instructors.where((instructor) => instructor['style'] == style).toList();
+  }
+
+  // Get all instructor names for a specific style (useful for dropdowns)
+  static Future<List<String>> getInstructorNamesForStyle(String style) async {
+    final instructors = await getInstructorsForStyle(style);
+    return instructors.map((instructor) => instructor['name'] as String).toList();
+  }
+
+  // Get primary instructor for a style (first one in the list)
+  static Future<String?> getPrimaryInstructorForStyle(String style) async {
+    final instructorNames = await getInstructorNamesForStyle(style);
+    return instructorNames.isNotEmpty ? instructorNames.first : null;
+  }
 } 
