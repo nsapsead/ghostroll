@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import '../models/session.dart';
 import '../theme/ghostroll_theme.dart';
 import 'session_detail_view.dart';
+import 'log_session_form.dart';
+import '../services/session_service.dart';
 import '../widgets/common/glow_text.dart';
 
 class JournalTimelineScreen extends StatefulWidget {
@@ -19,35 +21,21 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Mock data for demonstration
-  final List<Session> _sessions = [
-    Session(
-      id: '1',
-      date: DateTime.now().subtract(const Duration(days: 1)),
-      classType: ClassType.gi,
-      focusArea: 'Guard Passes',
-      rounds: 5,
-      techniquesLearned: ['Double Leg Pass', 'Knee Cut Pass'],
-      sparringNotes: 'Felt strong in top position',
-      reflection: 'Need to work on guard retention',
-    ),
-    Session(
-      id: '2',
-      date: DateTime.now().subtract(const Duration(days: 3)),
-      classType: ClassType.noGi,
-      focusArea: 'Leg Locks',
-      rounds: 3,
-      techniquesLearned: ['Heel Hook', 'Ankle Lock'],
-    ),
-    Session(
-      id: '3',
-      date: DateTime.now().subtract(const Duration(days: 5)),
-      classType: ClassType.striking,
-      focusArea: 'Boxing Combinations',
-      rounds: 4,
-      techniquesLearned: ['Jab-Cross-Hook', 'Body Shots'],
-    ),
-  ];
+  // Session data
+  List<Session> _sessions = [];
+  List<Session> _filteredSessions = [];
+  bool _isLoading = true;
+  
+  // Search and filter state
+  final TextEditingController _searchController = TextEditingController();
+  ClassType? _selectedClassTypeFilter;
+  String? _selectedInstructorFilter;
+  DateTime? _startDateFilter;
+  DateTime? _endDateFilter;
+  bool _showFilters = false;
+  
+  // Available filter options
+  List<String> _availableInstructors = [];
 
   @override
   void initState() {
@@ -76,13 +64,113 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
     ));
     _fadeController.forward();
     _slideController.forward();
+    
+    _loadSessions();
+    _searchController.addListener(_performSearch);
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
     _slideController.dispose();
+    _searchController.dispose();
     super.dispose();
+  }
+
+  // Load sessions from storage
+  Future<void> _loadSessions() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      final sessions = await SessionService.loadSessions();
+      
+      // Get unique instructors for filter dropdown
+      final instructors = sessions
+          .where((s) => s.instructor != null && s.instructor!.isNotEmpty)
+          .map((s) => s.instructor!)
+          .toSet()
+          .toList();
+      
+      setState(() {
+        _sessions = sessions;
+        _filteredSessions = sessions;
+        _availableInstructors = instructors;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      print('Error loading sessions: $e');
+    }
+  }
+
+  // Refresh sessions when returning from other screens
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadSessions();
+  }
+
+  // Perform search and filtering
+  void _performSearch() {
+    final query = _searchController.text.toLowerCase();
+    
+    setState(() {
+      _filteredSessions = _sessions.where((session) {
+        // Text search
+        bool matchesSearch = true;
+        if (query.isNotEmpty) {
+          matchesSearch = session.focusArea.toLowerCase().contains(query) ||
+              session.techniquesLearned.any((technique) => technique.toLowerCase().contains(query)) ||
+              (session.sparringNotes?.toLowerCase().contains(query) ?? false) ||
+              (session.reflection?.toLowerCase().contains(query) ?? false) ||
+              (session.instructor?.toLowerCase().contains(query) ?? false);
+        }
+        
+        // Class type filter
+        bool matchesClassType = _selectedClassTypeFilter == null || 
+            session.classType == _selectedClassTypeFilter;
+        
+        // Instructor filter
+        bool matchesInstructor = _selectedInstructorFilter == null ||
+            session.instructor == _selectedInstructorFilter;
+        
+        // Date range filter
+        bool matchesDateRange = true;
+        if (_startDateFilter != null && _endDateFilter != null) {
+          matchesDateRange = session.date.isAfter(_startDateFilter!.subtract(const Duration(days: 1))) &&
+              session.date.isBefore(_endDateFilter!.add(const Duration(days: 1)));
+        }
+        
+        return matchesSearch && matchesClassType && matchesInstructor && matchesDateRange;
+      }).toList();
+    });
+  }
+
+  // Clear all filters
+  void _clearFilters() {
+    setState(() {
+      _selectedClassTypeFilter = null;
+      _selectedInstructorFilter = null;
+      _startDateFilter = null;
+      _endDateFilter = null;
+      _searchController.clear();
+    });
+    _performSearch();
+  }
+
+  // Navigate to log session form
+  void _navigateToLogSession() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const LogSessionForm()),
+    ).then((_) {
+      // Refresh sessions when returning
+      _loadSessions();
+    });
   }
 
   @override
@@ -120,12 +208,23 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                       opacity: _fadeAnimation,
                       child: SlideTransition(
                         position: _slideAnimation,
-                        child: _sessions.isEmpty
-                            ? _buildEmptyState()
-                            : SingleChildScrollView(
-                                padding: const EdgeInsets.all(24),
-                                child: _buildTimeline(),
-                              ),
+                        child: _isLoading
+                            ? _buildLoadingState()
+                            : _sessions.isEmpty
+                                ? _buildEmptyState()
+                                : Column(
+                                    children: [
+                                      _buildSearchAndFilters(),
+                                      Expanded(
+                                        child: _filteredSessions.isEmpty
+                                            ? _buildNoResultsState()
+                                            : SingleChildScrollView(
+                                                padding: const EdgeInsets.all(24),
+                                                child: _buildTimeline(),
+                                              ),
+                                      ),
+                                    ],
+                                  ),
                       ),
                     ),
                   ),
@@ -134,6 +233,276 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return const Center(
+      child: CircularProgressIndicator(
+        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+      ),
+    );
+  }
+
+  Widget _buildSearchAndFilters() {
+    return Container(
+      margin: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          // Search bar
+          Container(
+            decoration: BoxDecoration(
+              color: GhostRollTheme.card,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: GhostRollTheme.medium,
+            ),
+            child: TextField(
+              controller: _searchController,
+              style: TextStyle(color: GhostRollTheme.text),
+              decoration: InputDecoration(
+                hintText: 'Search techniques, notes, focus areas...',
+                hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
+                prefixIcon: Icon(Icons.search, color: GhostRollTheme.textSecondary),
+                suffixIcon: _searchController.text.isNotEmpty
+                    ? IconButton(
+                        onPressed: () => _searchController.clear(),
+                        icon: Icon(Icons.clear, color: GhostRollTheme.textSecondary),
+                      )
+                    : IconButton(
+                        onPressed: () => setState(() => _showFilters = !_showFilters),
+                        icon: Icon(
+                          _showFilters ? Icons.filter_list : Icons.tune,
+                          color: _hasActiveFilters() ? GhostRollTheme.flowBlue : GhostRollTheme.textSecondary,
+                        ),
+                      ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.all(16),
+              ),
+            ),
+          ),
+          
+          // Filters panel
+          if (_showFilters) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: GhostRollTheme.card,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: GhostRollTheme.medium,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Filters',
+                        style: GhostRollTheme.titleMedium.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (_hasActiveFilters())
+                        TextButton(
+                          onPressed: _clearFilters,
+                          child: Text(
+                            'Clear All',
+                            style: TextStyle(color: GhostRollTheme.grindRed),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // Class type filter
+                  Text(
+                    'Class Type',
+                    style: GhostRollTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: ClassType.values.map((classType) {
+                      final isSelected = _selectedClassTypeFilter == classType;
+                      return FilterChip(
+                        selected: isSelected,
+                        label: Text(classType.displayName),
+                        onSelected: (selected) {
+                          setState(() {
+                            _selectedClassTypeFilter = selected ? classType : null;
+                          });
+                          _performSearch();
+                        },
+                        selectedColor: _getClassTypeColor(classType).withOpacity(0.3),
+                        checkmarkColor: _getClassTypeColor(classType),
+                      );
+                    }).toList(),
+                  ),
+                  
+                  if (_availableInstructors.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Instructor',
+                      style: GhostRollTheme.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    DropdownButtonFormField<String>(
+                      value: _selectedInstructorFilter,
+                      dropdownColor: GhostRollTheme.card,
+                      decoration: InputDecoration(
+                        hintText: 'Select instructor',
+                        hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      items: [
+                        DropdownMenuItem(
+                          value: null,
+                          child: Text('All Instructors', style: TextStyle(color: GhostRollTheme.textSecondary)),
+                        ),
+                        ..._availableInstructors.map((instructor) => DropdownMenuItem(
+                          value: instructor,
+                          child: Text(instructor, style: TextStyle(color: GhostRollTheme.text)),
+                        )),
+                      ],
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedInstructorFilter = value;
+                        });
+                        _performSearch();
+                      },
+                    ),
+                  ],
+                  
+                  const SizedBox(height: 16),
+                  Text(
+                    'Date Range',
+                    style: GhostRollTheme.bodyMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _startDateFilter ?? DateTime.now().subtract(const Duration(days: 30)),
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _startDateFilter = picked;
+                              });
+                              _performSearch();
+                            }
+                          },
+                          child: Text(
+                            _startDateFilter != null 
+                                ? DateFormat('MMM dd').format(_startDateFilter!)
+                                : 'Start Date',
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: _endDateFilter ?? DateTime.now(),
+                              firstDate: _startDateFilter ?? DateTime(2020),
+                              lastDate: DateTime.now(),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _endDateFilter = picked;
+                              });
+                              _performSearch();
+                            }
+                          },
+                          child: Text(
+                            _endDateFilter != null 
+                                ? DateFormat('MMM dd').format(_endDateFilter!)
+                                : 'End Date',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  bool _hasActiveFilters() {
+    return _selectedClassTypeFilter != null ||
+           _selectedInstructorFilter != null ||
+           _startDateFilter != null ||
+           _endDateFilter != null;
+  }
+
+  Widget _buildNoResultsState() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(48),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: GhostRollTheme.flowGradient,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: GhostRollTheme.glow,
+              ),
+              child: Icon(
+                Icons.search_off,
+                size: 64,
+                color: GhostRollTheme.text,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'No sessions found',
+              style: GhostRollTheme.headlineLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              _hasActiveFilters() 
+                  ? 'Try adjusting your filters or search terms'
+                  : 'No sessions match your search',
+              style: GhostRollTheme.bodyMedium.copyWith(
+                color: GhostRollTheme.textSecondary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: _clearFilters,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: GhostRollTheme.flowBlue,
+                foregroundColor: GhostRollTheme.text,
+              ),
+              child: const Text('Clear Filters'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -208,9 +577,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
             ),
             const SizedBox(height: 32),
             ElevatedButton.icon(
-              onPressed: () {
-                // Navigate to log session form
-              },
+              onPressed: _navigateToLogSession,
               icon: const Icon(Icons.add),
               label: const Text('Log Session'),
               style: ElevatedButton.styleFrom(
@@ -241,7 +608,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
           ),
         ),
         const SizedBox(height: 24),
-        ..._sessions.map((session) => _buildSessionCard(session)),
+        ..._filteredSessions.map((session) => _buildSessionCard(session)),
       ],
     );
   }

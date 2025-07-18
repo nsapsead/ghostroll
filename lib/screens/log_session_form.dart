@@ -5,6 +5,7 @@ import '../models/session.dart';
 import '../theme/ghostroll_theme.dart';
 import '../services/calendar_service.dart';
 import '../services/profile_service.dart';
+import '../services/session_service.dart';
 import '../widgets/common/glow_text.dart';
 
 class LogSessionForm extends StatefulWidget {
@@ -44,6 +45,7 @@ class _LogSessionFormState extends State<LogSessionForm>
   final TextEditingController _winsController = TextEditingController();
   final TextEditingController _stuckController = TextEditingController();
   final TextEditingController _questionsController = TextEditingController();
+  final TextEditingController _instructorController = TextEditingController();
   
   final List<Map<String, String>> _preClassMoods = [
     {'emoji': '😟', 'label': 'Anxious'},
@@ -110,6 +112,7 @@ class _LogSessionFormState extends State<LogSessionForm>
     _winsController.dispose();
     _stuckController.dispose();
     _questionsController.dispose();
+    _instructorController.dispose();
     super.dispose();
   }
 
@@ -130,6 +133,7 @@ class _LogSessionFormState extends State<LogSessionForm>
         if (_upcomingClasses.isNotEmpty) {
           _selectedScheduledClass = _upcomingClasses.first;
           _instructor = _selectedScheduledClass!['instructor'] ?? '';
+          _instructorController.text = _instructor;
         }
       });
     } catch (e) {
@@ -232,13 +236,39 @@ class _LogSessionFormState extends State<LogSessionForm>
         reflection: null,
         mood: _selectedMood,
         location: location,
-        instructor: _instructor.isNotEmpty ? _instructor : null,
+        instructor: _instructorController.text.isNotEmpty ? _instructorController.text : null,
         duration: 60, // Default to 60 for now
         isScheduledClass: _isScheduledClass,
       );
 
-      if (mounted) {
-        Navigator.pop(context, session);
+      try {
+        // Save session to journal
+        await SessionService.addSession(session);
+        
+        if (mounted) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text('Session logged successfully!'),
+              backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+          
+          Navigator.pop(context, session);
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to save session: $e'),
+              backgroundColor: GhostRollTheme.grindRed.withOpacity(0.9),
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+          );
+        }
       }
     }
   }
@@ -575,6 +605,7 @@ class _LogSessionFormState extends State<LogSessionForm>
                     setState(() {
                       _selectedScheduledClass = classEntry;
                       _instructor = classEntry['instructor'] ?? '';
+                      _instructorController.text = _instructor;
                     });
                     HapticFeedback.lightImpact();
                   },
@@ -967,7 +998,8 @@ class _LogSessionFormState extends State<LogSessionForm>
           ),
           const SizedBox(height: 20),
           TextFormField(
-            controller: TextEditingController(text: _instructor),
+            controller: _instructorController,
+            textDirection: TextDirection.ltr,
             decoration: InputDecoration(
               labelText: 'Instructor (if applicable)',
               labelStyle: TextStyle(color: GhostRollTheme.textSecondary),

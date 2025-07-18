@@ -1,5 +1,18 @@
 enum ClassType { gi, noGi, striking }
 
+extension ClassTypeExtension on ClassType {
+  String get displayName {
+    switch (this) {
+      case ClassType.gi:
+        return 'Gi';
+      case ClassType.noGi:
+        return 'No-Gi';
+      case ClassType.striking:
+        return 'Striking';
+    }
+  }
+}
+
 class Session {
   final String id;
   final DateTime date;

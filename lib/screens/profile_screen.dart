@@ -108,10 +108,22 @@ class _ProfileScreenState extends State<ProfileScreen>
     _loadInstructors();
     _loadSelectedStyles();
     _loadProfileData();
+    
+    // Add listeners for auto-save
+    _firstNameController.addListener(_autoSaveProfile);
+    _surnameController.addListener(_autoSaveProfile);
+    _weightController.addListener(_autoSaveProfile);
+    _heightController.addListener(_autoSaveProfile);
   }
 
   @override
   void dispose() {
+    // Remove listeners before disposing controllers
+    _firstNameController.removeListener(_autoSaveProfile);
+    _surnameController.removeListener(_autoSaveProfile);
+    _weightController.removeListener(_autoSaveProfile);
+    _heightController.removeListener(_autoSaveProfile);
+    
     _fadeController.dispose();
     _slideController.dispose();
     _firstNameController.dispose();
@@ -219,6 +231,27 @@ class _ProfileScreenState extends State<ProfileScreen>
           ),
         ),
       );
+    }
+  }
+
+  // Auto-save profile data without showing snackbar
+  void _autoSaveProfile() {
+    try {
+      final data = {
+        'firstName': _firstNameController.text,
+        'surname': _surnameController.text,
+        'gender': _selectedGender,
+        'dob': _dateOfBirth?.toIso8601String(),
+        'weight': _weightController.text,
+        'height': _heightController.text,
+        'beltRanks': _beltRanks,
+        'bjjStripes': _bjjStripes,
+        'bjjInstructor': _bjjInstructor,
+        'customBeltOrders': _customBeltOrders,
+      };
+      ProfileService.saveProfileData(data);
+    } catch (e) {
+      print('Error auto-saving profile: $e');
     }
   }
 
@@ -826,6 +859,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     setState(() {
                       _selectedGender = value ?? 'Prefer not to say';
                     });
+                    _autoSaveProfile(); // Auto-save when gender changes
                   },
                 ),
               ),
@@ -1360,6 +1394,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       setState(() {
                         _beltRanks[styleName] = value ?? '';
                       });
+                      _autoSaveProfile(); // Auto-save when belt rank changes
                     },
                       ),
                 ],

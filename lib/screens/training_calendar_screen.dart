@@ -7,6 +7,7 @@ import '../widgets/calendar/monthly_calendar_view.dart';
 import '../services/calendar_service.dart';
 import '../services/profile_service.dart';
 import '../services/instructor_service.dart';
+import '../services/session_service.dart';
 
 enum CalendarViewType { weekly, monthly }
 
@@ -604,9 +605,6 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
   }
 
   void _showAddRecurringClassDialog() async {
-    print('DEBUG: Available class types: $_availableClassTypes');
-    print('DEBUG: Is loading class types: $_isLoadingClassTypes');
-    
     int dayOfWeek = DateTime.now().weekday;
     TimeOfDay? startTime;
     TimeOfDay? endTime;
@@ -617,8 +615,6 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
     String? instructor;
     List<String> availableInstructors = [];
     final formKey = GlobalKey<FormState>();
-    
-    print('DEBUG: Initial class type selected: $classType');
     
     // If no class types available, show error and return
     if (_availableClassTypes.isEmpty) {
@@ -638,7 +634,6 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
       final styleName = _convertClassTypeToStyleName(classType);
       availableInstructors = await InstructorService.getInstructorNamesForStyle(styleName);
       instructor = availableInstructors.isNotEmpty ? availableInstructors.first : null;
-      print('DEBUG: Found ${availableInstructors.length} instructors: $availableInstructors');
     }
 
     await showDialog(
@@ -833,6 +828,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                             )
                           : TextFormField(
                               initialValue: instructor,
+                              textDirection: TextDirection.ltr,
                               decoration: InputDecoration(
                                 labelText: 'Instructor (optional)',
                                 labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -849,6 +845,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                       if (availableInstructors.isNotEmpty && instructor == '') ...[
                         const SizedBox(height: 16),
                         TextFormField(
+                          textDirection: TextDirection.ltr,
                           decoration: InputDecoration(
                             labelText: 'Custom Instructor Name',
                             labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -864,6 +861,8 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                       ],
                       const SizedBox(height: 16),
                       TextFormField(
+                        initialValue: location,
+                        textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           labelText: 'Location (optional)',
                           labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -878,6 +877,8 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
+                        initialValue: notes,
+                        textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           labelText: 'Notes (optional)',
                           labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -1018,6 +1019,12 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
     String? notes;
     String? instructor;
     final formKey = GlobalKey<FormState>();
+    
+    // Text controllers for better text input handling
+    final titleController = TextEditingController();
+    final instructorController = TextEditingController();
+    final locationController = TextEditingController();
+    final notesController = TextEditingController();
 
     await showDialog(
       context: context,
@@ -1040,6 +1047,8 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       TextFormField(
+                        controller: titleController,
+                        textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           labelText: 'Event Title',
                           labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -1160,6 +1169,8 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
+                        controller: instructorController,
+                        textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           labelText: 'Instructor (optional)',
                           labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -1174,6 +1185,8 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
+                        controller: locationController,
+                        textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           labelText: 'Location (optional)',
                           labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -1188,6 +1201,8 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                       ),
                       const SizedBox(height: 16),
                       TextFormField(
+                        controller: notesController,
+                        textDirection: TextDirection.ltr,
                         decoration: InputDecoration(
                           labelText: 'Notes (optional)',
                           labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -1213,14 +1228,14 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                   onPressed: () async {
                     if (formKey.currentState!.validate() && classType != null && startTime != null && endTime != null) {
                       final newEvent = CalendarService.createDropInEvent(
-                        title: title,
+                        title: titleController.text,
                         classType: classType!,
                         date: selectedDate,
                         startTime: '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}',
                         endTime: '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}',
-                        instructor: instructor,
-                        location: location,
-                        notes: notes,
+                        instructor: instructorController.text.isNotEmpty ? instructorController.text : null,
+                        location: locationController.text.isNotEmpty ? locationController.text : null,
+                        notes: notesController.text.isNotEmpty ? notesController.text : null,
                       );
                       
                       try {
@@ -1261,7 +1276,13 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
           },
         );
       },
-    );
+    ).then((_) {
+      // Dispose controllers when dialog is closed
+      titleController.dispose();
+      instructorController.dispose();
+      locationController.dispose();
+      notesController.dispose();
+    });
   }
 
   void _showEventDetailsDialog(CalendarEvent event) {
@@ -1322,6 +1343,17 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text('Close', style: TextStyle(color: GhostRollTheme.textSecondary)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _logAttendanceFromEvent(event);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: GhostRollTheme.recoveryGreen,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Log Attendance'),
             ),
             if (isRecurring) ...[
               PopupMenuButton<String>(
@@ -1609,6 +1641,66 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
             );
           }
         }
+      }
+    }
+  }
+
+  Future<void> _logAttendanceFromEvent(CalendarEvent event) async {
+    try {
+      // Determine the date for the session
+      DateTime sessionDate;
+      if (event.type == CalendarEventType.dropInEvent && event.specificDate != null) {
+        sessionDate = event.specificDate!;
+      } else {
+        // For recurring events, use today's date
+        sessionDate = DateTime.now();
+      }
+
+      // Create session from calendar event
+      final session = SessionService.createSessionFromCalendarEvent(
+        eventTitle: event.title,
+        classType: event.classType,
+        date: sessionDate,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        instructor: event.instructor,
+        location: event.location,
+        notes: event.notes,
+      );
+
+      // Add session to journal
+      await SessionService.addSession(session);
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Attendance logged to journal successfully!'),
+            backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            action: SnackBarAction(
+              label: 'View Journal',
+              textColor: Colors.white,
+              onPressed: () {
+                // Navigate to journal tab
+                Navigator.pushReplacementNamed(context, '/journal-timeline');
+              },
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error logging attendance: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to log attendance: $e'),
+            backgroundColor: GhostRollTheme.grindRed.withOpacity(0.9),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
       }
     }
   }
