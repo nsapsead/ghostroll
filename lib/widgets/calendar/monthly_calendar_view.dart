@@ -73,7 +73,6 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
       ),
       child: Column(
         children: [
-          _buildMonthHeader(),
           _buildDaysOfWeekHeader(),
           Expanded(
             child: _buildCalendarGrid(),
@@ -110,8 +109,12 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
 
   Widget _buildDaysOfWeekHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.fromLTRB(0, 16, 0, 8),
       decoration: BoxDecoration(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(16),
+          topRight: Radius.circular(16),
+        ),
         border: Border(
           bottom: BorderSide(
             color: GhostRollTheme.textSecondary.withOpacity(0.2),

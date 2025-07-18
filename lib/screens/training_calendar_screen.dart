@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/ghostroll_theme.dart';
+import '../theme/app_theme.dart';
 import '../widgets/common/glow_text.dart';
 import '../widgets/calendar/weekly_calendar_view.dart';
 import '../widgets/calendar/monthly_calendar_view.dart';
@@ -194,9 +195,15 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
   }
 
   Widget _buildViewControls() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-      padding: const EdgeInsets.all(4),
+      margin: EdgeInsets.symmetric(
+        horizontal: AppSpacing.responsiveHorizontal(screenWidth), 
+        vertical: 8
+      ),
+      padding: EdgeInsets.all(isSmallScreen ? 3 : 4),
       decoration: BoxDecoration(
         color: GhostRollTheme.card,
         borderRadius: BorderRadius.circular(16),
@@ -211,7 +218,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
               CalendarViewType.weekly,
             ),
           ),
-          const SizedBox(width: 4),
+          SizedBox(width: isSmallScreen ? 3 : 4),
           Expanded(
             child: _buildViewButton(
               'Month',

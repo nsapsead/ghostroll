@@ -98,6 +98,79 @@ class AppSpacing {
   static const double xxl = 40.0;
   static const double xxxl = 48.0;
   static const double huge = 64.0;
+  
+  // Responsive spacing for mobile
+  static double responsiveHorizontal(double screenWidth) {
+    if (screenWidth < 375) return 16.0; // iPhone SE, small phones
+    if (screenWidth < 414) return 20.0; // iPhone 12/13 mini, medium phones  
+    if (screenWidth < 428) return 24.0; // iPhone 14/15/16 Pro, large phones
+    return 28.0; // iPad mini and larger
+  }
+  
+  static double responsiveVertical(double screenHeight) {
+    if (screenHeight < 667) return 12.0; // Small phones
+    if (screenHeight < 812) return 16.0; // Medium phones
+    if (screenHeight < 926) return 20.0; // iPhone 16 Pro and similar
+    return 24.0; // iPhone 16 Pro Max and larger
+  }
+}
+
+// New responsive utilities class
+class ResponsiveUtils {
+  const ResponsiveUtils._();
+  
+  // Screen breakpoints optimized for modern iPhones
+  static const double smallPhone = 375.0;   // iPhone SE 3rd gen
+  static const double mediumPhone = 390.0;  // iPhone 12 mini, 13 mini
+  static const double largePhone = 393.0;   // iPhone 14, 15
+  static const double proPhone = 402.0;     // iPhone 16 Pro
+  static const double maxPhone = 430.0;     // iPhone 16 Pro Max
+  
+  static bool isSmallPhone(double width) => width < smallPhone;
+  static bool isMediumPhone(double width) => width >= smallPhone && width < largePhone;
+  static bool isLargePhone(double width) => width >= largePhone && width < maxPhone;
+  static bool isTablet(double width) => width >= 768.0;
+  
+  // Responsive font sizes
+  static double responsiveFontSize(double screenWidth, {
+    double baseSize = 16.0,
+    double minSize = 12.0,
+    double maxSize = 20.0,
+  }) {
+    double scaleFactor;
+    if (screenWidth < smallPhone) {
+      scaleFactor = 0.85; // 85% for small phones
+    } else if (screenWidth < largePhone) {
+      scaleFactor = 0.9; // 90% for medium phones
+    } else if (screenWidth < maxPhone) {
+      scaleFactor = 1.0; // 100% for large phones
+    } else {
+      scaleFactor = 1.1; // 110% for very large phones/tablets
+    }
+    
+    final fontSize = baseSize * scaleFactor;
+    return fontSize.clamp(minSize, maxSize);
+  }
+  
+  // Responsive icon sizes
+  static double responsiveIconSize(double screenWidth, {double baseSize = 24.0}) {
+    if (screenWidth < smallPhone) return baseSize * 0.85;
+    if (screenWidth < largePhone) return baseSize * 0.9;
+    if (screenWidth < maxPhone) return baseSize;
+    return baseSize * 1.1;
+  }
+  
+  // Responsive padding
+  static EdgeInsets responsivePadding(double screenWidth) {
+    final horizontal = AppSpacing.responsiveHorizontal(screenWidth);
+    return EdgeInsets.symmetric(horizontal: horizontal, vertical: AppSpacing.md);
+  }
+  
+  // Safe area aware bottom padding
+  static double safeBottomPadding(BuildContext context) {
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
+    return bottomPadding > 0 ? bottomPadding : AppSpacing.md;
+  }
 }
 
 class AppRadius {

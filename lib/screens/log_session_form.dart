@@ -315,7 +315,10 @@ class _LogSessionFormState extends State<LogSessionForm>
                       child: Form(
                         key: _formKey,
                         child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(24),
+                          padding: EdgeInsets.symmetric(
+                            horizontal: MediaQuery.of(context).size.width < 375 ? 16 : 24,
+                            vertical: 16,
+                          ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -409,8 +412,11 @@ class _LogSessionFormState extends State<LogSessionForm>
   }
 
   Widget _buildClassTypeSelector() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: EdgeInsets.all(isSmallScreen ? 6 : 8),
       decoration: BoxDecoration(
         color: GhostRollTheme.card,
         borderRadius: BorderRadius.circular(20),
@@ -432,7 +438,10 @@ class _LogSessionFormState extends State<LogSessionForm>
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                padding: EdgeInsets.symmetric(
+                  vertical: isSmallScreen ? 12 : 16, 
+                  horizontal: isSmallScreen ? 8 : 20
+                ),
                 decoration: BoxDecoration(
                   color: _isScheduledClass 
                       ? GhostRollTheme.flowBlue
@@ -442,24 +451,31 @@ class _LogSessionFormState extends State<LogSessionForm>
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.schedule,
                       color: _isScheduledClass 
                           ? Colors.white 
                           : GhostRollTheme.textSecondary,
-                      size: 20,
+                      size: isSmallScreen ? 18 : 20,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Scheduled Class',
-                      style: GhostRollTheme.titleMedium.copyWith(
-                        color: _isScheduledClass 
-                            ? Colors.white 
-                            : GhostRollTheme.textSecondary,
-                        fontWeight: _isScheduledClass 
-                            ? FontWeight.bold 
-                            : FontWeight.normal,
+                    SizedBox(width: isSmallScreen ? 4 : 8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          isSmallScreen ? 'Scheduled' : 'Scheduled Class',
+                          style: GhostRollTheme.titleMedium.copyWith(
+                            color: _isScheduledClass 
+                                ? Colors.white 
+                                : GhostRollTheme.textSecondary,
+                            fontWeight: _isScheduledClass 
+                                ? FontWeight.bold 
+                                : FontWeight.normal,
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -467,7 +483,7 @@ class _LogSessionFormState extends State<LogSessionForm>
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          SizedBox(width: isSmallScreen ? 4 : 8),
           Expanded(
             child: GestureDetector(
               onTap: () {
@@ -478,7 +494,10 @@ class _LogSessionFormState extends State<LogSessionForm>
               },
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                padding: EdgeInsets.symmetric(
+                  vertical: isSmallScreen ? 12 : 16, 
+                  horizontal: isSmallScreen ? 8 : 20
+                ),
                 decoration: BoxDecoration(
                   color: !_isScheduledClass 
                       ? GhostRollTheme.grindRed
@@ -488,24 +507,31 @@ class _LogSessionFormState extends State<LogSessionForm>
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.location_on,
                       color: !_isScheduledClass 
                           ? Colors.white 
                           : GhostRollTheme.textSecondary,
-                      size: 20,
+                      size: isSmallScreen ? 18 : 20,
                     ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Drop-in Class',
-                      style: GhostRollTheme.titleMedium.copyWith(
-                        color: !_isScheduledClass 
-                            ? Colors.white 
-                            : GhostRollTheme.textSecondary,
-                        fontWeight: !_isScheduledClass 
-                            ? FontWeight.bold 
-                            : FontWeight.normal,
+                    SizedBox(width: isSmallScreen ? 4 : 8),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          isSmallScreen ? 'Drop-in' : 'Drop-in Class',
+                          style: GhostRollTheme.titleMedium.copyWith(
+                            color: !_isScheduledClass 
+                                ? Colors.white 
+                                : GhostRollTheme.textSecondary,
+                            fontWeight: !_isScheduledClass 
+                                ? FontWeight.bold 
+                                : FontWeight.normal,
+                            fontSize: isSmallScreen ? 12 : 14,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -519,8 +545,11 @@ class _LogSessionFormState extends State<LogSessionForm>
   }
 
   Widget _buildScheduledClassSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       decoration: BoxDecoration(
         color: GhostRollTheme.card,
         borderRadius: BorderRadius.circular(20),
@@ -731,8 +760,11 @@ class _LogSessionFormState extends State<LogSessionForm>
   }
 
   Widget _buildDropInClassSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       decoration: BoxDecoration(
         color: GhostRollTheme.card,
         borderRadius: BorderRadius.circular(20),
@@ -934,8 +966,11 @@ class _LogSessionFormState extends State<LogSessionForm>
   }
 
   Widget _buildSessionDetailsSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       decoration: BoxDecoration(
         color: GhostRollTheme.card,
         borderRadius: BorderRadius.circular(20),
@@ -1153,79 +1188,60 @@ class _LogSessionFormState extends State<LogSessionForm>
                 size: 18,
               ),
               const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  'What is your comfort level with these techniques?',
-                  style: GhostRollTheme.titleMedium.copyWith(
-                    fontWeight: FontWeight.w600,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'What is your comfort level with these techniques?',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: _comfortLevels.asMap().entries.map((entry) {
-                final index = entry.key;
-                final comfort = entry.value;
-                final isSelected = _selectedMood == comfort['emoji'];
-                return Container(
-                  margin: EdgeInsets.only(
-                    right: index < _comfortLevels.length - 1 ? 12 : 0,
-                  ),
-                  child: GestureDetector(
-                    onTap: () => _onMoodTap(comfort['emoji']!),
-                    child: AnimatedContainer(
-                      duration: 300.ms,
-                      width: 80,
-                      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-                      decoration: BoxDecoration(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: _comfortLevels.map((comfort) {
+              final isSelected = _selectedMood == comfort['emoji'];
+              return GestureDetector(
+                onTap: () => _onMoodTap(comfort['emoji']!),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected 
+                        ? GhostRollTheme.flowBlue.withOpacity(0.2)
+                        : Colors.transparent,
+                    border: isSelected ? Border.all(
+                      color: GhostRollTheme.flowBlue,
+                      width: 3,
+                    ) : null,
+                    boxShadow: [
+                      BoxShadow(
                         color: isSelected 
-                            ? GhostRollTheme.recoveryGreen.withOpacity(0.2)
-                            : GhostRollTheme.overlayDark,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: isSelected ? GhostRollTheme.small : null,
-                        border: Border.all(
-                          color: isSelected 
-                              ? GhostRollTheme.recoveryGreen.withOpacity(0.5)
-                              : GhostRollTheme.textSecondary.withOpacity(0.2),
-                          width: 2,
-                        ),
+                            ? GhostRollTheme.flowBlue.withOpacity(0.3)
+                            : GhostRollTheme.flowBlue.withOpacity(0.1),
+                        blurRadius: isSelected ? 20 : 8,
+                        spreadRadius: isSelected ? 2 : 1,
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            comfort['emoji']!,
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            comfort['label']!,
-                            style: GhostRollTheme.bodySmall.copyWith(
-                              color: isSelected 
-                                  ? GhostRollTheme.recoveryGreen
-                                  : GhostRollTheme.textSecondary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 10,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ).animate().scale(
-                      duration: const Duration(milliseconds: 200),
-                      begin: Offset(isSelected ? 1.0 : 0.95, isSelected ? 1.0 : 0.95),
-                      end: Offset(isSelected ? 1.05 : 1.0, isSelected ? 1.05 : 1.0),
-                    ),
+                    ],
                   ),
-                );
-              }).toList(),
-            ),
+                  child: Text(
+                    comfort['emoji']!,
+                    style: const TextStyle(fontSize: 36),
+                  ),
+                ).animate().scale(
+                  duration: const Duration(milliseconds: 200),
+                  begin: const Offset(1.0, 1.0),
+                  end: Offset(isSelected ? 1.1 : 1.0, isSelected ? 1.1 : 1.0),
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -1233,8 +1249,11 @@ class _LogSessionFormState extends State<LogSessionForm>
   }
 
   Widget _buildSelfReflectionSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isSmallScreen ? 12 : 20),
       decoration: BoxDecoration(
         color: GhostRollTheme.card,
         borderRadius: BorderRadius.circular(20),
@@ -1274,82 +1293,65 @@ class _LogSessionFormState extends State<LogSessionForm>
                 size: 18,
               ),
               const SizedBox(width: 8),
-              Text(
-                'What was my mood coming into class?',
-                style: GhostRollTheme.titleMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'What was my mood coming into class?',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: _preClassMoods.asMap().entries.map((entry) {
-                final index = entry.key;
-                final mood = entry.value;
-                final isSelected = _preClassMood == mood['emoji'];
-                return Container(
-                  margin: EdgeInsets.only(
-                    right: index < _preClassMoods.length - 1 ? 12 : 0,
-                  ),
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _preClassMood = mood['emoji'];
-                      });
-                      HapticFeedback.lightImpact();
-                    },
-                    child: AnimatedContainer(
-                      duration: 300.ms,
-                      width: 60,
-                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                      decoration: BoxDecoration(
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: _preClassMoods.map((mood) {
+              final isSelected = _preClassMood == mood['emoji'];
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    _preClassMood = mood['emoji'];
+                  });
+                  HapticFeedback.lightImpact();
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isSelected 
+                        ? GhostRollTheme.flowBlue.withOpacity(0.2)
+                        : Colors.transparent,
+                    border: isSelected ? Border.all(
+                      color: GhostRollTheme.flowBlue,
+                      width: 3,
+                    ) : null,
+                    boxShadow: [
+                      BoxShadow(
                         color: isSelected 
-                            ? GhostRollTheme.recoveryGreen.withOpacity(0.2)
-                            : GhostRollTheme.overlayDark,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: isSelected ? GhostRollTheme.small : null,
-                        border: Border.all(
-                          color: isSelected 
-                              ? GhostRollTheme.recoveryGreen.withOpacity(0.5)
-                              : GhostRollTheme.textSecondary.withOpacity(0.2),
-                          width: 2,
-                        ),
+                            ? GhostRollTheme.flowBlue.withOpacity(0.3)
+                            : GhostRollTheme.flowBlue.withOpacity(0.1),
+                        blurRadius: isSelected ? 20 : 8,
+                        spreadRadius: isSelected ? 2 : 1,
                       ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            mood['emoji']!,
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            mood['label']!,
-                            style: GhostRollTheme.bodySmall.copyWith(
-                              color: isSelected 
-                                  ? GhostRollTheme.recoveryGreen
-                                  : GhostRollTheme.textSecondary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 9,
-                            ),
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ).animate().scale(
-                      duration: const Duration(milliseconds: 200),
-                      begin: Offset(isSelected ? 1.0 : 0.95, isSelected ? 1.0 : 0.95),
-                      end: Offset(isSelected ? 1.05 : 1.0, isSelected ? 1.05 : 1.0),
-                    ),
+                    ],
                   ),
-                );
-              }).toList(),
-            ),
+                  child: Text(
+                    mood['emoji']!,
+                    style: const TextStyle(fontSize: 36),
+                  ),
+                ).animate().scale(
+                  duration: const Duration(milliseconds: 200),
+                  begin: const Offset(1.0, 1.0),
+                  end: Offset(isSelected ? 1.1 : 1.0, isSelected ? 1.1 : 1.0),
+                ),
+              );
+            }).toList(),
           ),
           
           const SizedBox(height: 20),
@@ -1363,10 +1365,16 @@ class _LogSessionFormState extends State<LogSessionForm>
                 size: 18,
               ),
               const SizedBox(width: 8),
-              Text(
-                'What wins did I take away from this class?',
-                style: GhostRollTheme.titleMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'What wins did I take away from this class?',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1376,10 +1384,8 @@ class _LogSessionFormState extends State<LogSessionForm>
             controller: _winsController,
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: 'Victories, breakthroughs, or positive moments',
               hintText: 'What went well? What are you proud of?',
-              alignLabelWithHint: true,
-              labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
+              hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
@@ -1406,10 +1412,16 @@ class _LogSessionFormState extends State<LogSessionForm>
                 size: 18,
               ),
               const SizedBox(width: 8),
-              Text(
-                'Where did I get stuck?',
-                style: GhostRollTheme.titleMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Where did I get stuck?',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1419,10 +1431,8 @@ class _LogSessionFormState extends State<LogSessionForm>
             controller: _stuckController,
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: 'Challenges, confusion, or areas of difficulty',
               hintText: 'What was hard? What needs more work?',
-              alignLabelWithHint: true,
-              labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
+              hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
@@ -1449,10 +1459,16 @@ class _LogSessionFormState extends State<LogSessionForm>
                 size: 18,
               ),
               const SizedBox(width: 8),
-              Text(
-                'What questions did I ask?',
-                style: GhostRollTheme.titleMedium.copyWith(
-                  fontWeight: FontWeight.w600,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'What questions did I ask?',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1462,10 +1478,8 @@ class _LogSessionFormState extends State<LogSessionForm>
             controller: _questionsController,
             maxLines: 3,
             decoration: InputDecoration(
-              labelText: 'Questions asked during or after class',
               hintText: 'What did you ask your instructor or training partners?',
-              alignLabelWithHint: true,
-              labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
+              hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
                 borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),

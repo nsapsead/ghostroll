@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/session.dart';
 import '../theme/ghostroll_theme.dart';
+import '../theme/app_theme.dart';
 import 'session_detail_view.dart';
 import 'log_session_form.dart';
 import '../services/session_service.dart';
 import '../widgets/common/glow_text.dart';
+import '../widgets/common/app_components.dart';
 
 class JournalTimelineScreen extends StatefulWidget {
   const JournalTimelineScreen({super.key});
@@ -246,8 +248,10 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
   }
 
   Widget _buildSearchAndFilters() {
-    return Container(
-      margin: const EdgeInsets.all(24),
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = ResponsiveUtils.isSmallPhone(screenWidth);
+    
+    return ResponsiveContainer(
       child: Column(
         children: [
           // Search bar
@@ -259,25 +263,40 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
             ),
             child: TextField(
               controller: _searchController,
-              style: TextStyle(color: GhostRollTheme.text),
+              style: TextStyle(
+                color: GhostRollTheme.text,
+                fontSize: ResponsiveUtils.responsiveFontSize(screenWidth, baseSize: 16),
+              ),
               decoration: InputDecoration(
-                hintText: 'Search techniques, notes, focus areas...',
-                hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
-                prefixIcon: Icon(Icons.search, color: GhostRollTheme.textSecondary),
+                hintText: isSmallScreen ? 'Search techniques...' : 'Search techniques, notes, focus areas...',
+                hintStyle: TextStyle(
+                  color: GhostRollTheme.textSecondary,
+                  fontSize: ResponsiveUtils.responsiveFontSize(screenWidth, baseSize: 14),
+                ),
+                prefixIcon: Icon(
+                  Icons.search, 
+                  color: GhostRollTheme.textSecondary,
+                  size: ResponsiveUtils.responsiveIconSize(screenWidth),
+                ),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
                         onPressed: () => _searchController.clear(),
-                        icon: Icon(Icons.clear, color: GhostRollTheme.textSecondary),
+                        icon: Icon(
+                          Icons.clear, 
+                          color: GhostRollTheme.textSecondary,
+                          size: ResponsiveUtils.responsiveIconSize(screenWidth),
+                        ),
                       )
                     : IconButton(
                         onPressed: () => setState(() => _showFilters = !_showFilters),
                         icon: Icon(
                           _showFilters ? Icons.filter_list : Icons.tune,
                           color: _hasActiveFilters() ? GhostRollTheme.flowBlue : GhostRollTheme.textSecondary,
+                          size: ResponsiveUtils.responsiveIconSize(screenWidth),
                         ),
                       ),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.all(16),
+                contentPadding: EdgeInsets.all(isSmallScreen ? 12 : 16),
               ),
             ),
           ),

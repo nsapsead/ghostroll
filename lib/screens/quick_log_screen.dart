@@ -3,10 +3,12 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import 'log_session_form.dart';
 import '../theme/ghostroll_theme.dart';
-import '../widgets/ghost_confetti.dart';
+
 import '../widgets/common/glow_text.dart';
 import '../services/calendar_service.dart';
 import '../services/profile_service.dart';
+import '../services/session_service.dart';
+import 'dart:math' as math;
 
 // Custom clipper for radical button shape
 class RadicalButtonClipper extends CustomClipper<Path> {
@@ -60,6 +62,150 @@ class AccentShapeClipper extends CustomClipper<Path> {
 
   @override
   bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+// Modern angular button clipper
+class ModernButtonClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    
+    // Start from top-left with rounded corner
+    path.moveTo(16, 0);
+    path.lineTo(size.width - 40, 0);
+    
+    // Top-right with angular cut
+    path.lineTo(size.width, 16);
+    path.lineTo(size.width, size.height - 16);
+    
+    // Bottom-right with cut
+    path.lineTo(size.width - 16, size.height);
+    path.lineTo(16, size.height);
+    
+    // Bottom-left rounded
+    path.quadraticBezierTo(0, size.height, 0, size.height - 16);
+    path.lineTo(0, 16);
+    
+    // Top-left rounded
+    path.quadraticBezierTo(0, 0, 16, 0);
+    
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+// Modern button border for ink well
+class ModernButtonBorder extends ShapeBorder {
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
+    return getOuterPath(rect, textDirection: textDirection);
+  }
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    Size size = rect.size;
+    Path path = Path();
+    
+    // Mirror the ModernButtonClipper shape
+    path.moveTo(16, 0);
+    path.lineTo(size.width - 40, 0);
+    path.lineTo(size.width, 16);
+    path.lineTo(size.width, size.height - 16);
+    path.lineTo(size.width - 16, size.height);
+    path.lineTo(16, size.height);
+    path.quadraticBezierTo(0, size.height, 0, size.height - 16);
+    path.lineTo(0, 16);
+    path.quadraticBezierTo(0, 0, 16, 0);
+    path.close();
+    
+    return path;
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {}
+
+  @override
+  ShapeBorder scale(double t) => this;
+}
+
+// Hexagon button clipper
+class HexagonButtonClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    Path path = Path();
+    
+    final width = size.width;
+    final height = size.height;
+    final cornerRadius = height * 0.15;
+    
+    // Start from left side
+    path.moveTo(cornerRadius, 0);
+    
+    // Top edge with slight angle
+    path.lineTo(width - cornerRadius * 2, 0);
+    path.lineTo(width, cornerRadius);
+    
+    // Right edge
+    path.lineTo(width, height - cornerRadius);
+    path.lineTo(width - cornerRadius * 2, height);
+    
+    // Bottom edge
+    path.lineTo(cornerRadius, height);
+    path.lineTo(0, height - cornerRadius);
+    
+    // Left edge
+    path.lineTo(0, cornerRadius);
+    path.close();
+    
+    return path;
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
+}
+
+// Hexagon button border
+class HexagonButtonBorder extends ShapeBorder {
+  @override
+  EdgeInsetsGeometry get dimensions => EdgeInsets.zero;
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
+    return getOuterPath(rect, textDirection: textDirection);
+  }
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    Size size = rect.size;
+    Path path = Path();
+    
+    final width = size.width;
+    final height = size.height;
+    final cornerRadius = height * 0.15;
+    
+    path.moveTo(cornerRadius, 0);
+    path.lineTo(width - cornerRadius * 2, 0);
+    path.lineTo(width, cornerRadius);
+    path.lineTo(width, height - cornerRadius);
+    path.lineTo(width - cornerRadius * 2, height);
+    path.lineTo(cornerRadius, height);
+    path.lineTo(0, height - cornerRadius);
+    path.lineTo(0, cornerRadius);
+    path.close();
+    
+    return path;
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {}
+
+  @override
+  ShapeBorder scale(double t) => this;
 }
 
 // Custom border for ink well
@@ -119,7 +265,6 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  bool _showConfetti = false;
   List<Map<String, dynamic>> _upcomingClasses = [];
   bool _isLoadingClasses = true;
   String _userName = 'Guest'; // Default to Guest
@@ -260,7 +405,6 @@ class _QuickLogScreenState extends State<QuickLogScreen>
 
 
   void _onLogSession() {
-    setState(() => _showConfetti = true);
     HapticFeedback.mediumImpact();
     
     Navigator.push(
@@ -297,13 +441,15 @@ class _QuickLogScreenState extends State<QuickLogScreen>
                           padding: const EdgeInsets.symmetric(horizontal: 24),
                           child: Column(
                             children: [
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 8),
                               _buildWelcomeSection(),
-                              const SizedBox(height: 40),
+                              const SizedBox(height: 20),
                               _buildMainLogButton(),
-                              const SizedBox(height: 60),
-                              _buildUpcomingClassesSection(),
                               const SizedBox(height: 24),
+                              _buildQuickStatsSection(),
+                              const SizedBox(height: 20),
+                              _buildUpcomingClassesSection(),
+                              const SizedBox(height: 16),
                             ],
                           ),
                         ),
@@ -314,12 +460,6 @@ class _QuickLogScreenState extends State<QuickLogScreen>
               ),
             ),
           ),
-          
-          // Confetti overlay
-          if (_showConfetti)
-            GhostConfetti(
-              onComplete: () => setState(() => _showConfetti = false),
-            ),
         ],
       ),
     );
@@ -327,7 +467,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
 
   Widget _buildAppBar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
       child: Row(
         children: [
           Container(
@@ -358,6 +498,10 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   }
 
   Widget _buildWelcomeSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    final mascotSize = isSmallScreen ? 120.0 : 140.0;
+    
     return Column(
       children: [
         ScaleTransition(
@@ -368,8 +512,8 @@ class _QuickLogScreenState extends State<QuickLogScreen>
               // Ghost mascot tap effect
             },
             child: Container(
-              width: 160,
-              height: 160,
+              width: mascotSize,
+              height: mascotSize,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -402,7 +546,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16),
         GestureDetector(
           onTap: _userName == 'Guest' ? () {
             // Use callback to navigate to profile tab
@@ -447,129 +591,187 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   }
 
   Widget _buildMainLogButton() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    final buttonHeight = isSmallScreen ? 90.0 : 100.0;
+    
     return ScaleTransition(
       scale: _pulseAnimation,
       child: Container(
         width: double.infinity,
-        height: 120,
+        height: buttonHeight,
         child: Stack(
           children: [
-            // Background with radical shape
+            // Main gradient background with hexagon shape
             ClipPath(
-              clipper: RadicalButtonClipper(),
+              clipper: HexagonButtonClipper(),
               child: Container(
                 width: double.infinity,
-                height: 120,
+                height: buttonHeight,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                     colors: [
-                      Color(0xFF00D4FF), // Bright cyan
-                      Color(0xFF0099CC), // Deeper blue
-                      Color(0xFF006699), // Even deeper blue
+                      Color(0xFF00F5FF), // Electric cyan
+                      Color(0xFF1F8EF1), // GhostRoll blue
+                      Color(0xFF0066FF), // Deep blue
+                      Color(0xFF8A2BE2), // Purple accent
                     ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+                    begin: Alignment(-1.0, -1.0),
+                    end: Alignment(1.0, 1.0),
+                    stops: [0.0, 0.3, 0.7, 1.0],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF00D4FF).withOpacity(0.4),
-                      blurRadius: 20,
-                      spreadRadius: 2,
-                      offset: const Offset(0, 8),
+                      color: const Color(0xFF00F5FF).withOpacity(0.5),
+                      blurRadius: 25,
+                      spreadRadius: 3,
+                      offset: const Offset(0, 10),
                     ),
                     BoxShadow(
-                      color: const Color(0xFF00D4FF).withOpacity(0.2),
-                      blurRadius: 40,
-                      spreadRadius: 0,
-                      offset: const Offset(0, 16),
+                      color: const Color(0xFF8A2BE2).withOpacity(0.3),
+                      blurRadius: 35,
+                      spreadRadius: 1,
+                      offset: const Offset(0, 20),
                     ),
                   ],
                 ),
               ),
             ),
-            // Accent overlay with different shape
+            // Simplified energy accent
             Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              child: ClipPath(
-                clipper: AccentShapeClipper(),
-                child: Container(
-                  width: 120,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.white.withOpacity(0.2),
-                        Colors.white.withOpacity(0.1),
+              right: 20,
+              top: 20,
+              bottom: 20,
+              child: AnimatedBuilder(
+                animation: _pulseAnimation,
+                builder: (context, child) {
+                  return Container(
+                    width: 4,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withOpacity(0.8),
+                          Colors.cyan.withOpacity(0.6),
+                          Colors.white.withOpacity(0.8),
+                        ],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                      ),
+                      borderRadius: BorderRadius.circular(2),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.cyan.withOpacity(0.5 * _pulseAnimation.value),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
                       ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
             ),
-            // Interactive area
+            // Main interactive area
             Positioned.fill(
               child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   onTap: _onLogSession,
-                  customBorder: RadicalButtonBorder(),
-                  child: Stack(
-                    children: [
-                      // Centered horizontal layout with plus icon and text
-                      Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            // Plus icon on the left
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.25),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white.withOpacity(0.4),
-                                  width: 3,
-                                ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 6),
-                                  ),
-                                ],
-                              ),
-                              child: const Icon(
-                                Icons.add,
-                                color: Colors.white,
-                                size: 50,
-                              ),
+                  customBorder: HexagonButtonBorder(),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Row(
+                      children: [
+                        // Martial arts icon
+                        Container(
+                          width: isSmallScreen ? 60 : 65,
+                          height: isSmallScreen ? 60 : 65,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: RadialGradient(
+                              colors: [
+                                Colors.white.withOpacity(0.3),
+                                Colors.white.withOpacity(0.1),
+                              ],
                             ),
-                            const SizedBox(width: 24),
-                            // Text beside the icon
-                            Text(
-                              'Log a Class',
-                              style: GhostRollTheme.headlineSmall.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 28,
-                                letterSpacing: 1.2,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black.withOpacity(0.4),
-                                    offset: const Offset(0, 2),
-                                    blurRadius: 6,
-                                  ),
-                                ],
-                              ),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.6),
+                              width: 2,
                             ),
-                          ],
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.white.withOpacity(0.3),
+                                blurRadius: 12,
+                                spreadRadius: 2,
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.sports_martial_arts,
+                            color: Colors.white,
+                            size: isSmallScreen ? 28 : 32,
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 24),
+                        // Dynamic text
+                        Expanded(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ShaderMask(
+                                shaderCallback: (bounds) => const LinearGradient(
+                                  colors: [Colors.white, Color(0xFFE0E0E0)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ).createShader(bounds),
+                                child: Text(
+                                  'Log Training',
+                                  style: GhostRollTheme.titleLarge.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: isSmallScreen ? 24 : 26,
+                                    shadows: [
+                                      Shadow(
+                                        color: Colors.cyan.withOpacity(0.5),
+                                        offset: const Offset(0, 0),
+                                        blurRadius: 12,
+                                      ),
+                                      Shadow(
+                                        color: Colors.black.withOpacity(0.4),
+                                        offset: const Offset(0, 2),
+                                        blurRadius: 6,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Ready to roll? 🥋',
+                                style: GhostRollTheme.bodyMedium.copyWith(
+                                  color: Colors.white.withOpacity(0.95),
+                                  fontSize: isSmallScreen ? 14 : 15,
+                                  fontWeight: FontWeight.w500,
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black.withOpacity(0.3),
+                                      offset: const Offset(0, 1),
+                                      blurRadius: 3,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Forward arrow
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.white.withOpacity(0.8),
+                          size: isSmallScreen ? 16 : 18,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -580,10 +782,121 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     );
   }
 
+  Widget _buildQuickStatsSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
+    return FutureBuilder<Map<String, dynamic>>(
+      future: SessionService.getTrainingStats(),
+      builder: (context, snapshot) {
+        final stats = snapshot.data ?? {};
+        final thisWeek = stats['thisWeekSessions']?.toString() ?? '0';
+        final total = stats['totalSessions']?.toString() ?? '0';
+        
+        // Calculate streak (simplified - just show days since last session)
+        final streakText = total == '0' ? '0' : '1+';
+        
+        return Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.trending_up,
+                label: 'This Week',
+                value: thisWeek,
+                color: GhostRollTheme.flowBlue,
+                isSmall: isSmallScreen,
+              ),
+            ),
+            SizedBox(width: isSmallScreen ? 8 : 12),
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.local_fire_department,
+                label: 'Streak',
+                value: '${streakText} day${streakText != '1' ? 's' : ''}',
+                color: GhostRollTheme.grindRed,
+                isSmall: isSmallScreen,
+              ),
+            ),
+            SizedBox(width: isSmallScreen ? 8 : 12),
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.emoji_events,
+                label: 'Total',
+                value: total,
+                color: GhostRollTheme.recoveryGreen,
+                isSmall: isSmallScreen,
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    required bool isSmall,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        vertical: isSmall ? 12 : 16,
+        horizontal: isSmall ? 8 : 12,
+      ),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(isSmall ? 12 : 16),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: isSmall ? 4 : 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: isSmall ? 16 : 20,
+          ),
+          SizedBox(height: isSmall ? 4 : 6),
+          Text(
+            value,
+            style: GhostRollTheme.titleMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: isSmall ? 14 : 16,
+            ),
+          ),
+          SizedBox(height: isSmall ? 2 : 4),
+          Text(
+            label,
+            style: GhostRollTheme.bodySmall.copyWith(
+              color: GhostRollTheme.textSecondary,
+              fontSize: isSmall ? 10 : 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildUpcomingClassesSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
       decoration: BoxDecoration(
         color: GhostRollTheme.card,
         borderRadius: BorderRadius.circular(20),

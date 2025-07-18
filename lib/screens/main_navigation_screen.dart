@@ -5,6 +5,7 @@ import 'goals_screen.dart';
 import 'profile_screen.dart';
 import '../services/auth_service.dart';
 import '../theme/ghostroll_theme.dart';
+import '../theme/app_theme.dart';
 import 'training_calendar_screen.dart';
 import '../widgets/ghost_confetti.dart';
 import '../services/notification_service.dart';
@@ -117,18 +118,32 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
         ],
       ),
       child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(0, Icons.add_circle_outline, Icons.add_circle, 'Quick Log'),
-              _buildNavItem(1, Icons.history_outlined, Icons.history, 'Journal'),
-              _buildNavItem(2, Icons.calendar_today_outlined, Icons.calendar_today, 'Calendar'),
-              _buildNavItem(3, Icons.flag_outlined, Icons.flag, 'Goals'),
-              _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile'),
-            ],
-          ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            // Responsive padding based on screen width
+            final isSmallScreen = constraints.maxWidth < 375;
+            final isMediumScreen = constraints.maxWidth < 414;
+            
+            final horizontalPadding = isSmallScreen ? 6.0 : isMediumScreen ? 8.0 : 12.0;
+            final verticalPadding = isSmallScreen ? 2.0 : 4.0;
+            
+            return Padding(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPadding, 
+                vertical: verticalPadding
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly, // Changed from spaceAround
+                children: [
+                  Expanded(child: _buildNavItem(0, Icons.add_circle_outline, Icons.add_circle, 'Quick Log')),
+                  Expanded(child: _buildNavItem(1, Icons.history_outlined, Icons.history, 'Journal')),
+                  Expanded(child: _buildNavItem(2, Icons.calendar_today_outlined, Icons.calendar_today, 'Calendar')),
+                  Expanded(child: _buildNavItem(3, Icons.flag_outlined, Icons.flag, 'Goals')),
+                  Expanded(child: _buildNavItem(4, Icons.person_outline, Icons.person, 'Profile')),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -136,50 +151,73 @@ class _MainNavigationScreenState extends State<MainNavigationScreen>
 
   Widget _buildNavItem(int index, IconData icon, IconData activeIcon, String label) {
     final isSelected = _selectedIndex == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-        _animationController.reset();
-        _animationController.forward();
+    
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive sizing based on available width
+        final isSmallScreen = MediaQuery.of(context).size.width < 375;
+        final isMediumScreen = MediaQuery.of(context).size.width < 414;
+        
+        final iconSize = isSmallScreen ? 20.0 : 24.0;
+        final fontSize = isSmallScreen ? 10.0 : 12.0;
+        final horizontalPadding = isSmallScreen ? 1.0 : isMediumScreen ? 2.0 : 3.0;
+        final verticalPadding = isSmallScreen ? 2.0 : 3.0;
+        
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              _selectedIndex = index;
+            });
+            _animationController.reset();
+            _animationController.forward();
+          },
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding, 
+              vertical: verticalPadding
+            ),
+            decoration: BoxDecoration(
+              gradient: isSelected
+                  ? LinearGradient(
+                      colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.1)],
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                    )
+                  : null,
+              borderRadius: BorderRadius.circular(12),
+              border: isSelected
+                  ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
+                  : null,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  isSelected ? activeIcon : icon,
+                  color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                  size: iconSize,
+                ),
+                SizedBox(height: isSmallScreen ? 2 : 4),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                      color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
       },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [Colors.white.withOpacity(0.2), Colors.white.withOpacity(0.1)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                )
-              : null,
-          borderRadius: BorderRadius.circular(16),
-          border: isSelected
-              ? Border.all(color: Colors.white.withOpacity(0.3), width: 1)
-              : null,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isSelected ? activeIcon : icon,
-              color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                color: isSelected ? Colors.white : Colors.white.withOpacity(0.6),
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

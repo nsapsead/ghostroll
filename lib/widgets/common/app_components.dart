@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../theme/ghostroll_theme.dart';
+import 'glow_text.dart';
 
 // Gradient Card Component
 class GradientCard extends StatelessWidget {
@@ -376,12 +378,13 @@ class SectionHeader extends StatelessWidget {
   }
 }
 
-// Responsive Container Component
+// Enhanced Responsive Container Component
 class ResponsiveContainer extends StatelessWidget {
   final Widget child;
   final double? maxWidth;
   final EdgeInsetsGeometry? padding;
   final EdgeInsetsGeometry? margin;
+  final bool enableResponsivePadding;
 
   const ResponsiveContainer({
     super.key,
@@ -389,18 +392,192 @@ class ResponsiveContainer extends StatelessWidget {
     this.maxWidth,
     this.padding,
     this.margin,
+    this.enableResponsivePadding = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Container(
       width: double.infinity,
       constraints: BoxConstraints(
         maxWidth: maxWidth ?? 600,
       ),
-      padding: padding,
+      padding: enableResponsivePadding 
+          ? (padding ?? ResponsiveUtils.responsivePadding(screenWidth))
+          : padding,
       margin: margin,
       child: child,
+    );
+  }
+}
+
+// Mobile-optimized app bar component
+class MobileAppBar extends StatelessWidget {
+  final String title;
+  final List<Widget>? actions;
+  final Widget? leading;
+  final bool showBackButton;
+  final VoidCallback? onBackPressed;
+
+  const MobileAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.leading,
+    this.showBackButton = false,
+    this.onBackPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = ResponsiveUtils.isSmallPhone(screenWidth);
+    
+    return Padding(
+      padding: EdgeInsets.symmetric(
+        horizontal: AppSpacing.responsiveHorizontal(screenWidth), 
+        vertical: isSmallScreen ? 12 : 16
+      ),
+      child: Row(
+        children: [
+          if (showBackButton || leading != null) ...[
+            leading ?? IconButton(
+              onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+              icon: Icon(
+                Icons.arrow_back_ios,
+                color: GhostRollTheme.text,
+                size: ResponsiveUtils.responsiveIconSize(screenWidth, baseSize: 20),
+              ),
+            ),
+            SizedBox(width: isSmallScreen ? 8 : 12),
+          ],
+          Expanded(
+            child: Container(
+              height: isSmallScreen ? 48 : 64,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: GhostRollTheme.medium,
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 12 : 16),
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: GlowText(
+                        text: title,
+                        fontSize: ResponsiveUtils.responsiveFontSize(
+                          screenWidth, 
+                          baseSize: 20, 
+                          minSize: 16, 
+                          maxSize: 24
+                        ),
+                        textColor: Colors.white,
+                        glowColor: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          if (actions != null) ...[
+            SizedBox(width: isSmallScreen ? 8 : 12),
+            ...actions!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// Responsive card component
+class ResponsiveCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
+  final Color? backgroundColor;
+  final double? elevation;
+  final List<BoxShadow>? boxShadow;
+
+  const ResponsiveCard({
+    super.key,
+    required this.child,
+    this.padding,
+    this.margin,
+    this.backgroundColor,
+    this.elevation,
+    this.boxShadow,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = ResponsiveUtils.isSmallPhone(screenWidth);
+    
+    final responsivePadding = padding ?? EdgeInsets.all(
+      isSmallScreen ? 16 : 20
+    );
+    
+    final responsiveMargin = margin ?? EdgeInsets.symmetric(
+      horizontal: AppSpacing.responsiveHorizontal(screenWidth),
+      vertical: isSmallScreen ? 8 : 12,
+    );
+
+    return Container(
+      margin: responsiveMargin,
+      padding: responsivePadding,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(isSmallScreen ? 16 : 20),
+        boxShadow: boxShadow ?? (elevation != null 
+            ? [BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: elevation!,
+                offset: Offset(0, elevation! / 2),
+              )]
+            : GhostRollTheme.medium),
+      ),
+      child: child,
+    );
+  }
+}
+
+// Safe scrollable content wrapper
+class SafeScrollableContent extends StatelessWidget {
+  final List<Widget> children;
+  final CrossAxisAlignment crossAxisAlignment;
+  final MainAxisAlignment mainAxisAlignment;
+  final EdgeInsetsGeometry? padding;
+
+  const SafeScrollableContent({
+    super.key,
+    required this.children,
+    this.crossAxisAlignment = CrossAxisAlignment.start,
+    this.mainAxisAlignment = MainAxisAlignment.start,
+    this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final bottomPadding = ResponsiveUtils.safeBottomPadding(context);
+    
+    return SingleChildScrollView(
+      padding: padding ?? EdgeInsets.only(
+        left: AppSpacing.responsiveHorizontal(screenWidth),
+        right: AppSpacing.responsiveHorizontal(screenWidth),
+        top: AppSpacing.md,
+        bottom: bottomPadding,
+      ),
+      child: Column(
+        crossAxisAlignment: crossAxisAlignment,
+        mainAxisAlignment: mainAxisAlignment,
+        children: children,
+      ),
     );
   }
 } 
