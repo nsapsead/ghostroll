@@ -735,7 +735,11 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                             lastDate: DateTime.now().add(const Duration(days: 365)),
                           );
                           if (picked != null) {
-                            setDialogState(() => recurringStartDate = picked);
+                            setDialogState(() {
+                              recurringStartDate = picked;
+                              // Update day of week to match the selected start date
+                              dayOfWeek = picked.weekday;
+                            });
                           }
                         },
                         child: Container(

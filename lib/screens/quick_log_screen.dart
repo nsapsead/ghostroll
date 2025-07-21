@@ -745,22 +745,7 @@ class _QuickLogScreenState extends State<QuickLogScreen>
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                'Ready to roll? 🥋',
-                                style: GhostRollTheme.bodyMedium.copyWith(
-                                  color: Colors.white.withOpacity(0.95),
-                                  fontSize: isSmallScreen ? 14 : 15,
-                                  fontWeight: FontWeight.w500,
-                                  shadows: [
-                                    Shadow(
-                                      color: Colors.black.withOpacity(0.3),
-                                      offset: const Offset(0, 1),
-                                      blurRadius: 3,
-                                    ),
-                                  ],
-                                ),
-                              ),
+
                             ],
                           ),
                         ),

@@ -633,6 +633,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                                 SizedBox(height: _isEditMode ? 24 : 16),
                           _buildInstructorsSection(),
                                 SizedBox(height: _isEditMode ? 24 : 16),
+                          _buildNotificationSettingsSection(),
+                                SizedBox(height: _isEditMode ? 24 : 16),
                         ],
                             ),
                       ),
@@ -764,12 +766,15 @@ class _ProfileScreenState extends State<ProfileScreen>
               Icon(
                 Icons.person,
                 color: GhostRollTheme.flowBlue,
-                size: 20,
+                size: 24,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               Text(
                 'Personal Information',
-                style: GhostRollTheme.titleLarge,
+                style: GhostRollTheme.titleLarge.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -780,9 +785,27 @@ class _ProfileScreenState extends State<ProfileScreen>
               Expanded(
                 child: TextFormField(
                   controller: _firstNameController,
+                  style: GhostRollTheme.bodyMedium.copyWith(fontSize: 16),
                   decoration: InputDecoration(
                     labelText: 'First Name',
-                    prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary),
+                    labelStyle: GhostRollTheme.bodyMedium.copyWith(
+                      fontSize: 14,
+                      color: GhostRollTheme.textSecondary,
+                    ),
+                    prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary, size: 20),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.flowBlue, width: 2),
+                    ),
                   ),
                   validator: (value) {
                     if (value?.isEmpty ?? true) {
@@ -796,9 +819,27 @@ class _ProfileScreenState extends State<ProfileScreen>
               Expanded(
                 child: TextFormField(
                   controller: _surnameController,
+                  style: GhostRollTheme.bodyMedium.copyWith(fontSize: 16),
                   decoration: InputDecoration(
                     labelText: 'Surname',
-                    prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary),
+                    labelStyle: GhostRollTheme.bodyMedium.copyWith(
+                      fontSize: 14,
+                      color: GhostRollTheme.textSecondary,
+                    ),
+                    prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary, size: 20),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.flowBlue, width: 2),
+                    ),
                   ),
                   validator: (value) {
                     if (value?.isEmpty ?? true) {
@@ -828,16 +869,22 @@ class _ProfileScreenState extends State<ProfileScreen>
                       });
                     }
                   },
-                  icon: Icon(Icons.calendar_today, color: GhostRollTheme.flowBlue),
+                  icon: Icon(Icons.calendar_today, color: GhostRollTheme.flowBlue, size: 20),
                   label: Text(
                     _dateOfBirth == null ? 'Date of Birth' : '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}',
-                    style: TextStyle(color: GhostRollTheme.text),
+                    style: GhostRollTheme.bodyMedium.copyWith(
+                      fontSize: 16,
+                      color: GhostRollTheme.text,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                   style: OutlinedButton.styleFrom(
                     side: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    alignment: Alignment.centerLeft,
                   ),
                 ),
               ),
@@ -848,11 +895,24 @@ class _ProfileScreenState extends State<ProfileScreen>
                   decoration: InputDecoration(
                     labelText: 'Gender',
                     prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
+                  style: GhostRollTheme.bodyMedium.copyWith(
+                    fontSize: 14,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  isExpanded: true,
                   items: _genderOptions.map((gender) {
                     return DropdownMenuItem<String>(
                       value: gender,
-                      child: Text(gender),
+                      child: Text(
+                        gender,
+                        style: GhostRollTheme.bodyMedium.copyWith(
+                          fontSize: 14,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -871,24 +931,60 @@ class _ProfileScreenState extends State<ProfileScreen>
               Expanded(
                 child: TextFormField(
                   controller: _weightController,
+                  style: GhostRollTheme.bodyMedium.copyWith(fontSize: 16),
                   decoration: InputDecoration(
                     labelText: 'Weight (kg)',
-                    prefixIcon: Icon(Icons.monitor_weight_outlined, color: GhostRollTheme.textSecondary),
+                    labelStyle: GhostRollTheme.bodyMedium.copyWith(
+                      fontSize: 14,
+                      color: GhostRollTheme.textSecondary,
+                    ),
+                    prefixIcon: Icon(Icons.monitor_weight_outlined, color: GhostRollTheme.textSecondary, size: 20),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.flowBlue, width: 2),
+                    ),
                   ),
                   keyboardType: TextInputType.number,
                 ),
               ),
               const SizedBox(width: 16),
               Expanded(
-              child: TextFormField(
+                child: TextFormField(
                   controller: _heightController,
-                decoration: InputDecoration(
+                  style: GhostRollTheme.bodyMedium.copyWith(fontSize: 16),
+                  decoration: InputDecoration(
                     labelText: 'Height (cm)',
-                    prefixIcon: Icon(Icons.height, color: GhostRollTheme.textSecondary),
-                ),
+                    labelStyle: GhostRollTheme.bodyMedium.copyWith(
+                      fontSize: 14,
+                      color: GhostRollTheme.textSecondary,
+                    ),
+                    prefixIcon: Icon(Icons.height, color: GhostRollTheme.textSecondary, size: 20),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: GhostRollTheme.flowBlue, width: 2),
+                    ),
+                  ),
                   keyboardType: TextInputType.number,
+                ),
               ),
-            ),
           ],
         ),
           const SizedBox(height: 24),
@@ -2120,5 +2216,115 @@ class _ProfileScreenState extends State<ProfileScreen>
       default:
         return Colors.grey;
     }
+  }
+
+  Widget _buildNotificationSettingsSection() {
+    return Container(
+      padding: EdgeInsets.all(_isEditMode ? 24 : 16),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: GhostRollTheme.medium,
+        border: Border.all(
+          color: GhostRollTheme.textSecondary.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.notifications_active,
+                color: GhostRollTheme.flowBlue,
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Notification Settings',
+                style: GhostRollTheme.titleLarge.copyWith(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: GhostRollTheme.flowGradient,
+              ),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: GhostRollTheme.small,
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.pushNamed(context, '/notification-preferences');
+                },
+                borderRadius: BorderRadius.circular(12),
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.settings,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Configure Notifications',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: GhostRollTheme.overlayDark.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: GhostRollTheme.textSecondary.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  color: GhostRollTheme.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Customize your notification preferences to stay motivated with helpful reminders and celebrate your progress! 👻',
+                    style: GhostRollTheme.bodySmall.copyWith(
+                      color: GhostRollTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 } 
