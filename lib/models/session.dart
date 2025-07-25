@@ -1,4 +1,4 @@
-enum ClassType { gi, noGi, striking }
+enum ClassType { gi, noGi, striking, seminar }
 
 extension ClassTypeExtension on ClassType {
   String get displayName {
@@ -9,6 +9,8 @@ extension ClassTypeExtension on ClassType {
         return 'No-Gi';
       case ClassType.striking:
         return 'Striking';
+      case ClassType.seminar:
+        return 'Seminar';
     }
   }
 }
@@ -112,6 +114,8 @@ class Session {
         return 'No-Gi';
       case ClassType.striking:
         return 'Striking';
+      case ClassType.seminar:
+        return 'Seminar';
     }
   }
 

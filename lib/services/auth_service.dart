@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:rxdart/rxdart.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart';
+import 'profile_service.dart';
+import 'biometric_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
@@ -16,6 +17,8 @@ class AuthService {
   static Map<String, dynamic>? _mockUser = null;
   static final BehaviorSubject<Map<String, dynamic>?> _authController =
       BehaviorSubject<Map<String, dynamic>?>.seeded(_mockUser);
+  
+  final BiometricService _biometricService = BiometricService();
 
   // Notify listeners when auth state changes
   void _notifyAuthChanged() {
@@ -44,8 +47,37 @@ class AuthService {
       'displayName': displayName,
       'provider': 'email',
     };
+    
+    // Auto-populate profile with display name
+    await _autoPopulateProfile(displayName);
+    
     _notifyAuthChanged();
     return _mockUser;
+  }
+
+  // Auto-populate profile with display name
+  Future<void> _autoPopulateProfile(String displayName) async {
+    try {
+      final nameParts = displayName.trim().split(' ');
+      final firstName = nameParts.isNotEmpty ? nameParts.first : '';
+      final surname = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      
+      // Load existing profile data
+      final existingData = await ProfileService.loadProfileData();
+      
+      // Only update if name fields are empty
+      if ((existingData['firstName']?.isEmpty ?? true) && 
+          (existingData['surname']?.isEmpty ?? true)) {
+        final updatedData = {
+          ...existingData,
+          'firstName': firstName,
+          'surname': surname,
+        };
+        await ProfileService.saveProfileData(updatedData);
+      }
+    } catch (e) {
+      print('Error auto-populating profile: $e');
+    }
   }
 
   // Sign in with email and password
@@ -60,62 +92,27 @@ class AuthService {
     _mockUser = {
       'uid': 'mock-user-id',
       'email': email,
-      'displayName': 'Test User',
+      'displayName': 'Mock User',
       'provider': 'email',
     };
+    
     _notifyAuthChanged();
     return _mockUser;
   }
 
-  // Sign in with Google
+  // Sign in with Google (placeholder for future implementation)
   Future<Map<String, dynamic>?> signInWithGoogle() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock successful Google sign in
-    _mockUser = {
-      'uid': 'google-user-id',
-      'email': 'user@gmail.com',
-      'displayName': 'Google User',
-      'provider': 'google',
-      'photoURL': 'https://via.placeholder.com/150',
-    };
-    _notifyAuthChanged();
-    return _mockUser;
+    throw UnimplementedError('Google Sign-In not yet implemented');
   }
 
-  // Sign in with Apple
+  // Sign in with Apple (placeholder for future implementation)
   Future<Map<String, dynamic>?> signInWithApple() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock successful Apple sign in
-    _mockUser = {
-      'uid': 'apple-user-id',
-      'email': 'user@privaterelay.appleid.com',
-      'displayName': 'Apple User',
-      'provider': 'apple',
-      'photoURL': 'https://via.placeholder.com/150',
-    };
-    _notifyAuthChanged();
-    return _mockUser;
+    throw UnimplementedError('Apple Sign-In not yet implemented');
   }
 
-  // Sign in with Facebook
+  // Sign in with Facebook (placeholder for future implementation)
   Future<Map<String, dynamic>?> signInWithFacebook() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock successful Facebook sign in
-    _mockUser = {
-      'uid': 'facebook-user-id',
-      'email': 'user@facebook.com',
-      'displayName': 'Facebook User',
-      'provider': 'facebook',
-      'photoURL': 'https://via.placeholder.com/150',
-    };
-    _notifyAuthChanged();
-    return _mockUser;
+    throw UnimplementedError('Facebook Sign-In not yet implemented');
   }
 
   // Sign out
@@ -138,7 +135,7 @@ class AuthService {
     await Future.delayed(const Duration(seconds: 1));
     
     // Mock successful password reset
-    print('Password reset email sent to: $email');
+    print('Mock password reset email sent to: $email');
   }
 
   // Update user profile
@@ -146,47 +143,148 @@ class AuthService {
     required String displayName,
     String? photoURL,
   }) async {
-    // Mock profile update
-    print('Profile updated: $displayName');
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+    
+    // Update mock user
+    if (_mockUser != null) {
+      _mockUser = {
+        ..._mockUser!,
+        'displayName': displayName,
+        if (photoURL != null) 'photoURL': photoURL,
+      };
+      _notifyAuthChanged();
+    }
   }
 
-  // Get user profile from Firestore
+  // Handle authentication exceptions (mock implementation)
+  String _handleAuthException(dynamic e) {
+    return 'Authentication failed: $e';
+  }
+
+  // Get user profile (placeholder for Firestore integration)
   Future<Map<String, dynamic>?> getUserProfile(String uid) async {
-    // Mock user profile
-    return {
-      'uid': uid,
-      'email': 'test@example.com',
-      'displayName': 'Test User',
-      'profile': {
-        'personalInfo': {
-          'name': 'Test User',
-          'age': null,
-          'gender': null,
-          'weight': null,
-          'height': null,
-          'experience': null,
-        },
-        'martialArtsStyles': [],
-        'beltRanks': {},
-      },
-    };
+    // TODO: Implement Firestore integration
+    return null;
   }
 
-  // Update user profile in Firestore
+  // Update user profile data (placeholder for Firestore integration)
   Future<void> updateUserProfileData(String uid, Map<String, dynamic> data) async {
-    // Mock profile data update
-    print('Profile data updated for user: $uid');
+    // TODO: Implement Firestore integration
   }
 
   // Delete user account
   Future<void> deleteUserAccount() async {
-    // Mock account deletion
-    print('User account deleted');
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+    
+    // Clear mock user
+    _mockUser = null;
+    _notifyAuthChanged();
   }
 
   // Check if user exists
   Future<bool> userExists(String email) async {
-    // Mock user existence check
-    return email == 'test@example.com';
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+    
+    // Mock implementation - always return false for new users
+    return false;
+  }
+
+  // Biometric Authentication Methods
+
+  /// Check if biometric authentication is available
+  Future<bool> isBiometricAvailable() async {
+    return await _biometricService.isBiometricAvailable();
+  }
+
+  /// Get available biometric types
+  Future<List<BiometricType>> getAvailableBiometrics() async {
+    return await _biometricService.getAvailableBiometrics();
+  }
+
+  /// Get primary biometric type for the device
+  Future<String?> getPrimaryBiometricType() async {
+    return await _biometricService.getPrimaryBiometricType();
+  }
+
+  /// Authenticate using biometrics
+  Future<bool> authenticateWithBiometrics() async {
+    final success = await _biometricService.authenticateWithBiometrics(
+      reason: 'Sign in to GhostRoll',
+    );
+    
+    if (success) {
+      // If biometric auth succeeds, restore the last known user
+      await _restoreUserFromBiometric();
+      await _biometricService.recordSuccessfulAuth();
+    }
+    
+    return success;
+  }
+
+  /// Enable biometric authentication
+  Future<void> enableBiometricAuth() async {
+    await _biometricService.setBiometricEnabled(true);
+    await _biometricService.setRememberMeEnabled(true);
+  }
+
+  /// Disable biometric authentication
+  Future<void> disableBiometricAuth() async {
+    await _biometricService.setBiometricEnabled(false);
+    await _biometricService.setRememberMeEnabled(false);
+    await _biometricService.clearAuthRecords();
+  }
+
+  /// Check if biometric authentication is enabled
+  Future<bool> isBiometricEnabled() async {
+    return await _biometricService.isBiometricEnabled();
+  }
+
+  /// Check if "Remember Me" is enabled
+  Future<bool> isRememberMeEnabled() async {
+    return await _biometricService.isRememberMeEnabled();
+  }
+
+  /// Enable or disable "Remember Me"
+  Future<void> setRememberMeEnabled(bool enabled) async {
+    await _biometricService.setRememberMeEnabled(enabled);
+  }
+
+  /// Check if user needs to re-authenticate
+  Future<bool> needsReAuthentication() async {
+    return await _biometricService.needsReAuthentication();
+  }
+
+  /// Get authentication status
+  Future<Map<String, dynamic>> getAuthStatus() async {
+    return await _biometricService.getAuthStatus();
+  }
+
+  /// Restore user from biometric authentication
+  Future<void> _restoreUserFromBiometric() async {
+    // In a real app, this would restore the user from secure storage
+    // For now, we'll use a mock user
+    if (_mockUser == null) {
+      _mockUser = {
+        'uid': 'biometric-user-id',
+        'email': 'user@example.com',
+        'displayName': 'Biometric User',
+        'provider': 'biometric',
+      };
+      _notifyAuthChanged();
+    }
+  }
+
+  /// Initialize authentication state on app start
+  Future<void> initializeAuthState() async {
+    final authStatus = await _biometricService.getAuthStatus();
+    
+    // If biometric auth is enabled and user doesn't need re-authentication
+    if (authStatus['canUseBiometrics'] && !authStatus['needsReAuthentication']) {
+      // Automatically restore user session
+      await _restoreUserFromBiometric();
+    }
   }
 } 

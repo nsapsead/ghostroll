@@ -1115,16 +1115,27 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            border: Border.all(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
-                            borderRadius: BorderRadius.circular(8),
+                            color: GhostRollTheme.overlayDark,
+                            border: Border.all(color: GhostRollTheme.flowBlue.withOpacity(0.3)),
+                            borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
                             children: [
-                              Icon(Icons.calendar_today, color: GhostRollTheme.textSecondary),
+                              Icon(Icons.calendar_today, color: GhostRollTheme.flowBlue, size: 22),
                               const SizedBox(width: 8),
                               Text(
-                                '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
-                                style: TextStyle(color: GhostRollTheme.text),
+                                'Session Date:',
+                                style: GhostRollTheme.bodySmall.copyWith(color: GhostRollTheme.textSecondary),
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                _formatSessionDate(selectedDate),
+                                style: GhostRollTheme.titleMedium.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  color: GhostRollTheme.text,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),
@@ -1294,6 +1305,14 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
       locationController.dispose();
       notesController.dispose();
     });
+  }
+
+  String _formatSessionDate(DateTime date) {
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day.toString().padLeft(2, '0')} ${months[date.month - 1]} ${date.year}';
   }
 
   void _showEventDetailsDialog(CalendarEvent event) {

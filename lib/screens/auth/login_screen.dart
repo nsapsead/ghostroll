@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _authService = AuthService();
+  bool _rememberMe = false;
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -31,6 +32,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _isGoogleLoading = false;
   bool _isAppleLoading = false;
   bool _isFacebookLoading = false;
+  bool _isBiometricLoading = false;
 
   @override
   void initState() {
@@ -78,6 +80,15 @@ class _LoginScreenState extends State<LoginScreen>
     _fadeController.forward();
     _slideController.forward();
     _pulseController.repeat(reverse: true);
+    
+    _loadRememberMeState();
+  }
+
+  Future<void> _loadRememberMeState() async {
+    final rememberMe = await _authService.isRememberMeEnabled();
+    setState(() {
+      _rememberMe = rememberMe;
+    });
   }
 
   @override
@@ -103,6 +114,11 @@ class _LoginScreenState extends State<LoginScreen>
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
+      
+      // If remember me is enabled, also enable biometric auth
+      if (_rememberMe) {
+        await _authService.enableBiometricAuth();
+      }
     } catch (e) {
       setState(() {
         _errorMessage = 'Login failed. Please try again.';
@@ -171,6 +187,30 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  Future<void> _signInWithBiometrics() async {
+    setState(() {
+      _isBiometricLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final success = await _authService.authenticateWithBiometrics();
+      if (!success) {
+        setState(() {
+          _errorMessage = 'Biometric authentication failed. Please try again.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Biometric authentication failed. Please try again.';
+      });
+    } finally {
+      setState(() {
+        _isBiometricLoading = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -213,6 +253,8 @@ class _LoginScreenState extends State<LoginScreen>
                         const SizedBox(height: 48),
                         _buildLoginForm(),
                         const SizedBox(height: 24),
+                        _buildBiometricButton(),
+                        const SizedBox(height: 16),
                         _buildSocialLoginButtons(),
                         const SizedBox(height: 24),
                         _buildSignUpLink(),
@@ -369,23 +411,46 @@ class _LoginScreenState extends State<LoginScreen>
               },
             ),
             const SizedBox(height: 16),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
-                  );
-                },
-                child: Text(
-                  'Forgot Password?',
-                  style: GhostRollTheme.bodyMedium.copyWith(
-                    color: GhostRollTheme.flowBlue,
-                    fontWeight: FontWeight.w500,
+            Row(
+              children: [
+                Row(
+                  children: [
+                    Checkbox(
+                      value: _rememberMe,
+                      onChanged: (value) async {
+                        setState(() {
+                          _rememberMe = value ?? false;
+                        });
+                        await _authService.setRememberMeEnabled(_rememberMe);
+                      },
+                      activeColor: GhostRollTheme.flowBlue,
+                      checkColor: GhostRollTheme.text,
+                    ),
+                    Text(
+                      'Remember me',
+                      style: GhostRollTheme.bodyMedium.copyWith(
+                        color: GhostRollTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                    );
+                  },
+                  child: Text(
+                    'Forgot Password?',
+                    style: GhostRollTheme.bodyMedium.copyWith(
+                      color: GhostRollTheme.flowBlue,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-              ),
+              ],
             ),
             if (_errorMessage.isNotEmpty) ...[
               const SizedBox(height: 16),
@@ -457,6 +522,87 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  Widget _buildBiometricButton() {
+    return FutureBuilder<bool>(
+      future: _authService.isBiometricAvailable(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox.shrink();
+        }
+        
+        if (snapshot.data != true) {
+          return const SizedBox.shrink();
+        }
+        
+        return FutureBuilder<String?>(
+          future: _authService.getPrimaryBiometricType(),
+          builder: (context, biometricSnapshot) {
+            final biometricType = biometricSnapshot.data ?? 'Biometric';
+            
+            return Container(
+              width: double.infinity,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF00F5FF), Color(0xFF1F8EF1)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF00F5FF).withOpacity(0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _isBiometricLoading ? null : _signInWithBiometrics,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Center(
+                    child: _isBiometricLoading
+                        ? const SizedBox(
+                            height: 24,
+                            width: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            ),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                biometricType == 'Face ID' 
+                                    ? Icons.face 
+                                    : Icons.fingerprint,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'Sign in with $biometricType',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildSocialLoginButtons() {
     return Column(
       children: [
@@ -504,7 +650,8 @@ class _LoginScreenState extends State<LoginScreen>
                 label: 'Apple',
                 isLoading: _isAppleLoading,
                 onPressed: _signInWithApple,
-                color: Colors.black,
+                color: Colors.white,
+                backgroundColor: Colors.black,
               ),
             ),
             const SizedBox(width: 12),
@@ -529,14 +676,17 @@ class _LoginScreenState extends State<LoginScreen>
     required bool isLoading,
     required VoidCallback onPressed,
     required Color color,
+    Color? backgroundColor,
   }) {
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: GhostRollTheme.card,
+        color: backgroundColor ?? GhostRollTheme.card,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: GhostRollTheme.textSecondary.withOpacity(0.2),
+          color: backgroundColor != null 
+              ? Colors.transparent 
+              : GhostRollTheme.textSecondary.withOpacity(0.2),
         ),
         boxShadow: GhostRollTheme.small,
       ),

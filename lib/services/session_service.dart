@@ -38,6 +38,9 @@ class SessionService {
       case 'kickboxing':
         sessionClassType = ClassType.striking;
         break;
+      case 'seminar':
+        sessionClassType = ClassType.seminar;
+        break;
       default:
         sessionClassType = ClassType.gi;
     }

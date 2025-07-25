@@ -1099,6 +1099,8 @@ class _QuickLogScreenState extends State<QuickLogScreen>
         return Icons.security;
       case 'aikido':
         return Icons.self_improvement;
+      case 'seminar':
+        return Icons.school;
       default:
         return Icons.sports_martial_arts;
     }
@@ -1127,6 +1129,8 @@ class _QuickLogScreenState extends State<QuickLogScreen>
         return [Colors.grey.shade600, Colors.grey.shade800];
       case 'aikido':
         return [Colors.cyan.shade600, Colors.cyan.shade800];
+      case 'seminar':
+        return [const Color(0xFF9C27B0), const Color(0xFF7B1FA2)]; // Purple gradient for seminars
       default:
         return GhostRollTheme.flowGradient;
     }

@@ -52,7 +52,7 @@ class _ProfileScreenState extends State<ProfileScreen>
   final List<Map<String, dynamic>> _martialArtsStyles = [
     {'name': 'Brazilian Jiu-Jitsu (BJJ)', 'belts': ['White', 'Blue', 'Purple', 'Brown', 'Black'], 'hasStripes': true, 'isKarate': false},
     {'name': 'Judo', 'belts': ['White', 'Yellow', 'Orange', 'Green', 'Blue', 'Brown', 'Black'], 'hasStripes': false, 'isKarate': false},
-    {'name': 'Karate', 'belts': ['White', 'Yellow', 'Orange', 'Green', 'Blue', 'Purple', 'Brown', 'Black'], 'hasStripes': false, 'isKarate': true},
+    {'name': 'Karate', 'belts': ['White', 'Yellow', 'Orange', 'Green', 'Blue', 'Purple', 'Brown', 'Red', 'Black'], 'hasStripes': false, 'isKarate': true},
     {'name': 'Taekwondo', 'belts': ['White', 'Yellow', 'Orange', 'Green', 'Blue', 'Red', 'Black'], 'hasStripes': false, 'isKarate': false},
     {'name': 'Muay Thai', 'belts': ['No formal belt system', 'Beginner', 'Intermediate', 'Advanced'], 'hasStripes': false, 'isKarate': false},
     {'name': 'Boxing', 'belts': ['No formal belt system', 'Amateur', 'Professional'], 'hasStripes': false, 'isKarate': false},
@@ -160,7 +160,13 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _loadProfileData() async {
+    // Load saved profile data
     final data = await ProfileService.loadProfileData();
+    
+    // Get current authenticated user
+    final authService = AuthService();
+    final currentUser = authService.currentUser;
+    
     setState(() {
       // Handle backward compatibility with existing 'name' field
       if (data['firstName'] != null && data['surname'] != null) {
@@ -169,6 +175,12 @@ class _ProfileScreenState extends State<ProfileScreen>
       } else if (data['name'] != null) {
         // Split existing full name into first and last name
         final nameParts = data['name'].toString().trim().split(' ');
+        _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
+        _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+      } else if (currentUser != null && currentUser['displayName'] != null) {
+        // Use authentication display name if no saved profile data
+        final displayName = currentUser['displayName'] as String;
+        final nameParts = displayName.trim().split(' ');
         _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
         _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
       }
@@ -206,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     }
   }
 
-  void _saveProfile() {
+  void _saveProfile() async {
     if (_formKey.currentState?.validate() ?? false) {
       final data = {
         'firstName': _firstNameController.text,
@@ -220,17 +232,35 @@ class _ProfileScreenState extends State<ProfileScreen>
         'bjjInstructor': _bjjInstructor,
         'customBeltOrders': _customBeltOrders,
       };
-      ProfileService.saveProfileData(data);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Profile saved successfully!'),
-          backgroundColor: GhostRollTheme.flowBlue.withOpacity(0.9),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      
+      // Save to local storage
+      await ProfileService.saveProfileData(data);
+      
+      // Update Firebase Auth display name if name changed
+      final authService = AuthService();
+      final currentUser = authService.currentUser;
+      final fullName = '${_firstNameController.text} ${_surnameController.text}'.trim();
+      
+      if (currentUser != null && currentUser['displayName'] != fullName) {
+        try {
+          await authService.updateUserProfile(displayName: fullName);
+        } catch (e) {
+          print('Error updating Firebase Auth display name: $e');
+        }
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Profile saved successfully!'),
+            backgroundColor: GhostRollTheme.flowBlue.withOpacity(0.9),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
           ),
-        ),
-      );
+        );
+      }
     }
   }
 
@@ -850,6 +880,49 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 16),
+          // Email display (read-only from authentication)
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            decoration: BoxDecoration(
+              color: GhostRollTheme.overlayDark.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: GhostRollTheme.textSecondary.withOpacity(0.2)),
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.email_outlined, color: GhostRollTheme.textSecondary, size: 20),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Email',
+                        style: GhostRollTheme.bodySmall.copyWith(
+                          color: GhostRollTheme.textSecondary,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        AuthService().currentUser?['email'] ?? 'Not available',
+                        style: GhostRollTheme.bodyMedium.copyWith(
+                          color: GhostRollTheme.text,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.lock_outline,
+                  color: GhostRollTheme.textSecondary,
+                  size: 16,
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           Row(

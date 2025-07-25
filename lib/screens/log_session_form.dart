@@ -203,6 +203,8 @@ class _LogSessionFormState extends State<LogSessionForm>
       case 'wrestling':
       case 'judo':
         return ClassType.noGi;
+      case 'seminar':
+        return ClassType.seminar;
       default:
         return ClassType.gi;
     }
@@ -271,6 +273,15 @@ class _LogSessionFormState extends State<LogSessionForm>
         }
       }
     }
+  }
+
+  String _formatSessionDate(DateTime date) {
+    // Example: 25 Jul 2025
+    final months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return '${date.day.toString().padLeft(2, '0')} ${months[date.month - 1]} ${date.year}';
   }
 
   @override
@@ -809,7 +820,7 @@ class _LogSessionFormState extends State<LogSessionForm>
             ),
             items: [
               'BJJ', 'Muay Thai', 'Boxing', 'Wrestling', 'Judo', 
-              'Karate', 'Taekwondo', 'Kickboxing', 'Krav Maga', 'Aikido'
+              'Karate', 'Taekwondo', 'Kickboxing', 'Krav Maga', 'Aikido', 'Seminar'
             ].map((type) => DropdownMenuItem(
               value: type,
               child: Text(type),
@@ -872,8 +883,8 @@ class _LogSessionFormState extends State<LogSessionForm>
                       children: [
                         Icon(
                           Icons.calendar_today,
-                          color: GhostRollTheme.textSecondary,
-                          size: 20,
+                          color: GhostRollTheme.flowBlue,
+                          size: 22,
                         ),
                         const SizedBox(width: 8),
                         Expanded(
@@ -881,17 +892,20 @@ class _LogSessionFormState extends State<LogSessionForm>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Date',
+                                'Session Date',
                                 style: GhostRollTheme.bodySmall.copyWith(
                                   color: GhostRollTheme.textSecondary,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                '${_sessionDate.day}/${_sessionDate.month}/${_sessionDate.year}',
+                                _formatSessionDate(_sessionDate),
                                 style: GhostRollTheme.titleMedium.copyWith(
                                   fontWeight: FontWeight.w600,
+                                  color: GhostRollTheme.text,
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ],
                           ),

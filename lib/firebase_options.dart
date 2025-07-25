@@ -65,6 +65,6 @@ class DefaultFirebaseOptions {
     messagingSenderId: 'YOUR-SENDER-ID',
     projectId: 'ghostroll-app',
     storageBucket: 'ghostroll-app.appspot.com',
-    iosBundleId: 'com.example.martialArtsJournal',
+    iosBundleId: 'com.nick.ghostroll',
   );
 } 

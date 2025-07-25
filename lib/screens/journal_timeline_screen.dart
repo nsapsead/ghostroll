@@ -719,34 +719,69 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                       ),
                     ],
                   ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          _getClassTypeColor(session.classType),
-                          _getClassTypeColor(session.classType).withOpacity(0.8),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(12),
-                      boxShadow: [
-                        BoxShadow(
-                          color: _getClassTypeColor(session.classType).withOpacity(0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 2),
+                  Column(
+                    children: [
+                      // Session type indicator (Scheduled vs Drop-in)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                      ],
-                    ),
-                    child: Text(
-                      session.classTypeDisplay,
-                      style: GhostRollTheme.bodySmall.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                        decoration: BoxDecoration(
+                          color: session.isScheduledClass 
+                            ? GhostRollTheme.recoveryGreen.withOpacity(0.2)
+                            : GhostRollTheme.textTertiary.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: session.isScheduledClass 
+                              ? GhostRollTheme.recoveryGreen.withOpacity(0.4)
+                              : GhostRollTheme.textTertiary.withOpacity(0.4),
+                            width: 1,
+                          ),
+                        ),
+                        child: Text(
+                          session.isScheduledClass ? 'Scheduled' : 'Drop-in',
+                          style: GhostRollTheme.bodySmall.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: session.isScheduledClass 
+                              ? GhostRollTheme.recoveryGreen
+                              : GhostRollTheme.textTertiary,
+                            fontSize: 10,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 4),
+                      // Class type badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              _getClassTypeColor(session.classType),
+                              _getClassTypeColor(session.classType).withOpacity(0.8),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: _getClassTypeColor(session.classType).withOpacity(0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          session.classTypeDisplay,
+                          style: GhostRollTheme.bodySmall.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -839,6 +874,8 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
         return GhostRollTheme.grindRed;
       case ClassType.striking:
         return GhostRollTheme.recoveryGreen;
+      case ClassType.seminar:
+        return const Color(0xFF9C27B0); // Purple for seminars
     }
   }
 
@@ -850,6 +887,8 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
         return Icons.fitness_center;
       case ClassType.striking:
         return Icons.sports_kabaddi;
+      case ClassType.seminar:
+        return Icons.school;
     }
   }
 } 

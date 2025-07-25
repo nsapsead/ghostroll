@@ -668,10 +668,18 @@ class SocialAuthButton extends StatelessWidget {
           ),
         );
       case 'apple':
-        return const Icon(
-          Icons.apple,
-          color: Colors.white,
-          size: 24,
+        return Container(
+          width: 24,
+          height: 24,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: const Icon(
+            Icons.apple,
+            color: Colors.black,
+            size: 20,
+          ),
         );
       case 'facebook':
         return const Icon(
@@ -698,7 +706,7 @@ class SocialAuthButton extends StatelessWidget {
         );
       case 'apple':
         return const LinearGradient(
-          colors: [Color(0xFF000000), Color(0xFF1A1A1A)],
+          colors: [Color(0xFF000000), Color(0xFF2D2D2D)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         );

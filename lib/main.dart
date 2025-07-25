@@ -45,7 +45,7 @@ class _GhostRollAppState extends State<GhostRollApp> {
       debugShowCheckedModeBanner: false,
       theme: GhostRollTheme.dark,
       navigatorKey: _navigatorKey,
-      home: const MainNavigationScreen(), // TEMP: bypass auth for now
+      home: const AuthWrapper(),
       routes: {
         '/quick-log': (context) => const QuickLogScreen(),
         '/journal-timeline': (context) => const JournalTimelineScreen(),
