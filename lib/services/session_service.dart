@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/session.dart';
 
@@ -78,7 +79,7 @@ class SessionService {
       final sessionsJson = jsonEncode(sessions.map((s) => s.toJson()).toList());
       await prefs.setString(_sessionsKey, sessionsJson);
     } catch (e) {
-      print('Error saving sessions: $e');
+      debugPrint('Error saving sessions: $e');
       rethrow;
     }
   }
@@ -96,7 +97,7 @@ class SessionService {
       
       return [];
     } catch (e) {
-      print('Error loading sessions: $e');
+      debugPrint('Error loading sessions: $e');
       return [];
     }
   }
@@ -112,7 +113,7 @@ class SessionService {
       
       await saveSessions(sessions);
     } catch (e) {
-      print('Error adding session: $e');
+      debugPrint('Error adding session: $e');
       rethrow;
     }
   }
@@ -132,7 +133,7 @@ class SessionService {
         await saveSessions(sessions);
       }
     } catch (e) {
-      print('Error updating session: $e');
+      debugPrint('Error updating session: $e');
       rethrow;
     }
   }
@@ -144,7 +145,7 @@ class SessionService {
       sessions.removeWhere((s) => s.id == sessionId);
       await saveSessions(sessions);
     } catch (e) {
-      print('Error deleting session: $e');
+      debugPrint('Error deleting session: $e');
       rethrow;
     }
   }
@@ -158,7 +159,7 @@ class SessionService {
                session.date.isBefore(endDate.add(const Duration(days: 1)));
       }).toList();
     } catch (e) {
-      print('Error getting sessions by date range: $e');
+      debugPrint('Error getting sessions by date range: $e');
       return [];
     }
   }
@@ -169,7 +170,7 @@ class SessionService {
       final sessions = await loadSessions();
       return sessions.where((session) => session.classType == classType).toList();
     } catch (e) {
-      print('Error getting sessions by class type: $e');
+      debugPrint('Error getting sessions by class type: $e');
       return [];
     }
   }
@@ -182,7 +183,7 @@ class SessionService {
         session.instructor?.toLowerCase().contains(instructor.toLowerCase()) == true
       ).toList();
     } catch (e) {
-      print('Error getting sessions by instructor: $e');
+      debugPrint('Error getting sessions by instructor: $e');
       return [];
     }
   }
@@ -210,7 +211,7 @@ class SessionService {
         return techniqueMatch || focusAreaMatch || sparringNotesMatch || reflectionMatch;
       }).toList();
     } catch (e) {
-      print('Error searching sessions: $e');
+      debugPrint('Error searching sessions: $e');
       return [];
     }
   }
@@ -258,7 +259,7 @@ class SessionService {
         'thisMonthSessions': thisMonthSessions,
       };
     } catch (e) {
-      print('Error getting training stats: $e');
+      debugPrint('Error getting training stats: $e');
       return {};
     }
   }
@@ -269,7 +270,7 @@ class SessionService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_sessionsKey);
     } catch (e) {
-      print('Error clearing sessions: $e');
+      debugPrint('Error clearing sessions: $e');
       rethrow;
     }
   }

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileService {
@@ -23,19 +24,20 @@ class ProfileService {
     await prefs.setString(_profileDataKey, jsonEncode(profileData));
   }
 
-  // Load complete profile data
+  // Load profile data from local storage
   static Future<Map<String, dynamic>> loadProfileData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final profileString = prefs.getString(_profileDataKey);
-    
-    if (profileString == null || profileString.isEmpty) {
-      return {};
-    }
-
     try {
-      return jsonDecode(profileString) as Map<String, dynamic>;
+      final prefs = await SharedPreferences.getInstance();
+      final profileJson = prefs.getString('profile_data');
+      
+      if (profileJson != null) {
+        return Map<String, dynamic>.from(jsonDecode(profileJson));
+      }
+      
+      return {};
     } catch (e) {
-      print('Error loading profile data: $e');
+      // Log error but don't crash the app
+      debugPrint('Error loading profile data: $e');
       return {};
     }
   }

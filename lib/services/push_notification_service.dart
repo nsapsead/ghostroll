@@ -15,7 +15,7 @@ import '../core/constants/notification_strings.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
-  debugPrint('Handling a background message: ${message.messageId}');
+  // Background message handling - minimal logging for production
 }
 
 class PushNotificationService {
@@ -66,8 +66,8 @@ class PushNotificationService {
       // Request permissions
       await _requestPermissions();
       
-      debugPrint('Push notification service initialized successfully');
     } catch (e) {
+      // Log error but don't crash the app
       debugPrint('Error initializing push notification service: $e');
     }
   }
@@ -79,11 +79,7 @@ class PushNotificationService {
     
     // Handle foreground messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Got a message whilst in the foreground!');
-      debugPrint('Message data: ${message.data}');
-      
       if (message.notification != null) {
-        debugPrint('Message also contained a notification: ${message.notification}');
         _showLocalNotification(message);
       }
       
@@ -92,14 +88,12 @@ class PushNotificationService {
     
     // Handle when app is opened from notification
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      debugPrint('A new onMessageOpenedApp event was published!');
       _onMessageOpenedAppStreamController.add(message);
     });
     
     // Handle initial message when app is terminated
     RemoteMessage? initialMessage = await _firebaseMessaging.getInitialMessage();
     if (initialMessage != null) {
-      debugPrint('App opened from terminated state with message: ${initialMessage.data}');
       _onMessageOpenedAppStreamController.add(initialMessage);
     }
   }

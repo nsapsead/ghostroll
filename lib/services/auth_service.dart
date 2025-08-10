@@ -1,61 +1,233 @@
-import 'dart:async';
-import 'package:rxdart/rxdart.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:local_auth/local_auth.dart';
 import 'profile_service.dart';
 import 'biometric_service.dart';
 
 class AuthService {
   static final AuthService _instance = AuthService._internal();
   factory AuthService() => _instance;
-  AuthService._internal() {
-    // Emit the current user immediately on construction
-    _authController.add(_mockUser);
+  AuthService._internal();
+
+  // User authentication state
+  bool _isAuthenticated = false;
+  String? _currentUserId;
+  String? _currentUserEmail;
+  String? _currentUserDisplayName;
+
+  // Getters
+  bool get isAuthenticated => _isAuthenticated;
+  String? get currentUserId => _currentUserId;
+  String? get currentUserEmail => _currentUserEmail;
+  String? get currentUserDisplayName => _currentUserDisplayName;
+
+  /// Initialize authentication state
+  Future<void> initializeAuthState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _isAuthenticated = prefs.getBool('is_authenticated') ?? false;
+      _currentUserId = prefs.getString('current_user_id');
+      _currentUserEmail = prefs.getString('current_user_email');
+      _currentUserDisplayName = prefs.getString('current_user_display_name');
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error initializing auth state: $e');
+      _isAuthenticated = false;
+    }
   }
 
-  // Mock user for testing - start with null to show login screen
-  static Map<String, dynamic>? _mockUser = null;
-  static final BehaviorSubject<Map<String, dynamic>?> _authController =
-      BehaviorSubject<Map<String, dynamic>?>.seeded(_mockUser);
-  
-  final BiometricService _biometricService = BiometricService();
-
-  // Notify listeners when auth state changes
-  void _notifyAuthChanged() {
-    _authController.add(_mockUser);
+  /// Sign in with email and password
+  Future<bool> signInWithEmailAndPassword(String email, String password) async {
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Mock authentication - in production, this would use Firebase Auth
+      if (email.isNotEmpty && password.isNotEmpty) {
+        _isAuthenticated = true;
+        _currentUserId = DateTime.now().millisecondsSinceEpoch.toString();
+        _currentUserEmail = email;
+        _currentUserDisplayName = email.split('@').first;
+        
+        // Save auth state
+        await _saveAuthState();
+        
+        // Auto-populate profile with display name
+        if (_currentUserDisplayName != null) {
+          await _autoPopulateProfile(_currentUserDisplayName!);
+        }
+        
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error during sign in: $e');
+      return false;
+    }
   }
 
-  // Get current user
-  Map<String, dynamic>? get currentUser => _mockUser;
-
-  // Auth state changes stream
-  Stream<Map<String, dynamic>?> get authStateChanges => _authController.stream;
-
-  // Sign up with email and password
-  Future<Map<String, dynamic>?> signUpWithEmailAndPassword({
-    required String email,
-    required String password,
-    required String displayName,
-  }) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock successful registration
-    _mockUser = {
-      'uid': 'mock-user-id',
-      'email': email,
-      'displayName': displayName,
-      'provider': 'email',
-    };
-    
-    // Auto-populate profile with display name
-    await _autoPopulateProfile(displayName);
-    
-    _notifyAuthChanged();
-    return _mockUser;
+  /// Sign up with email and password
+  Future<bool> signUpWithEmailAndPassword(String email, String password, String displayName) async {
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Mock registration - in production, this would use Firebase Auth
+      if (email.isNotEmpty && password.isNotEmpty && displayName.isNotEmpty) {
+        _isAuthenticated = true;
+        _currentUserId = DateTime.now().millisecondsSinceEpoch.toString();
+        _currentUserEmail = email;
+        _currentUserDisplayName = displayName;
+        
+        // Save auth state
+        await _saveAuthState();
+        
+        // Auto-populate profile with display name
+        await _autoPopulateProfile(displayName);
+        
+        return true;
+      }
+      
+      return false;
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error during sign up: $e');
+      return false;
+    }
   }
 
-  // Auto-populate profile with display name
+  /// Sign out
+  Future<void> signOut() async {
+    try {
+      _isAuthenticated = false;
+      _currentUserId = null;
+      _currentUserEmail = null;
+      _currentUserDisplayName = null;
+      
+      // Clear auth state
+      await _clearAuthState();
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error during sign out: $e');
+    }
+  }
+
+  /// Sign in with Google
+  Future<bool> signInWithGoogle() async {
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Mock Google authentication - in production, this would use Firebase Auth
+      _isAuthenticated = true;
+      _currentUserId = DateTime.now().millisecondsSinceEpoch.toString();
+      _currentUserEmail = 'google.user@example.com';
+      _currentUserDisplayName = 'Google User';
+      
+      // Save auth state
+      await _saveAuthState();
+      
+      // Auto-populate profile with display name
+      if (_currentUserDisplayName != null) {
+        await _autoPopulateProfile(_currentUserDisplayName!);
+      }
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error during Google sign in: $e');
+      return false;
+    }
+  }
+
+  /// Sign in with Apple
+  Future<bool> signInWithApple() async {
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Mock Apple authentication - in production, this would use Firebase Auth
+      _isAuthenticated = true;
+      _currentUserId = DateTime.now().millisecondsSinceEpoch.toString();
+      _currentUserEmail = 'apple.user@example.com';
+      _currentUserDisplayName = 'Apple User';
+      
+      // Save auth state
+      await _saveAuthState();
+      
+      // Auto-populate profile with display name
+      if (_currentUserDisplayName != null) {
+        await _autoPopulateProfile(_currentUserDisplayName!);
+      }
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error during Apple sign in: $e');
+      return false;
+    }
+  }
+
+  /// Sign in with Facebook
+  Future<bool> signInWithFacebook() async {
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Mock Facebook authentication - in production, this would use Firebase Auth
+      _isAuthenticated = true;
+      _currentUserId = DateTime.now().millisecondsSinceEpoch.toString();
+      _currentUserEmail = 'facebook.user@example.com';
+      _currentUserDisplayName = 'Facebook User';
+      
+      // Save auth state
+      await _saveAuthState();
+      
+      // Auto-populate profile with display name
+      if (_currentUserDisplayName != null) {
+        await _autoPopulateProfile(_currentUserDisplayName!);
+      }
+      
+      return true;
+    } catch (e) {
+      debugPrint('Error during Facebook sign in: $e');
+      return false;
+    }
+  }
+
+  /// Send password reset email
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      // Simulate network delay
+      await Future.delayed(const Duration(seconds: 1));
+      
+      // Mock implementation - in production, this would send a real email
+      // For now, we'll just simulate success
+      debugPrint('Mock password reset email sent to: $email');
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error sending password reset email: $e');
+    }
+  }
+
+  /// Update user profile
+  Future<void> updateUserProfile({String? displayName, String? email}) async {
+    try {
+      if (displayName != null) {
+        _currentUserDisplayName = displayName;
+        await _saveAuthState();
+      }
+      
+      if (email != null) {
+        _currentUserEmail = email;
+        await _saveAuthState();
+      }
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error updating user profile: $e');
+    }
+  }
+
+  /// Auto-populate profile with display name
   Future<void> _autoPopulateProfile(String displayName) async {
     try {
       final nameParts = displayName.trim().split(' ');
@@ -76,215 +248,36 @@ class AuthService {
         await ProfileService.saveProfileData(updatedData);
       }
     } catch (e) {
-      print('Error auto-populating profile: $e');
+      // Log error but don't crash the app
+      debugPrint('Error auto-populating profile: $e');
     }
   }
 
-  // Sign in with email and password
-  Future<Map<String, dynamic>?> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock successful login
-    _mockUser = {
-      'uid': 'mock-user-id',
-      'email': email,
-      'displayName': 'Mock User',
-      'provider': 'email',
-    };
-    
-    _notifyAuthChanged();
-    return _mockUser;
-  }
-
-  // Sign in with Google (placeholder for future implementation)
-  Future<Map<String, dynamic>?> signInWithGoogle() async {
-    throw UnimplementedError('Google Sign-In not yet implemented');
-  }
-
-  // Sign in with Apple (placeholder for future implementation)
-  Future<Map<String, dynamic>?> signInWithApple() async {
-    throw UnimplementedError('Apple Sign-In not yet implemented');
-  }
-
-  // Sign in with Facebook (placeholder for future implementation)
-  Future<Map<String, dynamic>?> signInWithFacebook() async {
-    throw UnimplementedError('Facebook Sign-In not yet implemented');
-  }
-
-  // Sign out
-  Future<void> signOut() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Clear local storage
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-    
-    // Clear mock user
-    _mockUser = null;
-    _notifyAuthChanged();
-  }
-
-  // Reset password
-  Future<void> resetPassword(String email) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock successful password reset
-    print('Mock password reset email sent to: $email');
-  }
-
-  // Update user profile
-  Future<void> updateUserProfile({
-    required String displayName,
-    String? photoURL,
-  }) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Update mock user
-    if (_mockUser != null) {
-      _mockUser = {
-        ..._mockUser!,
-        'displayName': displayName,
-        if (photoURL != null) 'photoURL': photoURL,
-      };
-      _notifyAuthChanged();
+  /// Save authentication state to local storage
+  Future<void> _saveAuthState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('is_authenticated', _isAuthenticated);
+      await prefs.setString('current_user_id', _currentUserId ?? '');
+      await prefs.setString('current_user_email', _currentUserEmail ?? '');
+      await prefs.setString('current_user_display_name', _currentUserDisplayName ?? '');
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error saving auth state: $e');
     }
   }
 
-  // Handle authentication exceptions (mock implementation)
-  String _handleAuthException(dynamic e) {
-    return 'Authentication failed: $e';
-  }
-
-  // Get user profile (placeholder for Firestore integration)
-  Future<Map<String, dynamic>?> getUserProfile(String uid) async {
-    // TODO: Implement Firestore integration
-    return null;
-  }
-
-  // Update user profile data (placeholder for Firestore integration)
-  Future<void> updateUserProfileData(String uid, Map<String, dynamic> data) async {
-    // TODO: Implement Firestore integration
-  }
-
-  // Delete user account
-  Future<void> deleteUserAccount() async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Clear mock user
-    _mockUser = null;
-    _notifyAuthChanged();
-  }
-
-  // Check if user exists
-  Future<bool> userExists(String email) async {
-    // Simulate network delay
-    await Future.delayed(const Duration(seconds: 1));
-    
-    // Mock implementation - always return false for new users
-    return false;
-  }
-
-  // Biometric Authentication Methods
-
-  /// Check if biometric authentication is available
-  Future<bool> isBiometricAvailable() async {
-    return await _biometricService.isBiometricAvailable();
-  }
-
-  /// Get available biometric types
-  Future<List<BiometricType>> getAvailableBiometrics() async {
-    return await _biometricService.getAvailableBiometrics();
-  }
-
-  /// Get primary biometric type for the device
-  Future<String?> getPrimaryBiometricType() async {
-    return await _biometricService.getPrimaryBiometricType();
-  }
-
-  /// Authenticate using biometrics
-  Future<bool> authenticateWithBiometrics() async {
-    final success = await _biometricService.authenticateWithBiometrics(
-      reason: 'Sign in to GhostRoll',
-    );
-    
-    if (success) {
-      // If biometric auth succeeds, restore the last known user
-      await _restoreUserFromBiometric();
-      await _biometricService.recordSuccessfulAuth();
-    }
-    
-    return success;
-  }
-
-  /// Enable biometric authentication
-  Future<void> enableBiometricAuth() async {
-    await _biometricService.setBiometricEnabled(true);
-    await _biometricService.setRememberMeEnabled(true);
-  }
-
-  /// Disable biometric authentication
-  Future<void> disableBiometricAuth() async {
-    await _biometricService.setBiometricEnabled(false);
-    await _biometricService.setRememberMeEnabled(false);
-    await _biometricService.clearAuthRecords();
-  }
-
-  /// Check if biometric authentication is enabled
-  Future<bool> isBiometricEnabled() async {
-    return await _biometricService.isBiometricEnabled();
-  }
-
-  /// Check if "Remember Me" is enabled
-  Future<bool> isRememberMeEnabled() async {
-    return await _biometricService.isRememberMeEnabled();
-  }
-
-  /// Enable or disable "Remember Me"
-  Future<void> setRememberMeEnabled(bool enabled) async {
-    await _biometricService.setRememberMeEnabled(enabled);
-  }
-
-  /// Check if user needs to re-authenticate
-  Future<bool> needsReAuthentication() async {
-    return await _biometricService.needsReAuthentication();
-  }
-
-  /// Get authentication status
-  Future<Map<String, dynamic>> getAuthStatus() async {
-    return await _biometricService.getAuthStatus();
-  }
-
-  /// Restore user from biometric authentication
-  Future<void> _restoreUserFromBiometric() async {
-    // In a real app, this would restore the user from secure storage
-    // For now, we'll use a mock user
-    if (_mockUser == null) {
-      _mockUser = {
-        'uid': 'biometric-user-id',
-        'email': 'user@example.com',
-        'displayName': 'Biometric User',
-        'provider': 'biometric',
-      };
-      _notifyAuthChanged();
-    }
-  }
-
-  /// Initialize authentication state on app start
-  Future<void> initializeAuthState() async {
-    final authStatus = await _biometricService.getAuthStatus();
-    
-    // If biometric auth is enabled and user doesn't need re-authentication
-    if (authStatus['canUseBiometrics'] && !authStatus['needsReAuthentication']) {
-      // Automatically restore user session
-      await _restoreUserFromBiometric();
+  /// Clear authentication state from local storage
+  Future<void> _clearAuthState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('is_authenticated');
+      await prefs.remove('current_user_id');
+      await prefs.remove('current_user_email');
+      await prefs.remove('current_user_display_name');
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error clearing auth state: $e');
     }
   }
 } 

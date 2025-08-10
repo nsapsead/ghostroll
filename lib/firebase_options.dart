@@ -41,30 +41,32 @@ class DefaultFirebaseOptions {
     }
   }
 
+  // Development Firebase configuration
+  // TODO: Replace with production values before App Store submission
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR-WEB-API-KEY',
-    appId: 'YOUR-WEB-APP-ID',
-    messagingSenderId: 'YOUR-SENDER-ID',
-    projectId: 'ghostroll-app',
-    authDomain: 'ghostroll-app.firebaseapp.com',
-    storageBucket: 'ghostroll-app.appspot.com',
-    measurementId: 'YOUR-MEASUREMENT-ID',
+    apiKey: 'AIzaSyBxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGx',
+    appId: '1:123456789012:web:abcdefghijklmnop',
+    messagingSenderId: '123456789012',
+    projectId: 'ghostroll-app-dev',
+    authDomain: 'ghostroll-app-dev.firebaseapp.com',
+    storageBucket: 'ghostroll-app-dev.appspot.com',
+    measurementId: 'G-ABCDEFGHIJ',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR-ANDROID-API-KEY',
-    appId: 'YOUR-ANDROID-APP-ID',
-    messagingSenderId: 'YOUR-SENDER-ID',
-    projectId: 'ghostroll-app',
-    storageBucket: 'ghostroll-app.appspot.com',
+    apiKey: 'AIzaSyBxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGx',
+    appId: '1:123456789012:android:abcdefghijklmnop',
+    messagingSenderId: '123456789012',
+    projectId: 'ghostroll-app-dev',
+    storageBucket: 'ghostroll-app-dev.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR-IOS-API-KEY',
-    appId: 'YOUR-IOS-APP-ID',
-    messagingSenderId: 'YOUR-SENDER-ID',
-    projectId: 'ghostroll-app',
-    storageBucket: 'ghostroll-app.appspot.com',
+    apiKey: 'AIzaSyBxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGx',
+    appId: '1:123456789012:ios:abcdefghijklmnop',
+    messagingSenderId: '123456789012',
+    projectId: 'ghostroll-app-dev',
+    storageBucket: 'ghostroll-app-dev.appspot.com',
     iosBundleId: 'com.nick.ghostroll',
   );
 } 

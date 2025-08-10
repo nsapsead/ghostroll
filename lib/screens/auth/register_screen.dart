@@ -160,9 +160,9 @@ class _RegisterScreenState extends State<RegisterScreen>
 
     try {
       await _authService.signUpWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        displayName: _nameController.text.trim(),
+        _emailController.text.trim(),
+        _passwordController.text,
+        _nameController.text.trim(),
       );
     } catch (e) {
       setState(() {

@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../theme/ghostroll_theme.dart';
 import '../services/goals_service.dart';
 import '../widgets/common/glow_text.dart';
 import '../components/gradient_card.dart';
+import '../models/goal.dart';
 
 class GoalsScreen extends StatefulWidget {
   const GoalsScreen({super.key});
@@ -85,44 +87,52 @@ class _GoalsScreenState extends State<GoalsScreen>
     super.dispose();
   }
 
+  // Load goals from storage
   Future<void> _loadGoals() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
-      // Create default goals if none exist
-      await _goalsService.createDefaultGoals();
+      setState(() {
+        _isLoading = true;
+      });
       
       final goals = await _goalsService.loadGoals();
-      final stats = await _goalsService.getCompletionStats();
-      
       setState(() {
         _goals = goals;
-        _stats = stats;
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading goals: $e');
+      // Log error but don't crash the app
+      debugPrint('Error loading goals: $e');
       setState(() {
         _isLoading = false;
       });
     }
   }
 
+  // Toggle goal completion
   Future<void> _toggleGoalCompletion(Goal goal) async {
     try {
-      await _goalsService.toggleGoalCompletion(goal.id);
-      await _loadGoals(); // Reload to get updated stats
+      final updatedGoal = goal.copyWith(isCompleted: !goal.isCompleted);
+      await _goalsService.updateGoal(updatedGoal);
+      
+      setState(() {
+        final index = _goals.indexWhere((g) => g.id == goal.id);
+        if (index != -1) {
+          _goals[index] = updatedGoal;
+        }
+      });
     } catch (e) {
-      print('Error toggling goal completion: $e');
+      // Log error but don't crash the app
+      debugPrint('Error toggling goal completion: $e');
     }
   }
 
+  // Delete a goal
   Future<void> _deleteGoal(Goal goal) async {
     try {
       await _goalsService.deleteGoal(goal.id);
-      await _loadGoals();
+      setState(() {
+        _goals.removeWhere((g) => g.id == goal.id);
+      });
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -137,7 +147,8 @@ class _GoalsScreenState extends State<GoalsScreen>
         );
       }
     } catch (e) {
-      print('Error deleting goal: $e');
+      // Log error but don't crash the app
+      debugPrint('Error deleting goal: $e');
     }
   }
 

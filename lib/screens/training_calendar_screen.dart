@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/ghostroll_theme.dart';
@@ -49,7 +50,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
       setState(() {
         _isLoadingClassTypes = false;
       });
-      print('Error loading class types: $e');
+      debugPrint('Error loading class types: $e');
     }
   }
 
@@ -993,7 +994,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                         );
                       }
                     } catch (e) {
-                      print('Error adding recurring class: $e');
+                      debugPrint('Error adding recurring class: $e');
                       if (mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
@@ -1276,6 +1277,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                           );
                         }
                       } catch (e) {
+                        debugPrint('Error adding drop-in event: $e');
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text('Failed to save event. Please try again.'),
@@ -1533,6 +1535,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
           );
         }
       } catch (e) {
+        debugPrint('Error deleting event: $e');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -1596,6 +1599,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
             );
           }
         } catch (e) {
+          debugPrint('Error deleting instance: $e');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1660,6 +1664,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
             );
           }
         } catch (e) {
+          debugPrint('Error deleting future events: $e');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -1721,7 +1726,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
         );
       }
     } catch (e) {
-      print('Error logging attendance: $e');
+      debugPrint('Error logging attendance: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

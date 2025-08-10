@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:timezone/timezone.dart' as tz;
@@ -47,9 +48,9 @@ class SimpleNotificationService {
       await _createNotificationChannels();
 
       _isInitialized = true;
-      print('SimpleNotificationService initialized successfully');
     } catch (e) {
-      print('Error initializing SimpleNotificationService: $e');
+      // Log error but don't crash the app
+      debugPrint('Error initializing SimpleNotificationService: $e');
     }
   }
 
@@ -102,7 +103,7 @@ class SimpleNotificationService {
 
   // Handle notification taps
   void _onNotificationTapped(NotificationResponse response) {
-    print('Notification tapped: ${response.payload}');
+    debugPrint('Notification tapped: ${response.payload}');
     // You can add navigation logic here later
   }
 
@@ -152,9 +153,9 @@ class SimpleNotificationService {
       await prefs.setInt('daily_reminder_hour', hour);
       await prefs.setInt('daily_reminder_minute', minute);
 
-      print('Daily reminder scheduled for $hour:$minute');
+      debugPrint('Daily reminder scheduled for $hour:$minute');
     } catch (e) {
-      print('Error scheduling daily reminder: $e');
+      debugPrint('Error scheduling daily reminder: $e');
     }
   }
 
@@ -184,7 +185,7 @@ class SimpleNotificationService {
         ),
       );
     } catch (e) {
-      print('Error sending test notification: $e');
+      debugPrint('Error sending test notification: $e');
     }
   }
 

@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../theme/ghostroll_theme.dart';
 import '../../services/calendar_service.dart';
+import '../../models/class_schedule.dart';
 
 class MonthlyCalendarView extends StatefulWidget {
   final DateTime month;
@@ -36,22 +38,16 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
     }
   }
 
+  // Load events for the current month
   Future<void> _loadMonthEvents() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
       final events = await CalendarService.getEventsForMonth(widget.month);
       setState(() {
         _monthEvents = events;
-        _isLoading = false;
       });
     } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      print('Error loading month events: $e');
+      // Log error but don't crash the app
+      debugPrint('Error loading month events: $e');
     }
   }
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'screens/auth/auth_wrapper.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/quick_log_screen.dart';
@@ -13,9 +15,19 @@ import 'theme/ghostroll_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize notification service
-  final notificationService = SimpleNotificationService();
-  await notificationService.initialize();
+  try {
+    // Initialize Firebase
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    
+    // Initialize notification service
+    final notificationService = SimpleNotificationService();
+    await notificationService.initialize();
+  } catch (e) {
+    // Log error but don't crash the app
+    debugPrint('Error initializing services: $e');
+  }
   
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(

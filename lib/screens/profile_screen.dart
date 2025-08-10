@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import '../services/auth_service.dart';
@@ -155,7 +156,7 @@ class _ProfileScreenState extends State<ProfileScreen>
         _selectedStyles.addAll(selectedStyles);
       });
     } catch (e) {
-      print('Error loading selected styles: $e');
+      debugPrint('Error loading selected styles: $e');
     }
   }
 
@@ -165,7 +166,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     
     // Get current authenticated user
     final authService = AuthService();
-    final currentUser = authService.currentUser;
+    final displayName = authService.currentUserDisplayName;
     
     setState(() {
       // Handle backward compatibility with existing 'name' field
@@ -177,9 +178,8 @@ class _ProfileScreenState extends State<ProfileScreen>
         final nameParts = data['name'].toString().trim().split(' ');
         _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
         _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-      } else if (currentUser != null && currentUser['displayName'] != null) {
+      } else if (displayName != null && displayName.isNotEmpty) {
         // Use authentication display name if no saved profile data
-        final displayName = currentUser['displayName'] as String;
         final nameParts = displayName.trim().split(' ');
         _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
         _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
@@ -214,7 +214,7 @@ class _ProfileScreenState extends State<ProfileScreen>
     try {
       await ProfileService.saveSelectedStyles(_selectedStyles);
     } catch (e) {
-      print('Error saving selected styles: $e');
+      debugPrint('Error saving selected styles: $e');
     }
   }
 
@@ -238,14 +238,14 @@ class _ProfileScreenState extends State<ProfileScreen>
       
       // Update Firebase Auth display name if name changed
       final authService = AuthService();
-      final currentUser = authService.currentUser;
+      final currentDisplayName = authService.currentUserDisplayName;
       final fullName = '${_firstNameController.text} ${_surnameController.text}'.trim();
       
-      if (currentUser != null && currentUser['displayName'] != fullName) {
+      if (currentDisplayName != null && currentDisplayName != fullName) {
         try {
           await authService.updateUserProfile(displayName: fullName);
         } catch (e) {
-          print('Error updating Firebase Auth display name: $e');
+          debugPrint('Error updating Firebase Auth display name: $e');
         }
       }
       
@@ -281,7 +281,7 @@ class _ProfileScreenState extends State<ProfileScreen>
       };
       ProfileService.saveProfileData(data);
     } catch (e) {
-      print('Error auto-saving profile: $e');
+      debugPrint('Error auto-saving profile: $e');
     }
   }
 
@@ -907,7 +907,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        AuthService().currentUser?['email'] ?? 'Not available',
+                        AuthService().currentUserEmail ?? 'Not available',
                         style: GhostRollTheme.bodyMedium.copyWith(
                           color: GhostRollTheme.text,
                           fontSize: 16,
@@ -2109,7 +2109,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     });
                                   Navigator.pop(context);
                   } catch (e) {
-                    print('Error adding instructor: $e');
+                    debugPrint('Error adding instructor: $e');
                   }
                 }
               },
@@ -2221,7 +2221,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     }
                     Navigator.pop(context);
                   } catch (e) {
-                    print('Error removing instructor: $e');
+                    debugPrint('Error removing instructor: $e');
                   }
               },
               style: TextButton.styleFrom(
@@ -2247,7 +2247,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                     }
                                   Navigator.pop(context);
                   } catch (e) {
-                    print('Error updating instructor: $e');
+                    debugPrint('Error updating instructor: $e');
                   }
                 }
               },

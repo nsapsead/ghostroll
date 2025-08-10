@@ -1,54 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-class Goal {
-  final String id;
-  final String title;
-  final String description;
-  final String category;
-  final DateTime createdAt;
-  final DateTime? targetDate;
-  bool isCompleted;
-  final Color color;
-
-  Goal({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.category,
-    required this.createdAt,
-    this.targetDate,
-    this.isCompleted = false,
-    required this.color,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'category': category,
-      'createdAt': createdAt.toIso8601String(),
-      'targetDate': targetDate?.toIso8601String(),
-      'isCompleted': isCompleted,
-      'color': color.value,
-    };
-  }
-
-  factory Goal.fromJson(Map<String, dynamic> json) {
-    return Goal(
-      id: json['id'],
-      title: json['title'],
-      description: json['description'],
-      category: json['category'],
-      createdAt: DateTime.parse(json['createdAt']),
-      targetDate: json['targetDate'] != null ? DateTime.parse(json['targetDate']) : null,
-      isCompleted: json['isCompleted'] ?? false,
-      color: Color(json['color']),
-    );
-  }
-}
+import '../models/goal.dart';
 
 class GoalsService {
   static final GoalsService _instance = GoalsService._internal();
@@ -94,32 +48,34 @@ class GoalsService {
     }
   }
 
-  // Load all goals
+  // Load goals from local storage
   Future<List<Goal>> loadGoals() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final goalsJson = prefs.getStringList(_goalsKey) ?? [];
+      final goalsJson = prefs.getString('goals');
       
-      return goalsJson
-          .map((json) => Goal.fromJson(jsonDecode(json)))
-          .toList();
+      if (goalsJson != null) {
+        final List<dynamic> goalsList = jsonDecode(goalsJson);
+        return goalsList.map((json) => Goal.fromJson(json)).toList();
+      }
+      
+      return [];
     } catch (e) {
-      print('Error loading goals: $e');
+      // Log error but don't crash the app
+      debugPrint('Error loading goals: $e');
       return [];
     }
   }
 
-  // Save all goals
+  // Save goals to local storage
   Future<void> saveGoals(List<Goal> goals) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final goalsJson = goals
-          .map((goal) => jsonEncode(goal.toJson()))
-          .toList();
-      
-      await prefs.setStringList(_goalsKey, goalsJson);
+      final goalsJson = jsonEncode(goals.map((g) => g.toJson()).toList());
+      await prefs.setString('goals', goalsJson);
     } catch (e) {
-      print('Error saving goals: $e');
+      // Log error but don't crash the app
+      debugPrint('Error saving goals: $e');
     }
   }
 

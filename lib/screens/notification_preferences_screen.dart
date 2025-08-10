@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../theme/ghostroll_theme.dart';
 import '../services/simple_notification_service.dart';
@@ -34,7 +35,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
         _isLoading = false;
       });
     } catch (e) {
-      print('Error loading notification settings: $e');
+      debugPrint('Error loading notification settings: $e');
       setState(() {
         _isLoading = false;
       });
@@ -66,7 +67,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
         );
       }
     } catch (e) {
-      print('Error updating daily reminder: $e');
+      debugPrint('Error updating daily reminder: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -109,7 +110,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
           );
         }
       } catch (e) {
-        print('Error updating reminder time: $e');
+        debugPrint('Error updating reminder time: $e');
       }
     }
   }
@@ -129,7 +130,7 @@ class _NotificationPreferencesScreenState extends State<NotificationPreferencesS
         );
       }
     } catch (e) {
-      print('Error sending test notification: $e');
+      debugPrint('Error sending test notification: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

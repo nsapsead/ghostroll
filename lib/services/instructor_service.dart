@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class InstructorService {
@@ -13,20 +14,21 @@ class InstructorService {
 
   // Load instructors from local storage
   static Future<List<Map<String, dynamic>>> loadInstructors() async {
-    final prefs = await SharedPreferences.getInstance();
-    final instructorsJson = prefs.getString(_instructorsKey);
-    
-    if (instructorsJson != null) {
-      try {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final instructorsJson = prefs.getString(_instructorsKey);
+      
+      if (instructorsJson != null) {
         final List<dynamic> instructorsList = jsonDecode(instructorsJson);
         return instructorsList.cast<Map<String, dynamic>>();
-      } catch (e) {
-        print('Error loading instructors: $e');
-        return [];
       }
+      
+      return [];
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error loading instructors: $e');
+      return [];
     }
-    
-    return [];
   }
 
   // Add a new instructor

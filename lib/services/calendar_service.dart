@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../models/class_schedule.dart';
 
 // Enum for event types
 enum CalendarEventType { recurringClass, dropInEvent }
@@ -187,7 +190,7 @@ class CalendarService {
       final eventsJson = jsonEncode(events.map((e) => e.toJson()).toList());
       await prefs.setString(_eventsKey, eventsJson);
     } catch (e) {
-      print('Error saving events: $e');
+      debugPrint('Error saving events: $e');
       rethrow;
     }
   }
@@ -221,7 +224,7 @@ class CalendarService {
       
       return [];
     } catch (e) {
-      print('Error loading events: $e');
+      debugPrint('Error loading events: $e');
       return [];
     }
   }
@@ -252,7 +255,7 @@ class CalendarService {
       events.add(event);
       await saveEvents(events);
     } catch (e) {
-      print('Error adding event: $e');
+      debugPrint('Error adding event: $e');
       rethrow;
     }
   }
@@ -268,7 +271,7 @@ class CalendarService {
         await saveEvents(events);
       }
     } catch (e) {
-      print('Error updating event: $e');
+      debugPrint('Error updating event: $e');
       rethrow;
     }
   }
@@ -280,7 +283,7 @@ class CalendarService {
       events.removeWhere((event) => event.id == eventId);
       await saveEvents(events);
     } catch (e) {
-      print('Error deleting event: $e');
+      debugPrint('Error deleting event: $e');
       rethrow;
     }
   }
@@ -324,7 +327,7 @@ class CalendarService {
       eventsForDate.sort((a, b) => a.startTime.compareTo(b.startTime));
       return eventsForDate;
     } catch (e) {
-      print('Error getting events for date: $e');
+      debugPrint('Error getting events for date: $e');
       return [];
     }
   }
@@ -342,7 +345,7 @@ class CalendarService {
       
       return weekEvents;
     } catch (e) {
-      print('Error getting events for week: $e');
+      debugPrint('Error getting events for week: $e');
       return {};
     }
   }
@@ -364,7 +367,7 @@ class CalendarService {
       
       return monthEvents;
     } catch (e) {
-      print('Error getting events for month: $e');
+      debugPrint('Error getting events for month: $e');
       return {};
     }
   }
@@ -420,7 +423,7 @@ class CalendarService {
       
       return upcomingClasses;
     } catch (e) {
-      print('Error getting upcoming classes: $e');
+      debugPrint('Error getting upcoming classes: $e');
       return [];
     }
   }
@@ -431,7 +434,7 @@ class CalendarService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_eventsKey);
     } catch (e) {
-      print('Error clearing events: $e');
+      debugPrint('Error clearing events: $e');
       rethrow;
     }
   }
@@ -461,7 +464,7 @@ class CalendarService {
         }
       }
     } catch (e) {
-      print('Error deleting recurring event instance: $e');
+      debugPrint('Error deleting recurring event instance: $e');
       rethrow;
     }
   }
@@ -487,7 +490,7 @@ class CalendarService {
         }
       }
     } catch (e) {
-      print('Error deleting recurring event from date: $e');
+      debugPrint('Error deleting recurring event from date: $e');
       rethrow;
     }
   }
@@ -522,7 +525,7 @@ class CalendarService {
       final events = schedule.map((s) => _migrateFromLegacyFormat(s)).toList();
       await saveEvents(events);
     } catch (e) {
-      print('Error saving schedule: $e');
+      debugPrint('Error saving schedule: $e');
       rethrow;
     }
   }
@@ -536,7 +539,7 @@ class CalendarService {
           .map((e) => e.toJson())
           .toList();
     } catch (e) {
-      print('Error loading schedule: $e');
+      debugPrint('Error loading schedule: $e');
       return [];
     }
   }
@@ -547,7 +550,7 @@ class CalendarService {
       final event = _migrateFromLegacyFormat(entry);
       await addEvent(event);
     } catch (e) {
-      print('Error adding schedule entry: $e');
+      debugPrint('Error adding schedule entry: $e');
       rethrow;
     }
   }
@@ -558,7 +561,7 @@ class CalendarService {
       final event = _migrateFromLegacyFormat({...updatedEntry, 'id': entryId});
       await updateEvent(entryId, event);
     } catch (e) {
-      print('Error updating schedule entry: $e');
+      debugPrint('Error updating schedule entry: $e');
       rethrow;
     }
   }
@@ -568,7 +571,7 @@ class CalendarService {
     try {
       await deleteEvent(entryId);
     } catch (e) {
-      print('Error deleting schedule entry: $e');
+      debugPrint('Error deleting schedule entry: $e');
       rethrow;
     }
   }
@@ -582,7 +585,7 @@ class CalendarService {
           .map((e) => e.toJson())
           .toList();
     } catch (e) {
-      print('Error getting schedule for day: $e');
+      debugPrint('Error getting schedule for day: $e');
       return [];
     }
   }

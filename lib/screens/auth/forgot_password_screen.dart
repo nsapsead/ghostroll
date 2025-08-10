@@ -94,7 +94,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
     });
 
     try {
-      await _authService.resetPassword(_emailController.text.trim());
+      await _authService.sendPasswordResetEmail(_emailController.text.trim());
       setState(() {
         _emailSent = true;
       });

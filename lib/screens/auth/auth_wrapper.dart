@@ -1,6 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/auth_service.dart';
+import '../../services/biometric_service.dart';
 import 'login_screen.dart';
 import '../main_navigation_screen.dart';
 
@@ -13,7 +14,8 @@ class AuthWrapper extends StatefulWidget {
 
 class _AuthWrapperState extends State<AuthWrapper> {
   final AuthService _authService = AuthService();
-  bool _isInitializing = true;
+  final BiometricService _biometricService = BiometricService();
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -23,95 +25,93 @@ class _AuthWrapperState extends State<AuthWrapper> {
 
   Future<void> _initializeAuth() async {
     try {
-      // Initialize biometric authentication state
+      setState(() {
+        _isLoading = true;
+      });
+      
+      // Initialize auth service
       await _authService.initializeAuthState();
-    } catch (e) {
-      print('Error initializing auth: $e');
-    } finally {
-      if (mounted) {
+      
+      // Check if user is already authenticated
+      final isAuthenticated = _authService.isAuthenticated;
+      
+      if (isAuthenticated) {
+        // Check if biometric auth is available and enabled
+        final biometricAvailable = await _biometricService.isBiometricAvailable();
+        final biometricEnabled = await _biometricService.isBiometricEnabled();
+        
+        if (biometricAvailable && biometricEnabled) {
+          // Attempt biometric authentication
+          final authenticated = await _biometricService.authenticate();
+          if (authenticated) {
+            _navigateToMain();
+            return;
+          }
+        }
+        
+        // If no biometric or biometric failed, go to main
+        _navigateToMain();
+      } else {
         setState(() {
-          _isInitializing = false;
+          _isLoading = false;
         });
       }
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error initializing auth: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _navigateToMain() {
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isInitializing) {
+    if (_isLoading) {
       return _buildLoadingScreen();
     }
-
-    return StreamBuilder<Map<String, dynamic>?>(
-      stream: _authService.authStateChanges,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return _buildLoadingScreen();
-        }
-        
-        if (snapshot.hasData && snapshot.data != null) {
-          return const MainNavigationScreen();
-        }
-        
-        return const LoginScreen();
-      },
-    );
+    
+    // User is not authenticated, show login screen
+    return const LoginScreen();
   }
 
   Widget _buildLoadingScreen() {
     return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF0A0A0A),
-              const Color(0xFF1A1A1A),
-              const Color(0xFF0F0F0F),
-            ],
-            stops: const [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.white.withOpacity(0.1),
-                      blurRadius: 20,
-                      spreadRadius: 0,
-                    ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(20),
-                  child: Image.asset(
-                    'assets/images/GhostRollBeltMascot.png',
-                    fit: BoxFit.contain,
-                  ),
-                ),
+      backgroundColor: Colors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Ghost mascot logo
+            Image.asset(
+              'assets/images/ghostroll_logo.png',
+              width: 120,
+              height: 120,
+            ),
+            const SizedBox(height: 24),
+            // Loading text
+            const Text(
+              'GhostRoll',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
               ),
-              const SizedBox(height: 40),
-              const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                'Loading...',
-                style: TextStyle(
-                  color: Colors.grey[300],
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 16),
+            // Loading indicator
+            const CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ],
         ),
       ),
     );

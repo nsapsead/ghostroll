@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../services/biometric_service.dart';
 import '../../theme/ghostroll_theme.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
@@ -18,7 +19,6 @@ class _LoginScreenState extends State<LoginScreen>
   final _passwordController = TextEditingController();
   final _authService = AuthService();
   bool _rememberMe = false;
-
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late AnimationController _pulseController;
@@ -85,7 +85,8 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   Future<void> _loadRememberMeState() async {
-    final rememberMe = await _authService.isRememberMeEnabled();
+    final biometricService = BiometricService();
+    final rememberMe = await biometricService.isRememberMeEnabled();
     setState(() {
       _rememberMe = rememberMe;
     });
@@ -111,13 +112,14 @@ class _LoginScreenState extends State<LoginScreen>
 
     try {
       await _authService.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
+        _emailController.text.trim(),
+        _passwordController.text,
       );
       
       // If remember me is enabled, also enable biometric auth
       if (_rememberMe) {
-        await _authService.enableBiometricAuth();
+        final biometricService = BiometricService();
+        await biometricService.enableBiometricAuth();
       }
     } catch (e) {
       setState(() {
@@ -130,6 +132,7 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  // TODO: Implement social sign-in methods
   Future<void> _signInWithGoogle() async {
     setState(() {
       _isGoogleLoading = true;
@@ -137,7 +140,11 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      await _authService.signInWithGoogle();
+      // TODO: Implement Google sign-in
+      await Future.delayed(const Duration(seconds: 1));
+      setState(() {
+        _errorMessage = 'Google sign-in not yet implemented';
+      });
     } catch (e) {
       setState(() {
         _errorMessage = 'Google sign in failed. Please try again.';
@@ -156,7 +163,11 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      await _authService.signInWithApple();
+      // TODO: Implement Apple sign-in
+      await Future.delayed(const Duration(seconds: 1));
+      setState(() {
+        _errorMessage = 'Apple sign-in not yet implemented';
+      });
     } catch (e) {
       setState(() {
         _errorMessage = 'Apple sign in failed. Please try again.';
@@ -175,12 +186,12 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      await _authService.signInWithFacebook();
-    } catch (e) {
+      // TODO: Implement Facebook sign-in
+      await Future.delayed(const Duration(seconds: 1));
       setState(() {
-        _errorMessage = 'Facebook sign in failed. Please try again.';
+        _errorMessage = 'Facebook sign-in not yet implemented';
       });
-    } finally {
+    } catch (e) {
       setState(() {
         _isFacebookLoading = false;
       });
@@ -194,7 +205,8 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      final success = await _authService.authenticateWithBiometrics();
+      final biometricService = BiometricService();
+      final success = await biometricService.authenticate();
       if (!success) {
         setState(() {
           _errorMessage = 'Biometric authentication failed. Please try again.';
@@ -421,7 +433,8 @@ class _LoginScreenState extends State<LoginScreen>
                         setState(() {
                           _rememberMe = value ?? false;
                         });
-                        await _authService.setRememberMeEnabled(_rememberMe);
+                        final biometricService = BiometricService();
+      await biometricService.setRememberMeEnabled(_rememberMe);
                       },
                       activeColor: GhostRollTheme.flowBlue,
                       checkColor: GhostRollTheme.text,
@@ -524,7 +537,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildBiometricButton() {
     return FutureBuilder<bool>(
-      future: _authService.isBiometricAvailable(),
+      future: BiometricService().isBiometricAvailable(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const SizedBox.shrink();
@@ -535,7 +548,7 @@ class _LoginScreenState extends State<LoginScreen>
         }
         
         return FutureBuilder<String?>(
-          future: _authService.getPrimaryBiometricType(),
+          future: BiometricService().getPrimaryBiometricType(),
           builder: (context, biometricSnapshot) {
             final biometricType = biometricSnapshot.data ?? 'Biometric';
             

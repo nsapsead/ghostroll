@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart'; // Added for debugPrint
 
 class BiometricService {
   static final BiometricService _instance = BiometricService._internal();
@@ -21,9 +22,11 @@ class BiometricService {
     try {
       final isAvailable = await _localAuth.canCheckBiometrics;
       final isDeviceSupported = await _localAuth.isDeviceSupported();
+      
       return isAvailable && isDeviceSupported;
-    } on PlatformException catch (e) {
-      print('Error checking biometric availability: $e');
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error checking biometric availability: $e');
       return false;
     }
   }
@@ -32,8 +35,9 @@ class BiometricService {
   Future<List<BiometricType>> getAvailableBiometrics() async {
     try {
       return await _localAuth.getAvailableBiometrics();
-    } on PlatformException catch (e) {
-      print('Error getting available biometrics: $e');
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error getting available biometrics: $e');
       return [];
     }
   }
@@ -66,20 +70,18 @@ class BiometricService {
   }
 
   /// Authenticate using biometrics
-  Future<bool> authenticateWithBiometrics({
-    String reason = 'Please authenticate to continue',
-    String cancelButton = 'Cancel',
-  }) async {
+  Future<bool> authenticate() async {
     try {
       return await _localAuth.authenticate(
-        localizedReason: reason,
+        localizedReason: 'Please authenticate to access your journal',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
         ),
       );
-    } on PlatformException catch (e) {
-      print('Error during biometric authentication: $e');
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error during biometric authentication: $e');
       return false;
     }
   }
@@ -106,6 +108,25 @@ class BiometricService {
   Future<void> setRememberMeEnabled(bool enabled) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_rememberMeKey, enabled);
+  }
+
+  /// Enable biometric authentication for the current user
+  Future<void> enableBiometricAuth() async {
+    try {
+      // Enable biometric authentication
+      await setBiometricEnabled(true);
+      
+      // Enable remember me
+      await setRememberMeEnabled(true);
+      
+      // Record successful authentication
+      await recordSuccessfulAuth();
+      
+      debugPrint('Biometric authentication enabled successfully');
+    } catch (e) {
+      debugPrint('Error enabling biometric authentication: $e');
+      rethrow;
+    }
   }
 
   /// Set authentication timeout (in hours)
@@ -167,8 +188,9 @@ class BiometricService {
       final availableBiometrics = await _localAuth.getAvailableBiometrics();
       
       return isAvailable && isDeviceSupported && availableBiometrics.isNotEmpty;
-    } on PlatformException catch (e) {
-      print('Error checking biometric hardware: $e');
+    } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error checking biometric hardware: $e');
       return false;
     }
   }

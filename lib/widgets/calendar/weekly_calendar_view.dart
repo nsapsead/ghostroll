@@ -1,6 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../theme/ghostroll_theme.dart';
 import '../../services/calendar_service.dart';
+import '../../models/class_schedule.dart';
 
 class WeeklyCalendarView extends StatefulWidget {
   final DateTime weekStart;
@@ -36,11 +38,8 @@ class _WeeklyCalendarViewState extends State<WeeklyCalendarView> {
     }
   }
 
+  // Load events for the current week
   Future<void> _loadWeekEvents() async {
-    setState(() {
-      _isLoading = true;
-    });
-
     try {
       final events = await CalendarService.getEventsForWeek(widget.weekStart);
       setState(() {
@@ -48,10 +47,11 @@ class _WeeklyCalendarViewState extends State<WeeklyCalendarView> {
         _isLoading = false;
       });
     } catch (e) {
+      // Log error but don't crash the app
+      debugPrint('Error loading week events: $e');
       setState(() {
         _isLoading = false;
       });
-      print('Error loading week events: $e');
     }
   }
 

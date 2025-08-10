@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/session.dart';
@@ -102,10 +103,10 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
         _isLoading = false;
       });
     } catch (e) {
+      debugPrint('Error loading sessions: $e');
       setState(() {
         _isLoading = false;
       });
-      print('Error loading sessions: $e');
     }
   }
 
