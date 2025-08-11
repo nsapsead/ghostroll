@@ -60,7 +60,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>remote-notification</string>
-		<string>background-fetch</string>
 	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
