@@ -41,32 +41,34 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // Development Firebase configuration
-  // TODO: Replace with production values before App Store submission
+  // IMPORTANT: Replace these placeholder values with your actual Firebase configuration
+  // You can get these values from your Firebase Console project settings
+  
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGx',
-    appId: '1:123456789012:web:abcdefghijklmnop',
-    messagingSenderId: '123456789012',
-    projectId: 'ghostroll-app-dev',
-    authDomain: 'ghostroll-app-dev.firebaseapp.com',
-    storageBucket: 'ghostroll-app-dev.appspot.com',
-    measurementId: 'G-ABCDEFGHIJ',
+    apiKey: 'YOUR_WEB_API_KEY', // Replace with actual web API key
+    appId: 'YOUR_WEB_APP_ID', // Replace with actual web app ID
+    messagingSenderId: 'YOUR_SENDER_ID', // Replace with actual sender ID
+    projectId: 'ghostroll-app', // Replace with your actual project ID
+    authDomain: 'ghostroll-app.firebaseapp.com', // Replace with your actual auth domain
+    storageBucket: 'ghostroll-app.appspot.com', // Replace with your actual storage bucket
+    measurementId: 'YOUR_MEASUREMENT_ID', // Replace with actual measurement ID if using Analytics
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGx',
-    appId: '1:123456789012:android:abcdefghijklmnop',
-    messagingSenderId: '123456789012',
-    projectId: 'ghostroll-app-dev',
-    storageBucket: 'ghostroll-app-dev.appspot.com',
+    apiKey: 'AIzaSyBvDhjhAMv0GPJMvxvROHb4SC2DNBVShYM', // Real Android API key from your google-services.json
+    appId: '1:610274763374:android:3d4db7ca14cdaaf58ffc7f', // Real Android app ID from your google-services.json
+    messagingSenderId: '610274763374', // Real sender ID from your iOS plist
+    projectId: 'ghostroll-3800d', // Your actual Firebase project ID
+    storageBucket: 'ghostroll-3800d.firebasestorage.app', // Your actual storage bucket
+    // Note: Android package name is now com.nick.ghostroll
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyBxGxGxGxGxGxGxGxGxGxGxGxGxGxGxGx',
-    appId: '1:123456789012:ios:abcdefghijklmnop',
-    messagingSenderId: '123456789012',
-    projectId: 'ghostroll-app-dev',
-    storageBucket: 'ghostroll-app-dev.appspot.com',
-    iosBundleId: 'com.nick.ghostroll',
+    apiKey: 'AIzaSyAg1nJhraZW7it0qAseiUqHmb-VO3EhKHQ', // Real iOS API key from your plist
+    appId: '1:610274763374:ios:63ec1b7db438bbd68ffc7f', // Real iOS app ID from your plist
+    messagingSenderId: '610274763374', // Real sender ID from your plist
+    projectId: 'ghostroll-3800d', // Your actual Firebase project ID
+    storageBucket: 'ghostroll-3800d.firebasestorage.app', // Your actual storage bucket
+    iosBundleId: 'com.nick.ghostroll', // This matches your actual iOS bundle ID
   );
 } 

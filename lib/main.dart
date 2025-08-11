@@ -20,13 +20,25 @@ void main() async {
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+    debugPrint('Firebase initialized successfully');
     
     // Initialize notification service
     final notificationService = SimpleNotificationService();
     await notificationService.initialize();
-  } catch (e) {
-    // Log error but don't crash the app
+    debugPrint('Notification service initialized successfully');
+  } catch (e, stackTrace) {
+    // Log detailed error information but don't crash the app
     debugPrint('Error initializing services: $e');
+    debugPrint('Stack trace: $stackTrace');
+    
+    // Check if it's a Firebase configuration error
+    if (e.toString().contains('API_KEY') || 
+        e.toString().contains('appId') || 
+        e.toString().contains('projectId')) {
+      debugPrint('CRITICAL: Firebase configuration error detected!');
+      debugPrint('Please check your firebase_options.dart file and ensure all placeholder values are replaced with real Firebase configuration.');
+      debugPrint('Also verify that google-services.json (Android) and GoogleService-Info.plist (iOS) contain real values.');
+    }
   }
   
   SystemChrome.setSystemUIOverlayStyle(

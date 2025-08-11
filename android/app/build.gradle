@@ -27,7 +27,7 @@ apply plugin: 'com.google.gms.google-services'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-    namespace "com.example.martial_arts_journal"
+    namespace "com.nick.ghostroll"
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
@@ -45,7 +45,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.martial_arts_journal"
+        applicationId "com.nick.ghostroll"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
@@ -65,4 +65,16 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    
+    // Import the Firebase BoM
+    implementation platform('com.google.firebase:firebase-bom:34.1.0')
+    
+    // Firebase Analytics (required for other Firebase services)
+    implementation 'com.google.firebase:firebase-analytics'
+    
+    // Firebase Auth (for authentication)
+    implementation 'com.google.firebase:firebase-auth'
+    
+    // Firebase Messaging (for push notifications)
+    implementation 'com.google.firebase:firebase-messaging'
 } 

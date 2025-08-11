@@ -1,169 +1,185 @@
 # Firebase Setup for GhostRoll Authentication
 
-This guide will help you set up Firebase Authentication for your GhostRoll app.
+**⚠️ CRITICAL: Your app is currently crashing on TestFlight due to missing Firebase configuration!**
 
-## Prerequisites
+This guide will help you fix the current crashes and set up Firebase Authentication properly.
 
-- A Google account
-- Flutter SDK installed
-- Android Studio or VS Code
+## Current Issues Causing TestFlight Crashes
 
-## Step 1: Create a Firebase Project
+1. **Missing real Firebase configuration** - All config files contain placeholder values
+2. **Incorrect package names** - Firebase config doesn't match your actual app
+3. **Missing iOS Firebase config** - GoogleService-Info.plist is missing or has wrong values
 
-1. Go to the [Firebase Console](https://console.firebase.google.com/)
-2. Click "Create a project" or "Add project"
-3. Enter a project name: `ghostroll-app`
-4. Choose whether to enable Google Analytics (recommended)
-5. Click "Create project"
+## Step 1: Fix Firebase Configuration (REQUIRED TO STOP CRASHES)
 
-## Step 2: Enable Authentication
+### Option A: Use FlutterFire CLI (Recommended)
 
-1. In your Firebase project, click on "Authentication" in the left sidebar
-2. Click "Get started"
-3. Go to the "Sign-in method" tab
-4. Enable "Email/Password" authentication:
-   - Click on "Email/Password"
-   - Toggle "Enable"
-   - Click "Save"
-
-## Step 3: Set up Firestore Database
-
-1. In your Firebase project, click on "Firestore Database" in the left sidebar
-2. Click "Create database"
-3. Choose "Start in test mode" (for development)
-4. Select a location close to your users
-5. Click "Done"
-
-## Step 4: Configure Android App
-
-1. In your Firebase project, click on the gear icon (⚙️) next to "Project Overview"
-2. Select "Project settings"
-3. Scroll down to "Your apps" section
-4. Click the Android icon (🤖)
-5. Enter your Android package name: `com.example.martial_arts_journal`
-6. Enter app nickname: `GhostRoll`
-7. Click "Register app"
-8. Download the `google-services.json` file
-9. Replace the placeholder file in `android/app/google-services.json` with the downloaded file
-
-## Step 5: Configure iOS App (Optional)
-
-If you're developing for iOS:
-
-1. In the same project settings, click the iOS icon (🍎)
-2. Enter your iOS bundle ID: `com.example.martialArtsJournal`
-3. Enter app nickname: `GhostRoll`
-4. Click "Register app"
-5. Download the `GoogleService-Info.plist` file
-6. Add it to your iOS project in Xcode
-
-## Step 6: Install Dependencies
-
-Run the following command in your project directory:
-
+1. Install FlutterFire CLI:
 ```bash
-flutter pub get
+dart pub global activate flutterfire_cli
 ```
 
-## Step 7: Test the Authentication
+2. Login to Firebase:
+```bash
+firebase login
+```
 
-1. Run your app: `flutter run`
-2. You should see the login screen
-3. Try creating a new account
-4. Test logging in and out
+3. Configure your project:
+```bash
+flutterfire configure
+```
 
-## Security Rules for Firestore
+4. Select your Firebase project and platforms (iOS/Android)
 
-Update your Firestore security rules to allow authenticated users to read/write their own data:
+This will automatically generate the correct `firebase_options.dart` file with real values.
 
-```javascript
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users can only read/write their own profile
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+### Option B: Manual Configuration
+
+If you prefer manual setup, you need to replace ALL placeholder values in these files:
+
+1. **`lib/firebase_options.dart`** - Replace all `YOUR_*` values
+2. **`android/app/google-services.json`** - Replace all `YOUR_*` values  
+3. **`ios/Runner/GoogleService-Info.plist`** - Replace all `YOUR_*` values
+
+## Step 2: Get Real Firebase Configuration Values
+
+1. Go to [Firebase Console](https://console.firebase.google.com/)
+2. Select your project (or create one named `ghostroll-app`)
+3. Go to Project Settings (gear icon)
+4. Add your apps for each platform:
+
+### Android Configuration
+- Package name: `com.nick.ghostroll` ✅ (now matches your updated build.gradle)
+- Download `google-services.json` and replace the existing file
+
+### iOS Configuration  
+- Bundle ID: `com.nick.ghostroll` ✅ (matches your Xcode project)
+- Download `GoogleService-Info.plist` and add to Xcode project
+
+## Step 3: Update Configuration Files
+
+### Update firebase_options.dart
+Replace these placeholder values with real ones from Firebase Console:
+
+```dart
+static const FirebaseOptions android = FirebaseOptions(
+  apiKey: 'AIzaSy...', // Real API key from Firebase Console
+  appId: '1:123456789012:android:abcdef...', // Real app ID
+  messagingSenderId: '123456789012', // Real sender ID
+  projectId: 'ghostroll-app', // Your actual project ID
+  storageBucket: 'ghostroll-app.appspot.com', // Your actual bucket
+);
+
+static const FirebaseOptions ios = FirebaseOptions(
+  apiKey: 'AIzaSy...', // Real API key from Firebase Console
+  appId: '1:123456789012:ios:abcdef...', // Real app ID
+  messagingSenderId: '123456789012', // Real sender ID
+  projectId: 'ghostroll-app', // Your actual project ID
+  storageBucket: 'ghostroll-app.appspot.com', // Your actual bucket
+  iosBundleId: 'com.nick.ghostroll', // This matches your actual iOS bundle ID
+);
+```
+
+### Update google-services.json
+Replace these values:
+
+```json
+{
+  "project_info": {
+    "project_number": "123456789012", // Real project number
+    "project_id": "ghostroll-app", // Your actual project ID
+    "storage_bucket": "ghostroll-app.appspot.com" // Your actual bucket
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:123456789012:android:abcdef...", // Real app ID
+        "android_client_info": {
+          "package_name": "com.nick.ghostroll" // This matches your updated package name
+        }
+      },
+      "api_key": [
+        {
+          "current_key": "AIzaSy..." // Real API key
+        }
+      ]
     }
-    
-    // Users can only read/write their own training sessions
-    match /users/{userId}/sessions/{sessionId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
+  ]
 }
 ```
 
-## Features Included
+### Update GoogleService-Info.plist
+Replace these values:
 
-The authentication system includes:
+```xml
+<key>API_KEY</key>
+<string>AIzaSy...</string> <!-- Real iOS API key -->
 
-- ✅ Email/Password registration and login
-- ✅ Password strength validation
-- ✅ Password reset functionality
-- ✅ User profile creation in Firestore
-- ✅ Secure sign out
-- ✅ Authentication state management
-- ✅ Beautiful dark theme UI
-- ✅ Form validation and error handling
-- ✅ Loading states and animations
+<key>GCM_SENDER_ID</key>
+<string>123456789012</string> <!-- Real sender ID -->
 
-## Troubleshooting
+<key>BUNDLE_ID</key>
+<string>com.nick.ghostroll</string> <!-- This matches your actual iOS bundle ID -->
 
-### Common Issues
+<key>GOOGLE_APP_ID</key>
+<string>1:123456789012:ios:abcdef...</string> <!-- Real iOS app ID -->
+```
 
-1. **"google-services.json not found"**
-   - Make sure you've downloaded and placed the file in `android/app/google-services.json`
-   - Verify the package name matches your `build.gradle` file
+## Step 4: Verify Package Names Match
 
-2. **"Firebase not initialized"**
-   - Ensure you've added the Firebase dependencies to `pubspec.yaml`
-   - Check that `Firebase.initializeApp()` is called in `main.dart`
+Ensure these match exactly between your app and Firebase config:
 
-3. **"Authentication failed"**
-   - Verify that Email/Password authentication is enabled in Firebase Console
-   - Check that your app is properly configured with the correct package name
+- **Android**: `com.nick.ghostroll` ✅ (now matches your updated build.gradle)
+- **iOS**: `com.nick.ghostroll` ✅ (matches your Xcode project)
 
-4. **"Permission denied"**
-   - Update your Firestore security rules to allow authenticated access
-   - Ensure users are properly authenticated before accessing data
+## Step 5: Test Firebase Connection
 
-### Getting Help
+1. Run `flutter clean`
+2. Run `flutter pub get`
+3. Test on device/simulator
+4. Check console logs for Firebase initialization success
 
-If you encounter issues:
+## Step 6: Build for TestFlight
 
-1. Check the [Firebase documentation](https://firebase.google.com/docs)
-2. Review the [Flutter Firebase plugin documentation](https://firebase.flutter.dev/)
-3. Check the console logs for detailed error messages
-4. Verify your Firebase project configuration
+1. Update version in `pubspec.yaml` (e.g., `1.0.0+3`)
+2. Build iOS app: `flutter build ios --release`
+3. Archive in Xcode and upload to TestFlight
 
-## Next Steps
+## Troubleshooting TestFlight Crashes
 
-After setting up authentication, you can:
+### Common Crash Causes
+1. **Firebase not initialized** - Check `firebase_options.dart` has real values
+2. **Missing config files** - Ensure both Android and iOS config files exist
+3. **Package name mismatch** - Verify bundle IDs match exactly
+4. **Invalid API keys** - All API keys must be real, not placeholders
 
-1. Add more authentication providers (Google, Apple, etc.)
-2. Implement user profile management
-3. Add data persistence for training sessions
-4. Set up push notifications
-5. Add analytics and crash reporting
+### Debug Steps
+1. Check Xcode console logs during crash
+2. Verify Firebase initialization in `main.dart`
+3. Test on physical device before TestFlight
+4. Use Firebase Console to verify app registration
 
 ## Security Best Practices
 
-1. **Never commit sensitive keys to version control**
-   - Add `google-services.json` and `GoogleService-Info.plist` to `.gitignore`
-   - Use environment variables for sensitive configuration
+1. **Never commit real Firebase config to public repos**
+2. **Use environment variables for sensitive data**
+3. **Rotate API keys regularly**
+4. **Monitor Firebase Console for unusual activity**
 
-2. **Implement proper security rules**
-   - Always validate user permissions in Firestore rules
-   - Use Firebase Auth to verify user identity
+## Next Steps After Fixing Crashes
 
-3. **Handle errors gracefully**
-   - Provide clear error messages to users
-   - Log errors for debugging (but not sensitive data)
-
-4. **Regular security updates**
-   - Keep Firebase SDKs updated
-   - Monitor Firebase Console for security alerts
+1. Test authentication flow
+2. Set up Firestore security rules
+3. Configure push notifications
+4. Add crash reporting
+5. Set up analytics
 
 ---
 
-Your GhostRoll app is now ready with a complete authentication system! 🥋👻 
+**⚠️ IMPORTANT: Your app will continue to crash on TestFlight until you replace ALL placeholder values with real Firebase configuration!**
+
+**✅ CORRECT BUNDLE IDs:**
+- Android: `com.nick.ghostroll`
+- iOS: `com.nick.ghostroll`
+
+Need help? Check the [Firebase Flutter documentation](https://firebase.flutter.dev/) or [Firebase Console](https://console.firebase.google.com/). 
