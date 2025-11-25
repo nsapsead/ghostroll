@@ -6,21 +6,24 @@ import '../theme/app_theme.dart';
 import '../widgets/common/glow_text.dart';
 import '../widgets/calendar/weekly_calendar_view.dart';
 import '../widgets/calendar/monthly_calendar_view.dart';
-import '../services/calendar_service.dart';
-import '../services/profile_service.dart';
-import '../services/instructor_service.dart';
-import '../services/session_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
+import '../providers/session_provider.dart';
+import '../models/session.dart';
+import '../providers/calendar_providers.dart';
+import '../models/calendar_event.dart';
+import '../providers/profile_providers.dart';
 
 enum CalendarViewType { weekly, monthly }
 
-class TrainingCalendarScreen extends StatefulWidget {
+class TrainingCalendarScreen extends ConsumerStatefulWidget {
   const TrainingCalendarScreen({super.key});
 
   @override
-  State<TrainingCalendarScreen> createState() => _TrainingCalendarScreenState();
+  ConsumerState<TrainingCalendarScreen> createState() => _TrainingCalendarScreenState();
 }
 
-class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
+class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen> {
   CalendarViewType _currentView = CalendarViewType.monthly;
   DateTime _selectedDate = DateTime.now();
   List<String> _availableClassTypes = [];
@@ -40,16 +43,23 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
 
   Future<void> _loadAvailableClassTypes() async {
     try {
-      final selectedStyles = await ProfileService.loadSelectedStyles();
+      final user = ref.read(currentUserProvider);
+      final selectedStyles = user != null 
+          ? await ref.read(profileRepositoryProvider).getSelectedStyles(user.uid)
+          : <String>[];
       final classTypes = _convertStylesToClassTypes(selectedStyles);
-      setState(() {
-        _availableClassTypes = classTypes;
-        _isLoadingClassTypes = false;
-      });
+      if (mounted) {
+        setState(() {
+          _availableClassTypes = classTypes;
+          _isLoadingClassTypes = false;
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoadingClassTypes = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingClassTypes = false;
+        });
+      }
       debugPrint('Error loading class types: $e');
     }
   }
@@ -323,19 +333,67 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
   }
 
   Widget _buildCalendarView() {
+    final eventsAsync = ref.watch(calendarEventsProvider);
+
     return Container(
       margin: const EdgeInsets.all(24),
-      child: _currentView == CalendarViewType.weekly
-          ? WeeklyCalendarView(
-              weekStart: CalendarService.getWeekStart(_selectedDate),
-              onEventTap: _onEventTap,
-              onEmptySlotTap: _onEmptySlotTap,
-            )
-          : MonthlyCalendarView(
-              month: CalendarService.getMonthStart(_selectedDate),
-              onEventTap: _onEventTap,
-              onDayTap: _onDayTap,
-            ),
+      child: eventsAsync.when(
+        data: (events) {
+          // Filter events for the current view
+          // This logic needs to be adapted from CalendarService.getEventsForDate/Week/Month
+          // But since we have all events, we can filter them locally here or in the view widgets
+          // For now, let's pass the raw events to the views and let them filter, 
+          // OR we can create a helper to filter.
+          // Given the existing widgets expect a callback or internal loading, we might need to adjust them.
+          // However, looking at the code, WeeklyCalendarView and MonthlyCalendarView seem to take callbacks?
+          // Wait, the original code didn't pass events to the views. The views likely called CalendarService internally?
+          // Let's check the views. If they are not in this file, I need to check them.
+          // But wait, the original code for _buildCalendarView was:
+          /*
+          child: _currentView == CalendarViewType.weekly
+              ? WeeklyCalendarView(
+                  weekStart: CalendarUtils.getWeekStart(_selectedDate),
+                  onEventTap: _onEventTap,
+                  onEmptySlotTap: _onEmptySlotTap,
+                )
+              : MonthlyCalendarView(
+                  month: CalendarUtils.getMonthStart(_selectedDate),
+                  onEventTap: _onEventTap,
+                  onDayTap: _onDayTap,
+                ),
+          */
+          // This implies the views fetch data themselves. I should check them.
+          // If I can't check them right now, I should assume I need to pass data to them OR refactor them.
+          // Since I am refactoring the screen, I should probably refactor the views too if they use the service.
+          // But for this step, let's assume I need to pass the events to them if I can, or update them later.
+          // Actually, let's look at the imports. 
+          // import '../widgets/calendar/weekly_calendar_view.dart';
+          // import '../widgets/calendar/monthly_calendar_view.dart';
+          
+          // I will need to update these widgets to accept events or use the provider.
+          // For now, I will wrap them in the provider scope effectively by passing the events if they accept them,
+          // or I will have to edit them in a separate step.
+          // Let's stick to the plan: "Refactor TrainingCalendarScreen to use calendarRepositoryProvider".
+          // If the widgets fetch data internally, I need to edit them.
+          // Let's assume for now I will pass the events to modified versions of these widgets.
+          
+          return _currentView == CalendarViewType.weekly
+              ? WeeklyCalendarView(
+                  weekStart: CalendarUtils.getWeekStart(_selectedDate),
+                  events: events, // Passing events
+                  onEventTap: _onEventTap,
+                  onEmptySlotTap: _onEmptySlotTap,
+                )
+              : MonthlyCalendarView(
+                  month: CalendarUtils.getMonthStart(_selectedDate),
+                  events: events, // Passing events
+                  onEventTap: _onEventTap,
+                  onDayTap: _onDayTap,
+                );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error: $err')),
+      ),
     );
   }
 
@@ -357,7 +415,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
 
   String _getDateRangeText() {
     if (_currentView == CalendarViewType.weekly) {
-      final weekStart = CalendarService.getWeekStart(_selectedDate);
+      final weekStart = CalendarUtils.getWeekStart(_selectedDate);
       final weekEnd = weekStart.add(const Duration(days: 6));
       
       if (weekStart.month == weekEnd.month) {
@@ -640,7 +698,11 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
     // Load instructors for initial class type
     if (classType != null) {
       final styleName = _convertClassTypeToStyleName(classType);
-      availableInstructors = await InstructorService.getInstructorNamesForStyle(styleName);
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        final instructors = await ref.read(instructorRepositoryProvider).getInstructorsForStyle(user.uid, styleName);
+        availableInstructors = instructors.map((i) => i['name'] as String).toList();
+      }
       instructor = availableInstructors.isNotEmpty ? availableInstructors.first : null;
     }
 
@@ -681,7 +743,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                         items: List.generate(7, (i) => DropdownMenuItem(
                           value: i + 1,
                           child: Text(
-                            CalendarService.getDayName(i + 1),
+                            CalendarUtils.getDayName(i + 1),
                             style: TextStyle(color: GhostRollTheme.text),
                           ),
                         )),
@@ -716,7 +778,13 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                           if (v != null) {
                             // Load instructors for the new class type
                             final styleName = _convertClassTypeToStyleName(v);
-                            availableInstructors = await InstructorService.getInstructorNamesForStyle(styleName);
+                            final user = ref.read(currentUserProvider);
+                            if (user != null) {
+                              final instructors = await ref.read(instructorRepositoryProvider).getInstructorsForStyle(user.uid, styleName);
+                              availableInstructors = instructors.map((i) => i['name'] as String).toList();
+                            } else {
+                              availableInstructors = [];
+                            }
                             instructor = availableInstructors.isNotEmpty ? availableInstructors.first : null;
                           } else {
                             availableInstructors = [];
@@ -967,31 +1035,39 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                       return;
                     }
 
-                    final newEvent = CalendarService.createRecurringClass(
+                    final newEvent = CalendarEvent(
+                      id: DateTime.now().millisecondsSinceEpoch.toString(),
+                      title: classType!,
+                      type: CalendarEventType.recurringClass,
                       classType: classType!,
                       dayOfWeek: dayOfWeek,
+                      recurringStartDate: recurringStartDate,
+                      recurringEndDate: null,
                       startTime: '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}',
                       endTime: '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}',
-                      recurringStartDate: recurringStartDate,
-                      instructor: instructor,
                       location: location,
+                      instructor: instructor,
                       notes: notes,
+                      createdAt: DateTime.now(),
                     );
                     
                     try {
-                      await CalendarService.addEvent(newEvent);
-                      Navigator.pop(context);
-                      setState(() {}); // Refresh the calendar
-                      
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: const Text('Recurring class added successfully'),
-                            backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                        );
+                      final user = ref.read(currentUserProvider);
+                      if (user != null) {
+                        await ref.read(calendarRepositoryProvider).addEvent(user.uid, newEvent);
+                        Navigator.pop(context);
+                        // setState(() {}); // No need to setState, stream will update
+                        
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text('Recurring class added successfully'),
+                              backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
+                              behavior: SnackBarBehavior.floating,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          );
+                        }
                       }
                     } catch (e) {
                       debugPrint('Error adding recurring class: $e');
@@ -1250,31 +1326,37 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
                 ElevatedButton(
                   onPressed: () async {
                     if (formKey.currentState!.validate() && classType != null && startTime != null && endTime != null) {
-                      final newEvent = CalendarService.createDropInEvent(
+                      final newEvent = CalendarEvent(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
                         title: titleController.text,
+                        type: CalendarEventType.dropInEvent,
                         classType: classType!,
-                        date: selectedDate,
+                        specificDate: selectedDate,
                         startTime: '${startTime!.hour.toString().padLeft(2, '0')}:${startTime!.minute.toString().padLeft(2, '0')}',
                         endTime: '${endTime!.hour.toString().padLeft(2, '0')}:${endTime!.minute.toString().padLeft(2, '0')}',
                         instructor: instructorController.text.isNotEmpty ? instructorController.text : null,
                         location: locationController.text.isNotEmpty ? locationController.text : null,
                         notes: notesController.text.isNotEmpty ? notesController.text : null,
+                        createdAt: DateTime.now(),
                       );
                       
                       try {
-                        await CalendarService.addEvent(newEvent);
-                        Navigator.pop(context);
-                        setState(() {}); // Refresh the calendar
-                        
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Text('Drop-in event added successfully'),
-                              backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                          );
+                        final user = ref.read(currentUserProvider);
+                        if (user != null) {
+                          await ref.read(calendarRepositoryProvider).addEvent(user.uid, newEvent);
+                          Navigator.pop(context);
+                          // setState(() {}); // Stream updates automatically
+                          
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Drop-in event added successfully'),
+                                backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
+                          }
                         }
                       } catch (e) {
                         debugPrint('Error adding drop-in event: $e');
@@ -1353,9 +1435,9 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
             children: [
               _buildEventDetailRow('Type', isRecurring ? 'Recurring Class' : 'Drop-in Event'),
               _buildEventDetailRow('Class', event.classType),
-              _buildEventDetailRow('Time', CalendarService.formatTimeRange(event.startTime, event.endTime)),
+              _buildEventDetailRow('Time', CalendarUtils.formatTimeRange(event.startTime, event.endTime)),
               if (isRecurring) ...[
-                _buildEventDetailRow('Day', CalendarService.getDayName(event.dayOfWeek!)),
+                _buildEventDetailRow('Day', CalendarUtils.getDayName(event.dayOfWeek!)),
                 if (event.recurringStartDate != null)
                   _buildEventDetailRow('Starts', '${event.recurringStartDate!.day}/${event.recurringStartDate!.month}/${event.recurringStartDate!.year}'),
                 if (event.recurringEndDate != null)
@@ -1522,17 +1604,20 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
 
     if (confirmed == true) {
       try {
-        await CalendarService.deleteEvent(event.id);
-        setState(() {}); // Refresh calendar
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Event deleted successfully'),
-              backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          await ref.read(calendarRepositoryProvider).deleteEvent(user.uid, event.id);
+          // setState(() {}); // Stream updates
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Event deleted successfully'),
+                backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            );
+          }
         }
       } catch (e) {
         debugPrint('Error deleting event: $e');
@@ -1586,17 +1671,20 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
 
       if (confirmed == true) {
         try {
-          await CalendarService.deleteRecurringEventInstance(event.id, dateToDelete);
-          setState(() {}); // Refresh calendar
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Event instance deleted successfully'),
-                backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            );
+          final user = ref.read(currentUserProvider);
+          if (user != null) {
+            await ref.read(calendarRepositoryProvider).deleteRecurringEventInstance(user.uid, event.id, dateToDelete);
+            // setState(() {}); // Stream updates
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Event instance deleted successfully'),
+                  backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              );
+            }
           }
         } catch (e) {
           debugPrint('Error deleting instance: $e');
@@ -1651,24 +1739,27 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
 
       if (confirmed == true) {
         try {
-          await CalendarService.deleteRecurringEventFromDate(event.id, fromDate);
-          setState(() {}); // Refresh calendar
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Future events deleted successfully'),
-                backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-            );
+          final user = ref.read(currentUserProvider);
+          if (user != null) {
+            await ref.read(calendarRepositoryProvider).deleteRecurringEventFromDate(user.uid, event.id, fromDate);
+            setState(() {}); // Refresh calendar
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: const Text('Future events deleted successfully'),
+                  backgroundColor: GhostRollTheme.recoveryGreen.withOpacity(0.9),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+              );
+            }
           }
         } catch (e) {
           debugPrint('Error deleting future events: $e');
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Error deleting future events: $e'),
+                content: const Text('Failed to delete future events'),
                 backgroundColor: GhostRollTheme.grindRed.withOpacity(0.9),
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -1692,7 +1783,7 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
       }
 
       // Create session from calendar event
-      final session = SessionService.createSessionFromCalendarEvent(
+      final session = Session.fromCalendarEvent(
         eventTitle: event.title,
         classType: event.classType,
         date: sessionDate,
@@ -1703,8 +1794,11 @@ class _TrainingCalendarScreenState extends State<TrainingCalendarScreen> {
         notes: event.notes,
       );
 
+      final user = ref.read(currentUserProvider);
+      if (user == null) throw Exception('User not authenticated');
+
       // Add session to journal
-      await SessionService.addSession(session);
+      await ref.read(sessionRepositoryProvider).addSession(user.uid, session);
 
       // Show success message
       if (mounted) {

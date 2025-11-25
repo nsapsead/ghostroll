@@ -3,7 +3,7 @@ import 'quick_log_screen.dart';
 import 'journal_timeline_screen.dart';
 import 'goals_screen.dart';
 import 'profile_screen.dart';
-import '../services/auth_service.dart';
+
 import '../theme/ghostroll_theme.dart';
 import '../theme/app_theme.dart';
 import 'training_calendar_screen.dart';

@@ -6,29 +6,25 @@ import '../theme/ghostroll_theme.dart';
 import '../theme/app_theme.dart';
 import 'session_detail_view.dart';
 import 'log_session_form.dart';
-import '../services/session_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/session_provider.dart';
 import '../widgets/common/glow_text.dart';
 import '../widgets/common/app_components.dart';
 
-class JournalTimelineScreen extends StatefulWidget {
+class JournalTimelineScreen extends ConsumerStatefulWidget {
   const JournalTimelineScreen({super.key});
 
   @override
-  State<JournalTimelineScreen> createState() => _JournalTimelineScreenState();
+  ConsumerState<JournalTimelineScreen> createState() => _JournalTimelineScreenState();
 }
 
-class _JournalTimelineScreenState extends State<JournalTimelineScreen>
+class _JournalTimelineScreenState extends ConsumerState<JournalTimelineScreen>
     with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // Session data
-  List<Session> _sessions = [];
-  List<Session> _filteredSessions = [];
-  bool _isLoading = true;
-  
   // Search and filter state
   final TextEditingController _searchController = TextEditingController();
   ClassType? _selectedClassTypeFilter;
@@ -68,8 +64,10 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
     _fadeController.forward();
     _slideController.forward();
     
-    _loadSessions();
-    _searchController.addListener(_performSearch);
+    // Search listener to trigger rebuild
+    _searchController.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -80,77 +78,39 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
     super.dispose();
   }
 
-  // Load sessions from storage
-  Future<void> _loadSessions() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-      
-      final sessions = await SessionService.loadSessions();
-      
-      // Get unique instructors for filter dropdown
-      final instructors = sessions
-          .where((s) => s.instructor != null && s.instructor!.isNotEmpty)
-          .map((s) => s.instructor!)
-          .toSet()
-          .toList();
-      
-      setState(() {
-        _sessions = sessions;
-        _filteredSessions = sessions;
-        _availableInstructors = instructors;
-        _isLoading = false;
-      });
-    } catch (e) {
-      debugPrint('Error loading sessions: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
 
-  // Refresh sessions when returning from other screens
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _loadSessions();
-  }
 
-  // Perform search and filtering
-  void _performSearch() {
+  List<Session> _filterSessions(List<Session> sessions) {
     final query = _searchController.text.toLowerCase();
     
-    setState(() {
-      _filteredSessions = _sessions.where((session) {
-        // Text search
-        bool matchesSearch = true;
-        if (query.isNotEmpty) {
-          matchesSearch = session.focusArea.toLowerCase().contains(query) ||
-              session.techniquesLearned.any((technique) => technique.toLowerCase().contains(query)) ||
-              (session.sparringNotes?.toLowerCase().contains(query) ?? false) ||
-              (session.reflection?.toLowerCase().contains(query) ?? false) ||
-              (session.instructor?.toLowerCase().contains(query) ?? false);
-        }
-        
-        // Class type filter
-        bool matchesClassType = _selectedClassTypeFilter == null || 
-            session.classType == _selectedClassTypeFilter;
-        
-        // Instructor filter
-        bool matchesInstructor = _selectedInstructorFilter == null ||
-            session.instructor == _selectedInstructorFilter;
-        
-        // Date range filter
-        bool matchesDateRange = true;
-        if (_startDateFilter != null && _endDateFilter != null) {
-          matchesDateRange = session.date.isAfter(_startDateFilter!.subtract(const Duration(days: 1))) &&
-              session.date.isBefore(_endDateFilter!.add(const Duration(days: 1)));
-        }
-        
-        return matchesSearch && matchesClassType && matchesInstructor && matchesDateRange;
-      }).toList();
-    });
+    return sessions.where((session) {
+      // Text search
+      bool matchesSearch = true;
+      if (query.isNotEmpty) {
+        matchesSearch = session.focusArea.toLowerCase().contains(query) ||
+            session.techniquesLearned.any((technique) => technique.toLowerCase().contains(query)) ||
+            (session.sparringNotes?.toLowerCase().contains(query) ?? false) ||
+            (session.reflection?.toLowerCase().contains(query) ?? false) ||
+            (session.instructor?.toLowerCase().contains(query) ?? false);
+      }
+      
+      // Class type filter
+      bool matchesClassType = _selectedClassTypeFilter == null || 
+          session.classType == _selectedClassTypeFilter;
+      
+      // Instructor filter
+      bool matchesInstructor = _selectedInstructorFilter == null ||
+          session.instructor == _selectedInstructorFilter;
+      
+      // Date range filter
+      bool matchesDateRange = true;
+      if (_startDateFilter != null && _endDateFilter != null) {
+        matchesDateRange = session.date.isAfter(_startDateFilter!.subtract(const Duration(days: 1))) &&
+            session.date.isBefore(_endDateFilter!.add(const Duration(days: 1)));
+      }
+      
+      return matchesSearch && matchesClassType && matchesInstructor && matchesDateRange;
+    }).toList();
   }
 
   // Clear all filters
@@ -162,7 +122,6 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
       _endDateFilter = null;
       _searchController.clear();
     });
-    _performSearch();
   }
 
   // Navigate to log session form
@@ -171,8 +130,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
       context,
       MaterialPageRoute(builder: (context) => const LogSessionForm()),
     ).then((_) {
-      // Refresh sessions when returning
-      _loadSessions();
+      // Refresh handled by stream
     });
   }
 
@@ -211,23 +169,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                       opacity: _fadeAnimation,
                       child: SlideTransition(
                         position: _slideAnimation,
-                        child: _isLoading
-                            ? _buildLoadingState()
-                            : _sessions.isEmpty
-                                ? _buildEmptyState()
-                                : Column(
-                                    children: [
-                                      _buildSearchAndFilters(),
-                                      Expanded(
-                                        child: _filteredSessions.isEmpty
-                                            ? _buildNoResultsState()
-                                            : SingleChildScrollView(
-                                                padding: const EdgeInsets.all(24),
-                                                child: _buildTimeline(),
-                                              ),
-                                      ),
-                                    ],
-                                  ),
+                        child: _buildContent(),
                       ),
                     ),
                   ),
@@ -237,6 +179,43 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildContent() {
+    final sessionsAsync = ref.watch(sessionListProvider);
+
+    return sessionsAsync.when(
+      data: (sessions) {
+        // Update available instructors
+        _availableInstructors = sessions
+            .where((s) => s.instructor != null && s.instructor!.isNotEmpty)
+            .map((s) => s.instructor!)
+            .toSet()
+            .toList();
+
+        final filteredSessions = _filterSessions(sessions);
+
+        if (sessions.isEmpty) {
+          return _buildEmptyState();
+        }
+
+        return Column(
+          children: [
+            _buildSearchAndFilters(),
+            Expanded(
+              child: filteredSessions.isEmpty
+                  ? _buildNoResultsState()
+                  : SingleChildScrollView(
+                      padding: const EdgeInsets.all(24),
+                      child: _buildTimeline(filteredSessions),
+                    ),
+            ),
+          ],
+        );
+      },
+      loading: () => _buildLoadingState(),
+      error: (e, stack) => Center(child: Text('Error: $e')),
     );
   }
 
@@ -355,7 +334,6 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                           setState(() {
                             _selectedClassTypeFilter = selected ? classType : null;
                           });
-                          _performSearch();
                         },
                         selectedColor: _getClassTypeColor(classType).withOpacity(0.3),
                         checkmarkColor: _getClassTypeColor(classType),
@@ -394,7 +372,6 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                         setState(() {
                           _selectedInstructorFilter = value;
                         });
-                        _performSearch();
                       },
                     ),
                   ],
@@ -422,7 +399,6 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                               setState(() {
                                 _startDateFilter = picked;
                               });
-                              _performSearch();
                             }
                           },
                           child: Text(
@@ -446,7 +422,6 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
                               setState(() {
                                 _endDateFilter = picked;
                               });
-                              _performSearch();
                             }
                           },
                           child: Text(
@@ -617,7 +592,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
     );
   }
 
-  Widget _buildTimeline() {
+  Widget _buildTimeline(List<Session> sessions) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -628,7 +603,7 @@ class _JournalTimelineScreenState extends State<JournalTimelineScreen>
           ),
         ),
         const SizedBox(height: 24),
-        ..._filteredSessions.map((session) => _buildSessionCard(session)),
+        ...sessions.map((session) => _buildSessionCard(session)),
       ],
     );
   }

@@ -1,0 +1,308 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A1234567890123456789012 /* GhostRollApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789013 /* GhostRollApp.swift */; };
+		A1234567890123456789014 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789015 /* ContentView.swift */; };
+		A1234567890123456789016 /* AuthenticationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789017 /* AuthenticationView.swift */; };
+		A1234567890123456789018 /* JournalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789019 /* JournalView.swift */; };
+		A1234567890123456789020 /* GoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789021 /* GoalsView.swift */; };
+		A1234567890123456789022 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789023 /* ProfileView.swift */; };
+		A1234567890123456789024 /* AddSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789025 /* AddSessionView.swift */; };
+		A1234567890123456789026 /* SessionRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789027 /* SessionRowView.swift */; };
+		A1234567890123456789028 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789029 /* Session.swift */; };
+		A1234567890123456789030 /* Goal.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789031 /* Goal.swift */; };
+		A1234567890123456789032 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789033 /* User.swift */; };
+		A1234567890123456789034 /* ClassSchedule.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789035 /* ClassSchedule.swift */; };
+		A1234567890123456789036 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789037 /* AuthService.swift */; };
+		A1234567890123456789038 /* FirestoreService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789039 /* FirestoreService.swift */; };
+		A1234567890123456789040 /* SessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789041 /* SessionService.swift */; };
+		A1234567890123456789042 /* GoalService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789043 /* GoalService.swift */; };
+		A1234567890123456789044 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789045 /* GoogleService-Info.plist */; };
+		A1234567890123456789046 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A1234567890123456789047 /* LaunchScreen.storyboard */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A1234567890123456789013 /* GhostRollApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GhostRollApp.swift; sourceTree = "<group>"; };
+		A1234567890123456789015 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A1234567890123456789017 /* AuthenticationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticationView.swift; sourceTree = "<group>"; };
+		A1234567890123456789019 /* JournalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JournalView.swift; sourceTree = "<group>"; };
+		A1234567890123456789021 /* GoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalsView.swift; sourceTree = "<group>"; };
+		A1234567890123456789023 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		A1234567890123456789025 /* AddSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddSessionView.swift; sourceTree = "<group>"; };
+		A1234567890123456789027 /* SessionRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionRowView.swift; sourceTree = "<group>"; };
+		A1234567890123456789029 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
+		A1234567890123456789031 /* Goal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Goal.swift; sourceTree = "<group>"; };
+		A1234567890123456789033 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		A1234567890123456789035 /* ClassSchedule.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClassSchedule.swift; sourceTree = "<group>"; };
+		A1234567890123456789037 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		A1234567890123456789039 /* FirestoreService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirestoreService.swift; sourceTree = "<group>"; };
+		A1234567890123456789041 /* SessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionService.swift; sourceTree = "<group>"; };
+		A1234567890123456789043 /* GoalService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalService.swift; sourceTree = "<group>"; };
+		A1234567890123456789045 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		A1234567890123456789047 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		A1234567890123456789048 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1234567890123456789049 /* GhostRoll.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GhostRoll.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1234567890123456789050 /* GhostRoll */ = {isa = PBXGroup; children = (
+			A1234567890123456789051 /* GhostRoll */,
+			A1234567890123456789052 /* Products */,
+		); sourceTree = "<group>"; };
+		A1234567890123456789051 /* GhostRoll */ = {isa = PBXGroup; children = (
+			A1234567890123456789013 /* GhostRollApp.swift */,
+			A1234567890123456789015 /* ContentView.swift */,
+			A1234567890123456789017 /* AuthenticationView.swift */,
+			A1234567890123456789019 /* JournalView.swift */,
+			A1234567890123456789021 /* GoalsView.swift */,
+			A1234567890123456789023 /* ProfileView.swift */,
+			A1234567890123456789025 /* AddSessionView.swift */,
+			A1234567890123456789027 /* SessionRowView.swift */,
+			A1234567890123456789029 /* Session.swift */,
+			A1234567890123456789031 /* Goal.swift */,
+			A1234567890123456789033 /* User.swift */,
+			A1234567890123456789035 /* ClassSchedule.swift */,
+			A1234567890123456789037 /* AuthService.swift */,
+			A1234567890123456789039 /* FirestoreService.swift */,
+			A1234567890123456789041 /* SessionService.swift */,
+			A1234567890123456789043 /* GoalService.swift */,
+			A1234567890123456789045 /* GoogleService-Info.plist */,
+			A1234567890123456789048 /* Info.plist */,
+			A1234567890123456789053 /* Assets.xcassets */,
+			A1234567890123456789054 /* Base.lproj */,
+		); path = GhostRoll; sourceTree = "<group>"; };
+		A1234567890123456789052 /* Products */ = {isa = PBXGroup; children = (
+			A1234567890123456789049 /* GhostRoll.app */,
+		); name = Products; sourceTree = "<group>"; };
+		A1234567890123456789053 /* Assets.xcassets */ = {isa = PBXGroup; children = (
+			A1234567890123456789055 /* AppIcon.appiconset */,
+			A1234567890123456789056 /* LaunchImage.imageset */,
+		); path = Assets.xcassets; sourceTree = "<group>"; };
+		A1234567890123456789055 /* AppIcon.appiconset */ = {isa = PBXGroup; children = (
+			A1234567890123456789057 /* Contents.json */,
+		); path = AppIcon.appiconset; sourceTree = "<group>"; };
+		A1234567890123456789056 /* LaunchImage.imageset */ = {isa = PBXGroup; children = (
+			A1234567890123456789058 /* Contents.json */,
+		); path = LaunchImage.imageset; sourceTree = "<group>"; };
+		A1234567890123456789054 /* Base.lproj */ = {isa = PBXGroup; children = (
+			A1234567890123456789047 /* LaunchScreen.storyboard */,
+		); path = Base.lproj; sourceTree = "<group>"; };
+		A1234567890123456789057 /* Contents.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Contents.json; sourceTree = "<group>"; };
+		A1234567890123456789058 /* Contents.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = Contents.json; sourceTree = "<group>"; };
+		A1234567890123456789059 /* GhostRoll */ = {isa = PBXNativeTarget; buildConfigurationList = A1234567890123456789060 /* Build configuration list for PBXNativeTarget "GhostRoll" */; buildPhases = (
+			A1234567890123456789061 /* Sources */,
+			A1234567890123456789062 /* Frameworks */,
+			A1234567890123456789063 /* Resources */,
+		); buildRules = (
+		); dependencies = (
+		); name = GhostRoll; productName = GhostRoll; productReference = A1234567890123456789049 /* GhostRoll.app */; productType = "com.apple.product-type.application"; };
+		A1234567890123456789061 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (
+			A1234567890123456789012 /* GhostRollApp.swift in Sources */,
+			A1234567890123456789014 /* ContentView.swift in Sources */,
+			A1234567890123456789016 /* AuthenticationView.swift in Sources */,
+			A1234567890123456789018 /* JournalView.swift in Sources */,
+			A1234567890123456789020 /* GoalsView.swift in Sources */,
+			A1234567890123456789022 /* ProfileView.swift in Sources */,
+			A1234567890123456789024 /* AddSessionView.swift in Sources */,
+			A1234567890123456789026 /* SessionRowView.swift in Sources */,
+			A1234567890123456789028 /* Session.swift in Sources */,
+			A1234567890123456789030 /* Goal.swift in Sources */,
+			A1234567890123456789032 /* User.swift in Sources */,
+			A1234567890123456789034 /* ClassSchedule.swift in Sources */,
+			A1234567890123456789036 /* AuthService.swift in Sources */,
+			A1234567890123456789038 /* FirestoreService.swift in Sources */,
+			A1234567890123456789040 /* SessionService.swift in Sources */,
+			A1234567890123456789042 /* GoalService.swift in Sources */,
+		); runOnlyForDeploymentPostprocessing = 0; };
+		A1234567890123456789062 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (
+		); runOnlyForDeploymentPostprocessing = 0; };
+		A1234567890123456789063 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (
+			A1234567890123456789044 /* GoogleService-Info.plist in Resources */,
+			A1234567890123456789046 /* LaunchScreen.storyboard in Resources */,
+		); runOnlyForDeploymentPostprocessing = 0; };
+		A1234567890123456789060 /* Build configuration list for PBXNativeTarget "GhostRoll" */ = {isa = XCConfigurationList; buildConfigurations = (
+			A1234567890123456789064 /* Debug */,
+			A1234567890123456789065 /* Release */,
+		); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A1234567890123456789066 /* Build configuration list for PBXProject "GhostRoll" */ = {isa = XCConfigurationList; buildConfigurations = (
+			A1234567890123456789067 /* Debug */,
+			A1234567890123456789068 /* Release */,
+		); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		A1234567890123456789064 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+			CODE_SIGN_STYLE = Automatic;
+			CURRENT_PROJECT_VERSION = 1;
+			DEVELOPMENT_TEAM = "";
+			GENERATE_INFOPLIST_FILE = YES;
+			INFOPLIST_FILE = GhostRoll/Info.plist;
+			INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+			INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+			INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+			INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/Frameworks",
+			);
+			MARKETING_VERSION = 1.0;
+			PRODUCT_BUNDLE_IDENTIFIER = "com.nick.ghostroll";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_EMIT_LOC_STRINGS = YES;
+			SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
+		}; name = Debug; };
+		A1234567890123456789065 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+			CODE_SIGN_STYLE = Automatic;
+			CURRENT_PROJECT_VERSION = 1;
+			DEVELOPMENT_TEAM = "";
+			GENERATE_INFOPLIST_FILE = YES;
+			INFOPLIST_FILE = GhostRoll/Info.plist;
+			INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+			INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+			INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+			INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+			LD_RUNPATH_SEARCH_PATHS = (
+				"$(inherited)",
+				"@executable_path/Frameworks",
+			);
+			MARKETING_VERSION = 1.0;
+			PRODUCT_BUNDLE_IDENTIFIER = "com.nick.ghostroll";
+			PRODUCT_NAME = "$(TARGET_NAME)";
+			SWIFT_EMIT_LOC_STRINGS = YES;
+			SWIFT_VERSION = 5.0;
+			TARGETED_DEVICE_FAMILY = "1,2";
+		}; name = Release; };
+		A1234567890123456789067 /* Debug */ = {isa = XCBuildConfiguration; buildSettings = {
+			ALWAYS_SEARCH_USER_PATHS = NO;
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			CLANG_ANALYZER_NONNULL = YES;
+			CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+			CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+			CLANG_ENABLE_MODULES = YES;
+			CLANG_ENABLE_OBJC_ARC = YES;
+			CLANG_ENABLE_OBJC_WEAK = YES;
+			CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+			CLANG_WARN_BOOL_CONVERSION = YES;
+			CLANG_WARN_COMMA = YES;
+			CLANG_WARN_CONSTANT_CONVERSION = YES;
+			CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+			CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+			CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+			CLANG_WARN_EMPTY_BODY = YES;
+			CLANG_WARN_ENUM_CONVERSION = YES;
+			CLANG_WARN_INFINITE_RECURSION = YES;
+			CLANG_WARN_INT_CONVERSION = YES;
+			CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+			CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+			CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+			CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+			CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+			CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+			CLANG_WARN_STRICT_PROTOTYPES = YES;
+			CLANG_WARN_SUSPICIOUS_MOVE = YES;
+			CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+			CLANG_WARN_UNREACHABLE_CODE = YES;
+			CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+			COPY_PHASE_STRIP = NO;
+			DEBUG_INFORMATION_FORMAT = dwarf;
+			ENABLE_STRICT_OBJC_MSGSEND = YES;
+			ENABLE_TESTABILITY = YES;
+			ENABLE_USER_SCRIPT_SANDBOXING = YES;
+			GCC_C_LANGUAGE_STANDARD = gnu17;
+			GCC_DYNAMIC_NO_PIC = NO;
+			GCC_NO_COMMON_BLOCKS = YES;
+			GCC_OPTIMIZATION_LEVEL = 0;
+			GCC_PREPROCESSOR_DEFINITIONS = (
+				"DEBUG=1",
+				"$(inherited)",
+			);
+			GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+			GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+			GCC_WARN_UNDECLARED_SELECTOR = YES;
+			GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+			GCC_WARN_UNUSED_FUNCTION = YES;
+			GCC_WARN_UNUSED_VARIABLE = YES;
+			IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+			LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+			MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+			MTL_FAST_MATH = YES;
+			ONLY_ACTIVE_ARCH = YES;
+			SDKROOT = iphoneos;
+			SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+			SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+		}; name = Debug; };
+		A1234567890123456789068 /* Release */ = {isa = XCBuildConfiguration; buildSettings = {
+			ALWAYS_SEARCH_USER_PATHS = NO;
+			ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+			CLANG_ANALYZER_NONNULL = YES;
+			CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+			CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+			CLANG_ENABLE_MODULES = YES;
+			CLANG_ENABLE_OBJC_ARC = YES;
+			CLANG_ENABLE_OBJC_WEAK = YES;
+			CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+			CLANG_WARN_BOOL_CONVERSION = YES;
+			CLANG_WARN_COMMA = YES;
+			CLANG_WARN_CONSTANT_CONVERSION = YES;
+			CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+			CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+			CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+			CLANG_WARN_EMPTY_BODY = YES;
+			CLANG_WARN_ENUM_CONVERSION = YES;
+			CLANG_WARN_INFINITE_RECURSION = YES;
+			CLANG_WARN_INT_CONVERSION = YES;
+			CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+			CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+			CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+			CLANG_WARN_OBJC_ROOT_CLASS = YES;
+			CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+			CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+			CLANG_WARN_STRICT_PROTOTYPES = YES;
+			CLANG_WARN_SUSPICIOUS_MOVE = YES;
+			CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+			CLANG_WARN_UNREACHABLE_CODE = YES;
+			CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+			COPY_PHASE_STRIP = NO;
+			DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+			ENABLE_NS_ASSERTIONS = NO;
+			ENABLE_STRICT_OBJC_MSGSEND = YES;
+			ENABLE_USER_SCRIPT_SANDBOXING = YES;
+			GCC_C_LANGUAGE_STANDARD = gnu17;
+			GCC_NO_COMMON_BLOCKS = YES;
+			GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+			GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+			GCC_WARN_UNDECLARED_SELECTOR = YES;
+			GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+			GCC_WARN_UNUSED_FUNCTION = YES;
+			GCC_WARN_UNUSED_VARIABLE = YES;
+			IPHONEOS_DEPLOYMENT_TARGET = 13.0;
+			LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+			MTL_ENABLE_DEBUG_INFO = NO;
+			MTL_FAST_MATH = YES;
+			SDKROOT = iphoneos;
+			SWIFT_COMPILATION_MODE = wholemodule;
+			VALIDATE_PRODUCT = YES;
+		}; name = Release; };
+		A1234567890123456789069 /* PBXProject */ = {isa = PBXProject; attributes = {
+			BuildIndependentTargetsInParallel = 1;
+			LastSwiftUpdateCheck = 1500;
+			LastUpgradeCheck = 1500;
+			TargetAttributes = {
+				A1234567890123456789070 = {
+					CreatedOnToolsVersion = 15.0;
+				};
+			};
+		}; buildConfigurationList = A1234567890123456789066 /* Build configuration list for PBXProject "GhostRoll" */; compatibilityVersion = "Xcode 14.0"; developmentRegion = en; hasScannedForEncodings = 0; knownRegions = (
+			en,
+			Base,
+		); mainGroup = A1234567890123456789050 /* GhostRoll */; productRefGroup = A1234567890123456789052 /* Products */; projectDirPath = ""; projectRoot = ""; targets = (
+			A1234567890123456789059 /* GhostRoll */,
+		); };
+	};
+	rootObject = A1234567890123456789069 /* PBXProject */;
+}

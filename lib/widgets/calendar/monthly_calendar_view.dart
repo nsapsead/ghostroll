@@ -1,17 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../theme/ghostroll_theme.dart';
-import '../../services/calendar_service.dart';
+import '../../models/calendar_event.dart';
 import '../../models/class_schedule.dart';
 
 class MonthlyCalendarView extends StatefulWidget {
   final DateTime month;
+  final List<CalendarEvent> events;
   final Function(CalendarEvent) onEventTap;
   final Function(DateTime) onDayTap;
 
   const MonthlyCalendarView({
     super.key,
     required this.month,
+    required this.events,
     required this.onEventTap,
     required this.onDayTap,
   });
@@ -27,27 +29,73 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
   @override
   void initState() {
     super.initState();
-    _loadMonthEvents();
+    _processEvents();
   }
 
   @override
   void didUpdateWidget(MonthlyCalendarView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.month != widget.month) {
-      _loadMonthEvents();
+    if (oldWidget.month != widget.month || oldWidget.events != widget.events) {
+      _processEvents();
     }
   }
 
-  // Load events for the current month
-  Future<void> _loadMonthEvents() async {
+  // Process events for the current month
+  void _processEvents() {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      final events = await CalendarService.getEventsForMonth(widget.month);
+      final monthEvents = <DateTime, List<CalendarEvent>>{};
+      final firstDay = DateTime(widget.month.year, widget.month.month, 1);
+      final lastDay = DateTime(widget.month.year, widget.month.month + 1, 0);
+      
+      for (int day = firstDay.day; day <= lastDay.day; day++) {
+        final date = DateTime(widget.month.year, widget.month.month, day);
+        
+        // Filter events for this day
+        final eventsForDay = <CalendarEvent>[];
+        for (final event in widget.events) {
+          if (event.type == CalendarEventType.dropInEvent) {
+            if (event.specificDate != null && 
+                event.specificDate!.year == date.year &&
+                event.specificDate!.month == date.month &&
+                event.specificDate!.day == date.day) {
+              eventsForDay.add(event);
+            }
+          } else if (event.type == CalendarEventType.recurringClass) {
+            final startDate = event.recurringStartDate != null 
+                ? DateTime(event.recurringStartDate!.year, event.recurringStartDate!.month, event.recurringStartDate!.day)
+                : DateTime(event.createdAt.year, event.createdAt.month, event.createdAt.day);
+            
+            final dateString = date.toIso8601String().split('T')[0];
+            final isInDateRange = !date.isBefore(startDate) && 
+                (event.recurringEndDate == null || !date.isAfter(
+                    DateTime(event.recurringEndDate!.year, event.recurringEndDate!.month, event.recurringEndDate!.day)));
+            final isNotDeleted = !event.deletedInstances.contains(dateString);
+            
+            if (event.dayOfWeek == date.weekday && isInDateRange && isNotDeleted) {
+              eventsForDay.add(event);
+            }
+          }
+        }
+        
+        eventsForDay.sort((a, b) => a.startTime.compareTo(b.startTime));
+        if (eventsForDay.isNotEmpty) {
+          monthEvents[date] = eventsForDay;
+        }
+      }
+
       setState(() {
-        _monthEvents = events;
+        _monthEvents = monthEvents;
+        _isLoading = false;
       });
     } catch (e) {
-      // Log error but don't crash the app
-      debugPrint('Error loading month events: $e');
+      debugPrint('Error processing month events: $e');
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -124,7 +172,7 @@ class _MonthlyCalendarViewState extends State<MonthlyCalendarView> {
           return Expanded(
             child: Center(
               child: Text(
-                CalendarService.getShortDayName(dayOfWeek),
+                CalendarUtils.getShortDayName(dayOfWeek),
                 style: GhostRollTheme.bodySmall.copyWith(
                   color: GhostRollTheme.textSecondary,
                   fontWeight: FontWeight.w600,

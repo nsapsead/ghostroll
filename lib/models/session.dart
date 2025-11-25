@@ -131,4 +131,69 @@ class Session {
       return '${minutes}m';
     }
   }
+
+  factory Session.fromCalendarEvent({
+    required String eventTitle,
+    required String classType,
+    required DateTime date,
+    required String startTime,
+    required String endTime,
+    String? instructor,
+    String? location,
+    String? notes,
+    String focusArea = '',
+    List<String> techniquesLearned = const [],
+    String? sparringNotes,
+    String? reflection,
+    String? mood,
+  }) {
+    // Convert class type string to ClassType enum
+    ClassType sessionClassType;
+    switch (classType.toLowerCase()) {
+      case 'bjj':
+      case 'brazilian jiu-jitsu':
+        sessionClassType = ClassType.gi;
+        break;
+      case 'no-gi':
+      case 'nogi':
+        sessionClassType = ClassType.noGi;
+        break;
+      case 'striking':
+      case 'muay thai':
+      case 'boxing':
+      case 'kickboxing':
+        sessionClassType = ClassType.striking;
+        break;
+      case 'seminar':
+        sessionClassType = ClassType.seminar;
+        break;
+      default:
+        sessionClassType = ClassType.gi;
+    }
+
+    // Calculate duration from start and end time
+    final startParts = startTime.split(':');
+    final endParts = endTime.split(':');
+    final startDateTime = DateTime(date.year, date.month, date.day, 
+        int.parse(startParts[0]), int.parse(startParts[1]));
+    final endDateTime = DateTime(date.year, date.month, date.day, 
+        int.parse(endParts[0]), int.parse(endParts[1]));
+    final duration = endDateTime.difference(startDateTime).inMinutes;
+
+    return Session(
+      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      date: date,
+      classType: sessionClassType,
+      focusArea: focusArea.isNotEmpty ? focusArea : eventTitle,
+      rounds: 0, // User can edit this later
+      techniquesLearned: techniquesLearned.isNotEmpty ? techniquesLearned : [''],
+      sparringNotes: sparringNotes,
+      reflection: reflection,
+      mood: mood,
+      location: location,
+      instructor: instructor,
+      duration: duration > 0 ? duration : 60, // Default to 60 minutes if calculation fails
+      isScheduledClass: true,
+    );
+  }
 } 

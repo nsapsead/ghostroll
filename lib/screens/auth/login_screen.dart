@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 import '../../services/biometric_service.dart';
 import '../../theme/ghostroll_theme.dart';
 import 'register_screen.dart';
 import 'forgot_password_screen.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen>
+class _LoginScreenState extends ConsumerState<LoginScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _authService = AuthService();
   bool _rememberMe = false;
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -111,7 +111,7 @@ class _LoginScreenState extends State<LoginScreen>
     });
 
     try {
-      await _authService.signInWithEmailAndPassword(
+      await ref.read(authRepositoryProvider).signInWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
       );

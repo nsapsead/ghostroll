@@ -1,24 +1,24 @@
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/app_components.dart';
 import 'login_screen.dart';
 
-class RegisterScreen extends StatefulWidget {
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen>
+class _RegisterScreenState extends ConsumerState<RegisterScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _authService = AuthService();
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -159,11 +159,14 @@ class _RegisterScreenState extends State<RegisterScreen>
     });
 
     try {
-      await _authService.signUpWithEmailAndPassword(
+      final user = await ref.read(authRepositoryProvider).createUserWithEmailAndPassword(
         _emailController.text.trim(),
         _passwordController.text,
-        _nameController.text.trim(),
       );
+      
+      if (user != null) {
+        await user.updateDisplayName(_nameController.text.trim());
+      }
     } catch (e) {
       setState(() {
         _errorMessage = e.toString();
@@ -181,17 +184,24 @@ class _RegisterScreenState extends State<RegisterScreen>
       _errorMessage = '';
     });
 
-    try {
-      await _authService.signInWithGoogle();
-    } catch (e) {
+    // TODO: Implement Google Sign In
       setState(() {
-        _errorMessage = 'Google sign up failed. Please try again.';
-      });
-    } finally {
-      setState(() {
+        _errorMessage = 'Google Sign In not yet implemented';
         _isGoogleLoading = false;
       });
-    }
+      /*
+      try {
+        await _authService.signInWithGoogle();
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'Google sign up failed. Please try again.';
+        });
+      } finally {
+        setState(() {
+          _isGoogleLoading = false;
+        });
+      }
+      */
   }
 
   Future<void> _signUpWithApple() async {
@@ -200,17 +210,24 @@ class _RegisterScreenState extends State<RegisterScreen>
       _errorMessage = '';
     });
 
-    try {
-      await _authService.signInWithApple();
-    } catch (e) {
+    // TODO: Implement Apple Sign In
       setState(() {
-        _errorMessage = 'Apple sign up failed. Please try again.';
-      });
-    } finally {
-      setState(() {
+        _errorMessage = 'Apple Sign In not yet implemented';
         _isAppleLoading = false;
       });
-    }
+      /*
+      try {
+        await _authService.signInWithApple();
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'Apple sign up failed. Please try again.';
+        });
+      } finally {
+        setState(() {
+          _isAppleLoading = false;
+        });
+      }
+      */
   }
 
   Future<void> _signUpWithFacebook() async {
@@ -219,17 +236,24 @@ class _RegisterScreenState extends State<RegisterScreen>
       _errorMessage = '';
     });
 
-    try {
-      await _authService.signInWithFacebook();
-    } catch (e) {
+    // TODO: Implement Facebook Sign In
       setState(() {
-        _errorMessage = 'Facebook sign up failed. Please try again.';
-      });
-    } finally {
-      setState(() {
+        _errorMessage = 'Facebook Sign In not yet implemented';
         _isFacebookLoading = false;
       });
-    }
+      /*
+      try {
+        await _authService.signInWithFacebook();
+      } catch (e) {
+        setState(() {
+          _errorMessage = 'Facebook sign up failed. Please try again.';
+        });
+      } finally {
+        setState(() {
+          _isFacebookLoading = false;
+        });
+      }
+      */
   }
 
   String _getErrorMessage(String code) {

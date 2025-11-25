@@ -1,23 +1,23 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import '../services/auth_service.dart';
-import '../services/instructor_service.dart';
-import '../services/profile_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
+import '../providers/profile_providers.dart';
 import '../theme/ghostroll_theme.dart';
 
 import '../widgets/common/glow_text.dart';
 
-class ProfileScreen extends StatefulWidget {
+class ProfileScreen extends ConsumerStatefulWidget {
   final bool initialEditMode;
   
   const ProfileScreen({super.key, this.initialEditMode = false});
 
   @override
-  State<ProfileScreen> createState() => _ProfileScreenState();
+  ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen>
+class _ProfileScreenState extends ConsumerState<ProfileScreen>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _firstNameController = TextEditingController();
@@ -135,38 +135,55 @@ class _ProfileScreenState extends State<ProfileScreen>
   }
 
   Future<void> _loadInstructors() async {
+    // Instructors are now loaded via StreamProvider in build or we can fetch once here
+    // For now, let's fetch once to maintain existing behavior, but ideally we switch to StreamProvider
     try {
-      final instructors = await InstructorService.loadInstructors();
-      setState(() {
-        _instructors = instructors;
-        _isLoadingInstructors = false;
-      });
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        final instructorsStream = ref.read(instructorRepositoryProvider).getInstructors(user.uid);
+        instructorsStream.listen((instructors) {
+          if (mounted) {
+            setState(() {
+              _instructors = instructors;
+              _isLoadingInstructors = false;
+            });
+          }
+        });
+      }
     } catch (e) {
-      setState(() {
-        _isLoadingInstructors = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoadingInstructors = false;
+        });
+      }
     }
   }
 
   Future<void> _loadSelectedStyles() async {
     try {
-      final selectedStyles = await ProfileService.loadSelectedStyles();
-      setState(() {
-        _selectedStyles.clear();
-        _selectedStyles.addAll(selectedStyles);
-      });
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        final selectedStyles = await ref.read(profileRepositoryProvider).getSelectedStyles(user.uid);
+        if (mounted) {
+          setState(() {
+            _selectedStyles.clear();
+            _selectedStyles.addAll(selectedStyles);
+          });
+        }
+      }
     } catch (e) {
       debugPrint('Error loading selected styles: $e');
     }
   }
 
   Future<void> _loadProfileData() async {
-    // Load saved profile data
-    final data = await ProfileService.loadProfileData();
-    
     // Get current authenticated user
-    final authService = AuthService();
-    final displayName = authService.currentUserDisplayName;
+    final user = ref.read(currentUserProvider);
+    if (user == null) return;
+
+    // Load saved profile data
+    final data = await ref.read(profileRepositoryProvider).getProfile(user.uid);
+    final displayName = user?.displayName;
     
     setState(() {
       // Handle backward compatibility with existing 'name' field
@@ -212,7 +229,10 @@ class _ProfileScreenState extends State<ProfileScreen>
 
   Future<void> _saveSelectedStyles() async {
     try {
-      await ProfileService.saveSelectedStyles(_selectedStyles);
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        await ref.read(profileRepositoryProvider).updateSelectedStyles(user.uid, _selectedStyles);
+      }
     } catch (e) {
       debugPrint('Error saving selected styles: $e');
     }
@@ -233,17 +253,20 @@ class _ProfileScreenState extends State<ProfileScreen>
         'customBeltOrders': _customBeltOrders,
       };
       
-      // Save to local storage
-      await ProfileService.saveProfileData(data);
+      // Save to Firestore
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        await ref.read(profileRepositoryProvider).updateProfile(user.uid, data);
+      }
       
       // Update Firebase Auth display name if name changed
-      final authService = AuthService();
-      final currentDisplayName = authService.currentUserDisplayName;
+      // final user = ref.read(authRepositoryProvider).currentUser; // Already got user above
+      final currentDisplayName = user?.displayName;
       final fullName = '${_firstNameController.text} ${_surnameController.text}'.trim();
       
       if (currentDisplayName != null && currentDisplayName != fullName) {
         try {
-          await authService.updateUserProfile(displayName: fullName);
+          await user?.updateDisplayName(fullName);
         } catch (e) {
           debugPrint('Error updating Firebase Auth display name: $e');
         }
@@ -279,7 +302,10 @@ class _ProfileScreenState extends State<ProfileScreen>
         'bjjInstructor': _bjjInstructor,
         'customBeltOrders': _customBeltOrders,
       };
-      ProfileService.saveProfileData(data);
+      final user = ref.read(currentUserProvider);
+      if (user != null) {
+        ref.read(profileRepositoryProvider).updateProfile(user.uid, data);
+      }
     } catch (e) {
       debugPrint('Error auto-saving profile: $e');
     }
@@ -708,13 +734,13 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
           ),
           const Spacer(),
-          if (!_isEditMode)
-          Container(
-            decoration: BoxDecoration(
+          if (!_isEditMode) ...[
+            Container(
+              decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: GhostRollTheme.flowGradient,
                 ),
-              borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: GhostRollTheme.small,
               ),
               child: IconButton(
@@ -726,7 +752,27 @@ class _ProfileScreenState extends State<ProfileScreen>
                 icon: const Icon(Icons.edit, color: Colors.white),
                 tooltip: 'Edit Profile',
               ),
-            )
+            ),
+            const SizedBox(width: 8),
+            Container(
+              decoration: BoxDecoration(
+                color: GhostRollTheme.grindRed.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: GhostRollTheme.grindRed.withOpacity(0.5),
+                  width: 1,
+                ),
+              ),
+              child: IconButton(
+                onPressed: () async {
+                  await ref.read(authRepositoryProvider).signOut();
+                  // Navigation to login screen is handled by AuthWrapper
+                },
+                icon: Icon(Icons.logout, color: GhostRollTheme.grindRed),
+                tooltip: 'Logout',
+              ),
+            ),
+          ]
           else
             Row(
               children: [
@@ -907,7 +953,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        AuthService().currentUserEmail ?? 'Not available',
+                        ref.read(authRepositoryProvider).currentUser?.email ?? 'Not available',
                         style: GhostRollTheme.bodyMedium.copyWith(
                           color: GhostRollTheme.text,
                           fontSize: 16,
@@ -2103,11 +2149,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   };
                                   
                   try {
-                                  await InstructorService.addInstructor(newInstructor);
-                    setState(() {
-                      _instructors.add(newInstructor);
-                    });
-                                  Navigator.pop(context);
+                    final user = ref.read(currentUserProvider);
+                    if (user != null) {
+                      await ref.read(instructorRepositoryProvider).addInstructor(user.uid, newInstructor);
+                      // State update is handled by stream listener
+                      Navigator.pop(context);
+                    }
                   } catch (e) {
                     debugPrint('Error adding instructor: $e');
                   }
@@ -2211,15 +2258,13 @@ class _ProfileScreenState extends State<ProfileScreen>
             ),
             TextButton(
               onPressed: () async {
-                                  try {
-                    final index = _instructors.indexOf(instructor);
-                    if (index != -1) {
-                      await InstructorService.deleteInstructor(index);
-                      setState(() {
-                        _instructors.removeAt(index);
-                      });
+                  try {
+                    final user = ref.read(currentUserProvider);
+                    if (user != null && instructor['id'] != null) {
+                      await ref.read(instructorRepositoryProvider).deleteInstructor(user.uid, instructor['id']);
+                      // State update is handled by stream listener
+                      Navigator.pop(context);
                     }
-                    Navigator.pop(context);
                   } catch (e) {
                     debugPrint('Error removing instructor: $e');
                   }
@@ -2238,14 +2283,12 @@ class _ProfileScreenState extends State<ProfileScreen>
                                   };
                                   
                   try {
-                    final index = _instructors.indexOf(instructor);
-                    if (index != -1) {
-                                  await InstructorService.updateInstructor(index, updatedInstructor);
-                      setState(() {
-                        _instructors[index] = updatedInstructor;
-                      });
+                    final user = ref.read(currentUserProvider);
+                    if (user != null && instructor['id'] != null) {
+                      await ref.read(instructorRepositoryProvider).updateInstructor(user.uid, instructor['id'], updatedInstructor);
+                      // State update is handled by stream listener
+                      Navigator.pop(context);
                     }
-                                  Navigator.pop(context);
                   } catch (e) {
                     debugPrint('Error updating instructor: $e');
                   }

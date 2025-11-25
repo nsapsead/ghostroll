@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -8,8 +9,8 @@ import 'screens/quick_log_screen.dart';
 import 'screens/journal_timeline_screen.dart';
 import 'screens/log_session_form.dart';
 import 'screens/profile_screen.dart';
-import 'screens/notification_preferences_screen.dart';
-import 'services/simple_notification_service.dart';
+// import 'screens/notification_preferences_screen.dart';
+// import 'services/simple_notification_service.dart';
 import 'theme/ghostroll_theme.dart';
 
 void main() async {
@@ -23,9 +24,9 @@ void main() async {
     debugPrint('Firebase initialized successfully');
     
     // Initialize notification service
-    final notificationService = SimpleNotificationService();
-    await notificationService.initialize();
-    debugPrint('Notification service initialized successfully');
+    // final notificationService = SimpleNotificationService();
+    // await notificationService.initialize();
+    // debugPrint('Notification service initialized successfully');
   } catch (e, stackTrace) {
     // Log detailed error information but don't crash the app
     debugPrint('Error initializing services: $e');
@@ -49,7 +50,7 @@ void main() async {
       systemNavigationBarIconBrightness: Brightness.light,
     ),
   );
-  runApp(const GhostRollApp());
+  runApp(const ProviderScope(child: GhostRollApp()));
 }
 
 class GhostRollApp extends StatefulWidget {
@@ -75,7 +76,7 @@ class _GhostRollAppState extends State<GhostRollApp> {
         '/journal-timeline': (context) => const JournalTimelineScreen(),
         '/log-session': (context) => const LogSessionForm(),
         '/profile': (context) => const ProfileScreen(),
-        '/notification-preferences': (context) => const NotificationPreferencesScreen(),
+        // '/notification-preferences': (context) => const NotificationPreferencesScreen(),
       },
     );
   }

@@ -5,9 +5,13 @@ import 'log_session_form.dart';
 import '../theme/ghostroll_theme.dart';
 
 import '../widgets/common/glow_text.dart';
-import '../services/calendar_service.dart';
-import '../services/profile_service.dart';
-import '../services/session_service.dart';
+import '../providers/calendar_providers.dart';
+import '../models/calendar_event.dart';
+import '../providers/profile_providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/session_provider.dart';
+import '../providers/auth_provider.dart';
+import '../models/session.dart';
 import 'dart:math' as math;
 
 // Custom clipper for radical button shape
@@ -247,16 +251,16 @@ class RadicalButtonBorder extends ShapeBorder {
   ShapeBorder scale(double t) => this;
 }
 
-class QuickLogScreen extends StatefulWidget {
+class QuickLogScreen extends ConsumerStatefulWidget {
   final VoidCallback? onNavigateToProfile;
   
   const QuickLogScreen({super.key, this.onNavigateToProfile});
 
   @override
-  State<QuickLogScreen> createState() => _QuickLogScreenState();
+  ConsumerState<QuickLogScreen> createState() => _QuickLogScreenState();
 }
 
-class _QuickLogScreenState extends State<QuickLogScreen>
+class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
     with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _fadeController;
@@ -313,24 +317,36 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   }
 
   Future<void> _loadUserName() async {
-    try {
-      final profileData = await ProfileService.loadProfileData();
+    final user = ref.read(currentUserProvider);
+    if (user != null && user.displayName != null && user.displayName!.isNotEmpty) {
       setState(() {
-        String firstName = '';
-        
-        // Try to get firstName directly
-        if (profileData['firstName'] != null && profileData['firstName'].toString().trim().isNotEmpty) {
-          firstName = profileData['firstName'];
-        } 
-        // Fall back to splitting existing 'name' field for backward compatibility
-        else if (profileData['name'] != null && profileData['name'].toString().trim().isNotEmpty) {
-          final nameParts = profileData['name'].toString().trim().split(' ');
-          firstName = nameParts.isNotEmpty ? nameParts.first : '';
-        }
-        
-        _userName = firstName.isNotEmpty ? firstName : 'Guest';
+        _userName = user.displayName!.split(' ').first;
       });
-    } catch (e) {
+    } else if (user != null) {
+      // Fallback to Firestore Profile if Auth display name is empty
+      try {
+        final profileData = await ref.read(profileRepositoryProvider).getProfile(user.uid);
+        setState(() {
+          String firstName = '';
+          
+          // Try to get firstName directly
+          if (profileData['firstName'] != null && profileData['firstName'].toString().trim().isNotEmpty) {
+            firstName = profileData['firstName'];
+          } 
+          // Fall back to splitting existing 'name' field for backward compatibility
+          else if (profileData['name'] != null && profileData['name'].toString().trim().isNotEmpty) {
+            final nameParts = profileData['name'].toString().trim().split(' ');
+            firstName = nameParts.isNotEmpty ? nameParts.first : '';
+          }
+          
+          _userName = firstName.isNotEmpty ? firstName : 'Guest';
+        });
+      } catch (e) {
+        setState(() {
+          _userName = 'Guest';
+        });
+      }
+    } else {
       setState(() {
         _userName = 'Guest';
       });
@@ -355,21 +371,156 @@ class _QuickLogScreenState extends State<QuickLogScreen>
 
   Future<void> _loadUpcomingClasses() async {
     try {
-      final selectedStyles = await ProfileService.loadSelectedStyles();
-      final upcomingClasses = await CalendarService.getUpcomingClasses();
+      final user = ref.read(currentUserProvider);
+      final selectedStyles = user != null 
+          ? await ref.read(profileRepositoryProvider).getSelectedStyles(user.uid)
+          : <String>[];
       
-      // Filter classes based on selected martial arts styles
-      final filteredClasses = upcomingClasses.where((c) => 
-        _matchesSelectedStyle(c['classType'], selectedStyles)).toList();
+
       
-      setState(() {
-        _upcomingClasses = filteredClasses.take(5).toList(); // Limit to 5 classes
-        _isLoadingClasses = false;
-      });
+      // Since we're in a method, we can't watch, but we can read the current value
+      // However, for better reactivity, we should probably watch this in the build method
+      // But to keep changes minimal, let's read it. 
+      // Note: upcomingClassesProvider is a Provider<AsyncValue>, so reading it gives the current AsyncValue.
+      // But it depends on calendarEventsProvider which is a StreamProvider.
+      // So reading it might give loading initially.
+      // A better approach is to refactor this widget to watch the provider in build().
+      // Let's try to read it first, but if it's loading, we might need to wait or just show loading.
+      // Actually, since this is called in initState (via _loadData), we can't use ref.watch.
+      // We should change how this data is consumed.
+      // But for now, let's try to fetch it.
+      
+      // Wait, we can't await a Provider read if it's not a FutureProvider.
+      // upcomingClassesProvider returns AsyncValue.
+      // We should probably just use ref.read(calendarRepositoryProvider) and implement getUpcomingClasses there?
+      // Or better, let's just use the provider in the build method!
+      // But _upcomingClasses is state.
+      // Let's change _upcomingClasses to be derived from the provider in build().
+      // But that would require bigger changes.
+      
+      // Alternative: Re-implement getUpcomingClasses logic here using the repository stream? No.
+      // Let's just use the repository to fetch events once and filter them here.
+      // But the repository only exposes a stream.
+      // We can take the first element of the stream.
+      
+      if (user != null) {
+        final events = await ref.read(calendarRepositoryProvider).getEventsStream(user.uid).first;
+        
+        // Filter for upcoming classes (logic adapted from CalendarService)
+        final now = DateTime.now();
+        List<Map<String, dynamic>> upcomingClasses = [];
+        
+        for (int i = 0; i < 7; i++) {
+          final dateToCheck = now.add(Duration(days: i));
+          
+          for (final event in events) {
+             // ... (Reuse logic from provider or service, but simpler to just call a helper if available)
+             // Let's copy the logic for now to ensure it works without changing too much structure.
+             
+            if (event.type == CalendarEventType.dropInEvent) {
+              if (event.specificDate != null && 
+                  event.specificDate!.year == dateToCheck.year &&
+                  event.specificDate!.month == dateToCheck.month &&
+                  event.specificDate!.day == dateToCheck.day) {
+                
+                final startTimeParts = event.startTime.split(':');
+                final classDateTime = DateTime(
+                  dateToCheck.year,
+                  dateToCheck.month,
+                  dateToCheck.day,
+                  int.parse(startTimeParts[0]),
+                  int.parse(startTimeParts[1]),
+                );
+                
+                if (classDateTime.isAfter(now)) {
+                  upcomingClasses.add({
+                    'id': event.id,
+                    'classType': event.classType,
+                    'dayOfWeek': event.dayOfWeek ?? dateToCheck.weekday,
+                    'startTime': event.startTime,
+                    'endTime': event.endTime,
+                    'location': event.location ?? '',
+                    'instructor': event.instructor ?? '',
+                    'notes': event.notes ?? '',
+                    'date': dateToCheck.toIso8601String().split('T')[0],
+                    'dateTime': classDateTime.toIso8601String(),
+                    'type': event.type.name,
+                  });
+                }
+              }
+            } else if (event.type == CalendarEventType.recurringClass) {
+              final checkDate = DateTime(dateToCheck.year, dateToCheck.month, dateToCheck.day);
+              final startDate = event.recurringStartDate != null 
+                  ? DateTime(event.recurringStartDate!.year, event.recurringStartDate!.month, event.recurringStartDate!.day)
+                  : DateTime(event.createdAt.year, event.createdAt.month, event.createdAt.day);
+              
+              final dateString = checkDate.toIso8601String().split('T')[0];
+              final isInDateRange = !checkDate.isBefore(startDate) && 
+                  (event.recurringEndDate == null || !checkDate.isAfter(
+                      DateTime(event.recurringEndDate!.year, event.recurringEndDate!.month, event.recurringEndDate!.day)));
+              final isNotDeleted = !event.deletedInstances.contains(dateString);
+              
+              if (event.dayOfWeek == dateToCheck.weekday && isInDateRange && isNotDeleted) {
+                final startTimeParts = event.startTime.split(':');
+                final classDateTime = DateTime(
+                  dateToCheck.year,
+                  dateToCheck.month,
+                  dateToCheck.day,
+                  int.parse(startTimeParts[0]),
+                  int.parse(startTimeParts[1]),
+                );
+                
+                if (classDateTime.isAfter(now)) {
+                  upcomingClasses.add({
+                    'id': event.id,
+                    'classType': event.classType,
+                    'dayOfWeek': event.dayOfWeek ?? dateToCheck.weekday,
+                    'startTime': event.startTime,
+                    'endTime': event.endTime,
+                    'location': event.location ?? '',
+                    'instructor': event.instructor ?? '',
+                    'notes': event.notes ?? '',
+                    'date': dateToCheck.toIso8601String().split('T')[0],
+                    'dateTime': classDateTime.toIso8601String(),
+                    'type': event.type.name,
+                  });
+                }
+              }
+            }
+          }
+        }
+        
+        upcomingClasses.sort((a, b) {
+          final dateTimeA = DateTime.parse(a['dateTime']);
+          final dateTimeB = DateTime.parse(b['dateTime']);
+          return dateTimeA.compareTo(dateTimeB);
+        });
+        
+        // Filter classes based on selected martial arts styles
+        final filteredClasses = upcomingClasses.where((c) => 
+          _matchesSelectedStyle(c['classType'], selectedStyles)).toList();
+        
+        if (mounted) {
+          setState(() {
+            _upcomingClasses = filteredClasses.take(5).toList(); // Limit to 5 classes
+            _isLoadingClasses = false;
+          });
+        }
+      } else {
+         if (mounted) {
+          setState(() {
+            _upcomingClasses = [];
+            _isLoadingClasses = false;
+          });
+        }
+      }
     } catch (e) {
-      setState(() {
-        _isLoadingClasses = false;
-      });
+      debugPrint('Error loading upcoming classes: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingClasses = false;
+        });
+      }
     }
   }
 
@@ -396,11 +547,11 @@ class _QuickLogScreenState extends State<QuickLogScreen>
   }
 
   String _getDayName(int dayOfWeek) {
-    return CalendarService.getDayName(dayOfWeek);
+    return CalendarUtils.getDayName(dayOfWeek);
   }
 
   String _formatTime(String timeString) {
-    return CalendarService.formatTime(timeString);
+    return CalendarUtils.formatTime(timeString);
   }
 
 
@@ -771,15 +922,21 @@ class _QuickLogScreenState extends State<QuickLogScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 375;
     
-    return FutureBuilder<Map<String, dynamic>>(
-      future: SessionService.getTrainingStats(),
-      builder: (context, snapshot) {
-        final stats = snapshot.data ?? {};
-        final thisWeek = stats['thisWeekSessions']?.toString() ?? '0';
-        final total = stats['totalSessions']?.toString() ?? '0';
+    final sessionsAsync = ref.watch(sessionListProvider);
+    
+    return sessionsAsync.when(
+      data: (sessions) {
+        final now = DateTime.now();
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        
+        final thisWeekSessions = sessions.where((s) => s.date.isAfter(weekStart)).length;
+        final totalSessions = sessions.length;
+        
+        final thisWeek = thisWeekSessions.toString();
+        final total = totalSessions.toString();
         
         // Calculate streak (simplified - just show days since last session)
-        final streakText = total == '0' ? '0' : '1+';
+        final streakText = total == '0' ? '0' : '1+'; // Placeholder for streak logic
         
         return Row(
           children: [
@@ -815,6 +972,8 @@ class _QuickLogScreenState extends State<QuickLogScreen>
           ],
         );
       },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 

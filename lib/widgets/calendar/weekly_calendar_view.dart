@@ -1,17 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import '../../theme/ghostroll_theme.dart';
-import '../../services/calendar_service.dart';
+import '../../models/calendar_event.dart';
 import '../../models/class_schedule.dart';
 
 class WeeklyCalendarView extends StatefulWidget {
   final DateTime weekStart;
+  final List<CalendarEvent> events;
   final Function(CalendarEvent) onEventTap;
   final Function(DateTime, TimeOfDay) onEmptySlotTap;
 
   const WeeklyCalendarView({
     super.key,
     required this.weekStart,
+    required this.events,
     required this.onEventTap,
     required this.onEmptySlotTap,
   });
@@ -27,28 +29,67 @@ class _WeeklyCalendarViewState extends State<WeeklyCalendarView> {
   @override
   void initState() {
     super.initState();
-    _loadWeekEvents();
+    _processEvents();
   }
 
   @override
   void didUpdateWidget(WeeklyCalendarView oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.weekStart != widget.weekStart) {
-      _loadWeekEvents();
+    if (oldWidget.weekStart != widget.weekStart || oldWidget.events != widget.events) {
+      _processEvents();
     }
   }
 
-  // Load events for the current week
-  Future<void> _loadWeekEvents() async {
+  // Process events for the current week
+  void _processEvents() {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      final events = await CalendarService.getEventsForWeek(widget.weekStart);
+      final weekEvents = <DateTime, List<CalendarEvent>>{};
+      
+      for (int i = 0; i < 7; i++) {
+        final date = widget.weekStart.add(Duration(days: i));
+        final dateKey = DateTime(date.year, date.month, date.day);
+        
+        // Filter events for this day
+        final eventsForDay = <CalendarEvent>[];
+        for (final event in widget.events) {
+          if (event.type == CalendarEventType.dropInEvent) {
+            if (event.specificDate != null && 
+                event.specificDate!.year == date.year &&
+                event.specificDate!.month == date.month &&
+                event.specificDate!.day == date.day) {
+              eventsForDay.add(event);
+            }
+          } else if (event.type == CalendarEventType.recurringClass) {
+            final startDate = event.recurringStartDate != null 
+                ? DateTime(event.recurringStartDate!.year, event.recurringStartDate!.month, event.recurringStartDate!.day)
+                : DateTime(event.createdAt.year, event.createdAt.month, event.createdAt.day);
+            
+            final dateString = dateKey.toIso8601String().split('T')[0];
+            final isInDateRange = !dateKey.isBefore(startDate) && 
+                (event.recurringEndDate == null || !dateKey.isAfter(
+                    DateTime(event.recurringEndDate!.year, event.recurringEndDate!.month, event.recurringEndDate!.day)));
+            final isNotDeleted = !event.deletedInstances.contains(dateString);
+            
+            if (event.dayOfWeek == date.weekday && isInDateRange && isNotDeleted) {
+              eventsForDay.add(event);
+            }
+          }
+        }
+        
+        eventsForDay.sort((a, b) => a.startTime.compareTo(b.startTime));
+        weekEvents[dateKey] = eventsForDay;
+      }
+
       setState(() {
-        _weekEvents = events;
+        _weekEvents = weekEvents;
         _isLoading = false;
       });
     } catch (e) {
-      // Log error but don't crash the app
-      debugPrint('Error loading week events: $e');
+      debugPrint('Error processing week events: $e');
       setState(() {
         _isLoading = false;
       });
@@ -115,7 +156,7 @@ class _WeeklyCalendarViewState extends State<WeeklyCalendarView> {
                 child: Column(
                   children: [
                     Text(
-                      CalendarService.getShortDayName(date.weekday),
+                      CalendarUtils.getShortDayName(date.weekday),
                       style: GhostRollTheme.bodySmall.copyWith(
                         color: isToday 
                             ? GhostRollTheme.flowBlue 
@@ -183,7 +224,7 @@ class _WeeklyCalendarViewState extends State<WeeklyCalendarView> {
             width: 60,
             padding: const EdgeInsets.only(right: 8),
             child: Text(
-              CalendarService.formatTime(timeString),
+              CalendarUtils.formatTime(timeString),
               style: GhostRollTheme.bodySmall.copyWith(
                 color: GhostRollTheme.textSecondary,
               ),
@@ -270,7 +311,7 @@ class _WeeklyCalendarViewState extends State<WeeklyCalendarView> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    CalendarService.formatTimeRange(event.startTime, event.endTime),
+                    CalendarUtils.formatTimeRange(event.startTime, event.endTime),
                     style: GhostRollTheme.bodySmall.copyWith(
                       color: Colors.white.withOpacity(0.9),
                       fontSize: 9,

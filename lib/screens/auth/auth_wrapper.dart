@@ -1,86 +1,32 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import '../../services/auth_service.dart';
-import '../../services/biometric_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../providers/auth_provider.dart';
 import 'login_screen.dart';
 import '../main_navigation_screen.dart';
 
-class AuthWrapper extends StatefulWidget {
+class AuthWrapper extends ConsumerWidget {
   const AuthWrapper({super.key});
 
   @override
-  State<AuthWrapper> createState() => _AuthWrapperState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateChangesProvider);
 
-class _AuthWrapperState extends State<AuthWrapper> {
-  final AuthService _authService = AuthService();
-  final BiometricService _biometricService = BiometricService();
-  bool _isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _initializeAuth();
-  }
-
-  Future<void> _initializeAuth() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-      
-      // Initialize auth service
-      await _authService.initializeAuthState();
-      
-      // Check if user is already authenticated
-      final isAuthenticated = _authService.isAuthenticated;
-      
-      if (isAuthenticated) {
-        // Check if biometric auth is available and enabled
-        final biometricAvailable = await _biometricService.isBiometricAvailable();
-        final biometricEnabled = await _biometricService.isBiometricEnabled();
-        
-        if (biometricAvailable && biometricEnabled) {
-          // Attempt biometric authentication
-          final authenticated = await _biometricService.authenticate();
-          if (authenticated) {
-            _navigateToMain();
-            return;
-          }
+    return authState.when(
+      data: (user) {
+        if (user != null) {
+          return const MainNavigationScreen();
+        } else {
+          return const LoginScreen();
         }
-        
-        // If no biometric or biometric failed, go to main
-        _navigateToMain();
-      } else {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      // Log error but don't crash the app
-      debugPrint('Error initializing auth: $e');
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _navigateToMain() {
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_isLoading) {
-      return _buildLoadingScreen();
-    }
-    
-    // User is not authenticated, show login screen
-    return const LoginScreen();
+      },
+      loading: () => _buildLoadingScreen(),
+      error: (e, stack) => Scaffold(
+        body: Center(
+          child: Text('Error: $e'),
+        ),
+      ),
+    );
   }
 
   Widget _buildLoadingScreen() {
@@ -90,11 +36,32 @@ class _AuthWrapperState extends State<AuthWrapper> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Ghost mascot logo
+            // Ghost mascot logo with error handling
             Image.asset(
-              'assets/images/ghostroll_logo.png',
-              width: 120,
-              height: 120,
+              'assets/images/GhostRollBeltMascot.png',
+              width: 150,
+              height: 150,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.sports_martial_arts,
+                        size: 60,
+                        color: Colors.white,
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 24),
             // Loading text
@@ -116,4 +83,5 @@ class _AuthWrapperState extends State<AuthWrapper> {
       ),
     );
   }
-} 
+}
+ 

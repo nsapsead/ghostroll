@@ -3,19 +3,22 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import '../models/session.dart';
 import '../theme/ghostroll_theme.dart';
-import '../services/calendar_service.dart';
-import '../services/profile_service.dart';
-import '../services/session_service.dart';
+import '../providers/calendar_providers.dart';
+import '../models/calendar_event.dart';
+import '../providers/profile_providers.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
+import '../providers/session_provider.dart';
 import '../widgets/common/glow_text.dart';
 
-class LogSessionForm extends StatefulWidget {
+class LogSessionForm extends ConsumerStatefulWidget {
   const LogSessionForm({super.key});
 
   @override
-  State<LogSessionForm> createState() => _LogSessionFormState();
+  ConsumerState<LogSessionForm> createState() => _LogSessionFormState();
 }
 
-class _LogSessionFormState extends State<LogSessionForm>
+class _LogSessionFormState extends ConsumerState<LogSessionForm>
     with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
@@ -116,30 +119,137 @@ class _LogSessionFormState extends State<LogSessionForm>
     super.dispose();
   }
 
+
   Future<void> _loadUpcomingClasses() async {
     try {
-      final selectedStyles = await ProfileService.loadSelectedStyles();
-      final upcomingClasses = await CalendarService.getUpcomingClasses();
+      final user = ref.read(currentUserProvider);
+      final selectedStyles = user != null 
+          ? await ref.read(profileRepositoryProvider).getSelectedStyles(user.uid)
+          : <String>[];
       
-      // Filter classes based on selected martial arts styles
-      final filteredClasses = upcomingClasses.where((c) => 
-        _matchesSelectedStyle(c['classType'], selectedStyles)).toList();
-      
-      setState(() {
-        _upcomingClasses = filteredClasses.take(10).toList(); // Show next 10 classes
-        _isLoadingClasses = false;
+      // Fetch events from repository stream (first emission)
+      if (user != null) {
+        final events = await ref.read(calendarRepositoryProvider).getEventsStream(user.uid).first;
         
-        // Auto-select first upcoming class if available
-        if (_upcomingClasses.isNotEmpty) {
-          _selectedScheduledClass = _upcomingClasses.first;
-          _instructor = _selectedScheduledClass!['instructor'] ?? '';
-          _instructorController.text = _instructor;
+        // Filter for upcoming classes (logic adapted from CalendarService)
+        final now = DateTime.now();
+        List<Map<String, dynamic>> upcomingClasses = [];
+        
+        for (int i = 0; i < 7; i++) {
+          final dateToCheck = now.add(Duration(days: i));
+          
+          for (final event in events) {
+            if (event.type == CalendarEventType.dropInEvent) {
+              if (event.specificDate != null && 
+                  event.specificDate!.year == dateToCheck.year &&
+                  event.specificDate!.month == dateToCheck.month &&
+                  event.specificDate!.day == dateToCheck.day) {
+                
+                final startTimeParts = event.startTime.split(':');
+                final classDateTime = DateTime(
+                  dateToCheck.year,
+                  dateToCheck.month,
+                  dateToCheck.day,
+                  int.parse(startTimeParts[0]),
+                  int.parse(startTimeParts[1]),
+                );
+                
+                if (classDateTime.isAfter(now)) {
+                  upcomingClasses.add({
+                    'id': event.id,
+                    'classType': event.classType,
+                    'dayOfWeek': event.dayOfWeek ?? dateToCheck.weekday,
+                    'startTime': event.startTime,
+                    'endTime': event.endTime,
+                    'location': event.location ?? '',
+                    'instructor': event.instructor ?? '',
+                    'notes': event.notes ?? '',
+                    'date': dateToCheck.toIso8601String().split('T')[0],
+                    'dateTime': classDateTime.toIso8601String(),
+                    'type': event.type.name,
+                  });
+                }
+              }
+            } else if (event.type == CalendarEventType.recurringClass) {
+              final checkDate = DateTime(dateToCheck.year, dateToCheck.month, dateToCheck.day);
+              final startDate = event.recurringStartDate != null 
+                  ? DateTime(event.recurringStartDate!.year, event.recurringStartDate!.month, event.recurringStartDate!.day)
+                  : DateTime(event.createdAt.year, event.createdAt.month, event.createdAt.day);
+              
+              final dateString = checkDate.toIso8601String().split('T')[0];
+              final isInDateRange = !checkDate.isBefore(startDate) && 
+                  (event.recurringEndDate == null || !checkDate.isAfter(
+                      DateTime(event.recurringEndDate!.year, event.recurringEndDate!.month, event.recurringEndDate!.day)));
+              final isNotDeleted = !event.deletedInstances.contains(dateString);
+              
+              if (event.dayOfWeek == dateToCheck.weekday && isInDateRange && isNotDeleted) {
+                final startTimeParts = event.startTime.split(':');
+                final classDateTime = DateTime(
+                  dateToCheck.year,
+                  dateToCheck.month,
+                  dateToCheck.day,
+                  int.parse(startTimeParts[0]),
+                  int.parse(startTimeParts[1]),
+                );
+                
+                if (classDateTime.isAfter(now)) {
+                  upcomingClasses.add({
+                    'id': event.id,
+                    'classType': event.classType,
+                    'dayOfWeek': event.dayOfWeek ?? dateToCheck.weekday,
+                    'startTime': event.startTime,
+                    'endTime': event.endTime,
+                    'location': event.location ?? '',
+                    'instructor': event.instructor ?? '',
+                    'notes': event.notes ?? '',
+                    'date': dateToCheck.toIso8601String().split('T')[0],
+                    'dateTime': classDateTime.toIso8601String(),
+                    'type': event.type.name,
+                  });
+                }
+              }
+            }
+          }
         }
-      });
+        
+        upcomingClasses.sort((a, b) {
+          final dateTimeA = DateTime.parse(a['dateTime']);
+          final dateTimeB = DateTime.parse(b['dateTime']);
+          return dateTimeA.compareTo(dateTimeB);
+        });
+        
+        // Filter classes based on selected martial arts styles
+        final filteredClasses = upcomingClasses.where((c) => 
+          _matchesSelectedStyle(c['classType'], selectedStyles)).toList();
+        
+        if (mounted) {
+          setState(() {
+            _upcomingClasses = filteredClasses.take(10).toList(); // Show next 10 classes
+            _isLoadingClasses = false;
+            
+            // Auto-select first upcoming class if available
+            if (_upcomingClasses.isNotEmpty) {
+              _selectedScheduledClass = _upcomingClasses.first;
+              _instructor = _selectedScheduledClass!['instructor'] ?? '';
+              _instructorController.text = _instructor;
+            }
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() {
+            _upcomingClasses = [];
+            _isLoadingClasses = false;
+          });
+        }
+      }
     } catch (e) {
-      setState(() {
-        _isLoadingClasses = false;
-      });
+      debugPrint('Error loading upcoming classes: $e');
+      if (mounted) {
+        setState(() {
+          _isLoadingClasses = false;
+        });
+      }
     }
   }
 
@@ -244,8 +354,11 @@ class _LogSessionFormState extends State<LogSessionForm>
       );
 
       try {
+        final user = ref.read(currentUserProvider);
+        if (user == null) throw Exception('User not authenticated');
+
         // Save session to journal
-        await SessionService.addSession(session);
+        await ref.read(sessionRepositoryProvider).addSession(user.uid, session);
         
         if (mounted) {
           // Show success message
@@ -704,7 +817,7 @@ class _LogSessionFormState extends State<LogSessionForm>
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
-                                    '${CalendarService.getDayName(classEntry['dayOfWeek'])} @ ${CalendarService.formatTime(classEntry['startTime'])}',
+                                    '${CalendarUtils.getDayName(classEntry['dayOfWeek'])} @ ${CalendarUtils.formatTime(classEntry['startTime'])}',
                                     style: GhostRollTheme.bodySmall.copyWith(
                                       color: GhostRollTheme.textSecondary,
                                     ),

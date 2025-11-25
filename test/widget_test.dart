@@ -11,11 +11,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:martial_arts_journal/main.dart';
 
 void main() {
-      testWidgets('App smoke test', (WidgetTester tester) async {
-      // Build our app and trigger a frame.
-      await tester.pumpWidget(const MartialArtsJournalApp());
+  testWidgets('App smoke test', (WidgetTester tester) async {
+    await tester.pumpWidget(const GhostRollApp());
 
-      // Verify that our app loads without errors.
-      expect(find.byType(MaterialApp), findsOneWidget);
-    });
+    // The root MaterialApp should render without throwing.
+    expect(find.byType(MaterialApp), findsOneWidget);
+  });
 }
