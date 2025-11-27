@@ -17,5 +17,6 @@ final sessionListProvider = StreamProvider<List<Session>>((ref) {
   if (user == null) {
     return Stream.value([]);
   }
-  return ref.watch(sessionRepositoryProvider).getSessions(user.uid);
+  // Load first 50 sessions (can be extended with pagination later)
+  return ref.watch(sessionRepositoryProvider).getSessions(user.uid, limit: 50);
 });

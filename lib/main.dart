@@ -1,7 +1,10 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'screens/auth/auth_wrapper.dart';
 import 'screens/main_navigation_screen.dart';
@@ -16,12 +19,39 @@ import 'theme/ghostroll_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
+  // Pass all uncaught "fatal" errors from the framework to Crashlytics
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+  };
+  
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+  
   try {
     // Initialize Firebase
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
     debugPrint('Firebase initialized successfully');
+    
+    // Enable Firestore offline persistence (with error handling)
+    try {
+      await FirebaseFirestore.instance.enablePersistence(
+        const PersistenceSettings(synchronizeTabs: true),
+      );
+      debugPrint('Firestore offline persistence enabled');
+    } catch (persistenceError) {
+      // Persistence might fail if database doesn't exist yet - that's okay
+      debugPrint('Note: Firestore persistence not enabled: $persistenceError');
+      debugPrint('This is normal if Firestore database hasn\'t been created yet.');
+    }
+    
+    // Initialize Crashlytics
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    debugPrint('Firebase Crashlytics initialized');
     
     // Initialize notification service
     // final notificationService = SimpleNotificationService();
@@ -31,6 +61,9 @@ void main() async {
     // Log detailed error information but don't crash the app
     debugPrint('Error initializing services: $e');
     debugPrint('Stack trace: $stackTrace');
+    
+    // Record error to Crashlytics
+    FirebaseCrashlytics.instance.recordError(e, stackTrace, fatal: false);
     
     // Check if it's a Firebase configuration error
     if (e.toString().contains('API_KEY') || 

@@ -10,6 +10,7 @@ import '../providers/profile_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../providers/session_provider.dart';
+import '../providers/streak_provider.dart';
 import '../widgets/common/glow_text.dart';
 
 class LogSessionForm extends ConsumerStatefulWidget {
@@ -386,6 +387,14 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
 
         // Save session to journal
         await ref.read(sessionRepositoryProvider).addSession(user.uid, session);
+        
+        // Update streak
+        try {
+          await ref.read(streakRepositoryProvider).logSession(user.uid);
+        } catch (streakError) {
+          debugPrint('Error updating streak: $streakError');
+          // Don't fail the whole operation if streak update fails
+        }
         
         if (mounted) {
           // Show success message

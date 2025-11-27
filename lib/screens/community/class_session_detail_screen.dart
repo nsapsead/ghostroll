@@ -103,7 +103,7 @@ class _ClassSessionDetailScreenState extends ConsumerState<ClassSessionDetailScr
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Class Session', style: GhostRollTheme.textTitle),
+        title: Text('Class Session', style: GhostRollTheme.textTitle),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),

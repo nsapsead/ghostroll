@@ -157,7 +157,7 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> with SingleTick
       builder: (context) => AlertDialog(
         backgroundColor: GhostRollTheme.surface,
         title: Text('Join ${club.name}?', style: GhostRollTheme.textTitle),
-        content: const Text(
+        content: Text(
           'Your name and avatar will be visible to other members.',
           style: GhostRollTheme.textBody,
         ),
@@ -189,7 +189,7 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> with SingleTick
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Join a Club', style: GhostRollTheme.textTitle),
+        title: Text('Join a Club', style: GhostRollTheme.textTitle),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
@@ -277,12 +277,12 @@ class _JoinClubScreenState extends ConsumerState<JoinClubScreen> with SingleTick
             color: GhostRollTheme.textSecondary,
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'Have a join code?',
             style: GhostRollTheme.textTitle,
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Enter the code provided by your instructor to join a private club.',
             style: GhostRollTheme.textBody,
             textAlign: TextAlign.center,

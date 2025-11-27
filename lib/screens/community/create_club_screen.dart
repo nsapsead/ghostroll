@@ -114,7 +114,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('Create a Club', style: GhostRollTheme.textTitle),
+        title: Text('Create a Club', style: GhostRollTheme.textTitle),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
@@ -128,7 +128,7 @@ class _CreateClubScreenState extends ConsumerState<CreateClubScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Club Details',
                 style: GhostRollTheme.textSectionHeader,
               ),

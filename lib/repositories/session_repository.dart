@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/session.dart';
 
 abstract class SessionRepository {
-  Stream<List<Session>> getSessions(String userId);
+  Stream<List<Session>> getSessions(String userId, {int limit = 50, DocumentSnapshot? startAfter});
   Future<void> addSession(String userId, Session session);
   Future<void> updateSession(String userId, Session session);
   Future<void> deleteSession(String userId, String sessionId);
@@ -14,14 +14,19 @@ class FirestoreSessionRepository implements SessionRepository {
   FirestoreSessionRepository(this._firestore);
 
   @override
-  Stream<List<Session>> getSessions(String userId) {
-    return _firestore
+  Stream<List<Session>> getSessions(String userId, {int limit = 50, DocumentSnapshot? startAfter}) {
+    var query = _firestore
         .collection('users')
         .doc(userId)
         .collection('sessions')
         .orderBy('date', descending: true)
-        .snapshots()
-        .map((snapshot) {
+        .limit(limit);
+    
+    if (startAfter != null) {
+      query = query.startAfterDocument(startAfter);
+    }
+    
+    return query.snapshots().map((snapshot) {
       return snapshot.docs.map((doc) {
         final data = doc.data();
         // Handle Firestore Timestamp to DateTime conversion

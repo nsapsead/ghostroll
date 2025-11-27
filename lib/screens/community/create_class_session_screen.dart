@@ -129,7 +129,7 @@ class _CreateClassSessionScreenState extends ConsumerState<CreateClassSessionScr
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('New Class Session', style: GhostRollTheme.textTitle),
+        title: Text('New Class Session', style: GhostRollTheme.textTitle),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
@@ -143,7 +143,7 @@ class _CreateClassSessionScreenState extends ConsumerState<CreateClassSessionScr
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Class Details', style: GhostRollTheme.textSectionHeader),
+              Text('Class Details', style: GhostRollTheme.textSectionHeader),
               const SizedBox(height: 24),
               
               // Class Type Dropdown

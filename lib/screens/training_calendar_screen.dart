@@ -9,6 +9,7 @@ import '../widgets/calendar/monthly_calendar_view.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
 import '../providers/session_provider.dart';
+import '../providers/streak_provider.dart';
 import '../models/session.dart';
 import '../providers/calendar_providers.dart';
 import '../models/calendar_event.dart';
@@ -1807,6 +1808,14 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
 
       // Add session to journal
       await ref.read(sessionRepositoryProvider).addSession(user.uid, session);
+
+      // Update streak
+      try {
+        await ref.read(streakRepositoryProvider).logSession(user.uid);
+      } catch (streakError) {
+        debugPrint('Error updating streak: $streakError');
+        // Don't fail the whole operation if streak update fails
+      }
 
       // Show success message
       if (mounted) {

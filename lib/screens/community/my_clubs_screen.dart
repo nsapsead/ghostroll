@@ -53,13 +53,13 @@ class MyClubsScreen extends ConsumerWidget {
               color: GhostRollTheme.textSecondary.withOpacity(0.3),
             ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'You\'re not in a club yet',
               style: GhostRollTheme.textTitle,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               'Join your gym to unlock shared class notes and connect with your teammates.',
               style: GhostRollTheme.textBody,
               textAlign: TextAlign.center,

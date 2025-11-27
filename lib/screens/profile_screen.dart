@@ -77,6 +77,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     'Prefer not to say',
   ];
 
+  String? _lastLoadedUserId; // Track which user's data we've loaded
+  bool _isLoadingData = false; // Prevent concurrent loads
+
   @override
   void initState() {
     super.initState();
@@ -113,15 +116,45 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     _fadeController.forward();
     _slideController.forward();
     
-    _loadInstructors();
-    _loadSelectedStyles();
-    _loadProfileData();
+    // DO NOT add auto-save listeners here - they will be added after data is loaded
+    // This prevents auto-save from firing with empty values before data is loaded
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Don't load here - wait for build() to handle auth state properly
+  }
+
+  void _loadDataIfUserAvailable() {
+    if (_isLoadingData) {
+      debugPrint('Profile: Already loading data, skipping...');
+      return; // Prevent concurrent loads
+    }
     
-    // Add listeners for auto-save
-    _firstNameController.addListener(_autoSaveProfile);
-    _surnameController.addListener(_autoSaveProfile);
-    _weightController.addListener(_autoSaveProfile);
-    _heightController.addListener(_autoSaveProfile);
+    final user = ref.read(currentUserProvider);
+    debugPrint('Profile: Checking user availability. User: ${user?.uid}, Last loaded: $_lastLoadedUserId');
+    
+    // Only load if we have a user and haven't loaded their data yet
+    if (user != null && _lastLoadedUserId != user.uid) {
+      debugPrint('Profile: Loading data for user ${user.uid}');
+      _lastLoadedUserId = user.uid;
+      _isLoadingData = true;
+      _loadInstructors();
+      _loadSelectedStyles();
+      _loadProfileData().then((_) {
+        debugPrint('Profile: Successfully loaded profile data');
+        _isLoadingData = false;
+      }).catchError((e, stackTrace) {
+        debugPrint('Profile: Error loading profile data: $e');
+        debugPrint('Profile: Stack trace: $stackTrace');
+        _isLoadingData = false;
+      });
+    } else if (user == null) {
+      debugPrint('Profile: No user available yet');
+    } else {
+      debugPrint('Profile: Data already loaded for user ${user.uid}');
+    }
   }
 
   @override
@@ -187,11 +220,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   Future<void> _loadProfileData() async {
     // Get current authenticated user
     final user = ref.read(currentUserProvider);
-    if (user == null) return;
+    if (user == null) {
+      debugPrint('Profile: Cannot load profile data - no user available');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+      return;
+    }
 
+    debugPrint('Profile: Loading profile data for user ${user.uid}');
+    
+    // Ensure listeners are removed before loading (they shouldn't be added yet, but be safe)
+    _firstNameController.removeListener(_autoSaveProfile);
+    _surnameController.removeListener(_autoSaveProfile);
+    _weightController.removeListener(_autoSaveProfile);
+    _heightController.removeListener(_autoSaveProfile);
+    
     // Load saved profile data
     try {
       final data = await ref.read(profileRepositoryProvider).getProfile(user.uid);
+      debugPrint('Profile: Retrieved data from Firestore: ${data.keys.toList()}');
+      debugPrint('Profile: Data content: firstName=${data['firstName']}, surname=${data['surname']}, weight=${data['weight']}, height=${data['height']}');
       
       final displayName = user.displayName;
       
@@ -201,21 +252,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           if (data['firstName'] != null && data['surname'] != null) {
             _firstNameController.text = data['firstName'] ?? '';
             _surnameController.text = data['surname'] ?? '';
+            debugPrint('Profile: Loaded firstName: ${data['firstName']}, surname: ${data['surname']}');
           } else if (data['name'] != null) {
             // Split existing full name into first and last name
             final nameParts = data['name'].toString().trim().split(' ');
             _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
             _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+            debugPrint('Profile: Loaded name (split): ${data['name']}');
           } else if (displayName != null && displayName.isNotEmpty) {
             // Use authentication display name if no saved profile data
             final nameParts = displayName.trim().split(' ');
             _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
             _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+            debugPrint('Profile: Using displayName: $displayName');
           }
           
           _selectedGender = data['gender'] ?? 'Prefer not to say';
           _weightController.text = data['weight'] ?? '';
           _heightController.text = data['height'] ?? '';
+          debugPrint('Profile: Loaded gender: $_selectedGender, weight: ${data['weight']}, height: ${data['height']}');
+          
           if (data['dob'] != null) {
             _dateOfBirth = DateTime.tryParse(data['dob']);
           }
@@ -237,9 +293,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
           }
           _isLoading = false;
         });
+        
+        // Add auto-save listeners AFTER data is loaded to prevent saving empty values
+        // This ensures that any changes made by the user AFTER loading will trigger auto-save
+        _firstNameController.addListener(_autoSaveProfile);
+        _surnameController.addListener(_autoSaveProfile);
+        _weightController.addListener(_autoSaveProfile);
+        _heightController.addListener(_autoSaveProfile);
+        
+        debugPrint('Profile: Profile data loaded successfully and auto-save listeners enabled');
       }
-    } catch (e) {
-      debugPrint('Error loading profile data: $e');
+    } catch (e, stackTrace) {
+      debugPrint('Profile: Error loading profile data: $e');
+      debugPrint('Profile: Stack trace: $stackTrace');
+      
+      // Add listeners even on error so user can still edit and save manually
+      _firstNameController.addListener(_autoSaveProfile);
+      _surnameController.addListener(_autoSaveProfile);
+      _weightController.addListener(_autoSaveProfile);
+      _heightController.addListener(_autoSaveProfile);
+      
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -274,10 +347,51 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         'customBeltOrders': _customBeltOrders,
       };
       
+      debugPrint('Profile: Saving profile data: $data');
+      
       // Save to Firestore
       final user = ref.read(currentUserProvider);
       if (user != null) {
-        await ref.read(profileRepositoryProvider).updateProfile(user.uid, data);
+        try {
+          debugPrint('Profile: Saving profile data for user ${user.uid}');
+          debugPrint('Profile: Data being saved: $data');
+          await ref.read(profileRepositoryProvider).updateProfile(user.uid, data);
+          debugPrint('Profile: Successfully saved profile data to Firestore');
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Profile saved successfully!'),
+                backgroundColor: GhostRollTheme.recoveryGreen,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        } catch (e, stackTrace) {
+          debugPrint('Profile: Error saving profile data: $e');
+          debugPrint('Profile: Stack trace: $stackTrace');
+          
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error saving profile: ${e.toString()}'),
+                backgroundColor: GhostRollTheme.grindRed,
+                duration: const Duration(seconds: 3),
+              ),
+            );
+          }
+        }
+      } else {
+        debugPrint('Profile: Cannot save - no user available');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Please log in to save your profile'),
+              backgroundColor: GhostRollTheme.grindRed,
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
       
       // Update Firebase Auth display name if name changed
@@ -310,7 +424,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   // Auto-save profile data without showing snackbar
   void _autoSaveProfile() {
-    if (_isLoading) return;
+    if (_isLoading || _isLoadingData) {
+      debugPrint('Profile: Skipping auto-save - still loading (isLoading: $_isLoading, isLoadingData: $_isLoadingData)');
+      return;
+    }
+    
+    // Don't auto-save if we haven't loaded data for the current user yet
+    final user = ref.read(currentUserProvider);
+    if (user == null || _lastLoadedUserId != user.uid) {
+      debugPrint('Profile: Skipping auto-save - data not loaded for current user (user: ${user?.uid}, lastLoaded: $_lastLoadedUserId)');
+      return;
+    }
 
     // Cancel previous timer
     if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
@@ -332,10 +456,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         };
         final user = ref.read(currentUserProvider);
         if (user != null) {
-          ref.read(profileRepositoryProvider).updateProfile(user.uid, data);
+          debugPrint('Profile: Auto-saving profile data for user ${user.uid}');
+          debugPrint('Profile: Data being saved: $data');
+          ref.read(profileRepositoryProvider).updateProfile(user.uid, data).then((_) {
+            debugPrint('Profile: Auto-save successful - data persisted to Firestore');
+          }).catchError((e, stackTrace) {
+            debugPrint('Profile: Error auto-saving profile: $e');
+            debugPrint('Profile: Stack trace: $stackTrace');
+            // Show error to user if possible
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Error saving profile: ${e.toString()}'),
+                  backgroundColor: GhostRollTheme.grindRed,
+                  duration: const Duration(seconds: 3),
+                ),
+              );
+            }
+          });
+        } else {
+          debugPrint('Profile: Cannot auto-save - no user available');
         }
       } catch (e) {
-        debugPrint('Error auto-saving profile: $e');
+        debugPrint('Profile: Error in auto-save timer: $e');
       }
     });
   }
@@ -672,6 +815,49 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    // Watch for user changes and reload data if needed
+    final authStateAsync = ref.watch(authStateChangesProvider);
+    
+    // Listen directly to authStateChangesProvider to catch all authentication state changes,
+    // including when the user is restored on app restart
+    ref.listen(authStateChangesProvider, (previous, next) {
+      final previousUser = previous?.value;
+      final nextUser = next.value;
+      
+      if (nextUser == null) {
+        // User logged out - reset tracking so data will be loaded when they log back in
+        debugPrint('Profile: User logged out, resetting loaded user ID');
+        _lastLoadedUserId = null;
+        _isLoadingData = false;
+      } else if (previousUser == null || previousUser.uid != nextUser.uid) {
+        debugPrint('Profile: User changed from ${previousUser?.uid} to ${nextUser.uid}');
+        // User became available or changed - reload data
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _loadDataIfUserAvailable();
+        });
+      }
+    });
+    
+    // Handle auth state - wait for it to be ready before loading
+    authStateAsync.when(
+      data: (user) {
+        // User is available - check if we need to load data
+        if (user != null && _lastLoadedUserId != user.uid && !_isLoadingData) {
+          debugPrint('Profile: User available in build but data not loaded yet (user: ${user.uid}, lastLoaded: $_lastLoadedUserId)');
+          // User changed or became available - reload data
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _loadDataIfUserAvailable();
+          });
+        }
+      },
+      loading: () {
+        debugPrint('Profile: Auth state is loading...');
+      },
+      error: (error, stack) {
+        debugPrint('Profile: Auth state error: $error');
+      },
+    );
+    
     return Scaffold(
       body: Stack(
         children: [
