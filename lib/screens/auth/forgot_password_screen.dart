@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
+import '../../repositories/auth_repository.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/common/app_components.dart';
 import 'login_screen.dart';

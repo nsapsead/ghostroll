@@ -29,6 +29,7 @@ class Session {
   final String? instructor;
   final int duration; // in minutes
   final bool isScheduledClass;
+  final String? linkedClassSessionId;
 
   Session({
     required this.id,
@@ -44,6 +45,7 @@ class Session {
     this.instructor,
     this.duration = 60,
     this.isScheduledClass = false,
+    this.linkedClassSessionId,
   });
 
   Map<String, dynamic> toJson() {
@@ -61,6 +63,7 @@ class Session {
       'instructor': instructor,
       'duration': duration,
       'isScheduledClass': isScheduledClass,
+      'linkedClassSessionId': linkedClassSessionId,
     };
   }
 
@@ -81,6 +84,7 @@ class Session {
       instructor: json['instructor'] as String?,
       duration: json['duration'] as int? ?? 60,
       isScheduledClass: json['isScheduledClass'] as bool? ?? false,
+      linkedClassSessionId: json['linkedClassSessionId'] as String?,
     );
   }
 
@@ -103,6 +107,7 @@ class Session {
       instructor: instructor,
       duration: duration,
       isScheduledClass: isScheduledClass,
+      linkedClassSessionId: linkedClassSessionId,
     );
   }
 

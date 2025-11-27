@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../repositories/calendar_repository.dart';
 import '../models/calendar_event.dart';
 import 'auth_provider.dart';
+import 'class_session_providers.dart';
+import 'package:rxdart/rxdart.dart';
 
 // Repository Provider
 final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
@@ -10,11 +12,50 @@ final calendarRepositoryProvider = Provider<CalendarRepository>((ref) {
 });
 
 // Stream of all calendar events for the current user
-final calendarEventsProvider = StreamProvider<List<CalendarEvent>>((ref) {
+// Stream of personal calendar events
+final personalCalendarEventsProvider = StreamProvider<List<CalendarEvent>>((ref) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return Stream.value([]);
   
   return ref.watch(calendarRepositoryProvider).getEventsStream(user.uid);
+});
+
+// Stream of ALL calendar events (personal + club classes)
+final calendarEventsProvider = StreamProvider<List<CalendarEvent>>((ref) {
+  final personalEventsStream = ref.watch(personalCalendarEventsProvider.stream);
+  final classSessionsStream = ref.watch(allUserClassSessionsProvider.stream);
+  
+  return Rx.combineLatest2(
+    personalEventsStream, 
+    classSessionsStream, 
+    (List<CalendarEvent> personalEvents, List<dynamic> classSessions) {
+      // Convert ClassSessions to CalendarEvents
+      final classEvents = classSessions.map((session) {
+        // We need to cast because dynamic is used in the signature above due to Riverpod type inference sometimes
+        // But we know it's List<ClassSession>
+        // Actually, let's just use dynamic and cast inside
+        final s = session; 
+        
+        // Create a synthetic CalendarEvent from ClassSession
+        // We prefix ID to avoid collision
+        return CalendarEvent(
+          id: 'class_${s.id}',
+          title: s.focusArea ?? '${s.classType} Class',
+          type: CalendarEventType.dropInEvent, // Treat as drop-in for display
+          classType: s.classType, // This matches the string expected by UI
+          specificDate: s.date,
+          startTime: '${s.date.hour.toString().padLeft(2, '0')}:${s.date.minute.toString().padLeft(2, '0')}',
+          endTime: '${s.date.add(Duration(minutes: s.duration ?? 60)).hour.toString().padLeft(2, '0')}:${s.date.add(Duration(minutes: s.duration ?? 60)).minute.toString().padLeft(2, '0')}',
+          createdAt: s.createdAt,
+          instructor: 'Club Class', // Or fetch instructor name if we had it
+          location: 'Club', // Or fetch club name if we had it
+          notes: 'Shared class session',
+        );
+      }).toList();
+      
+      return [...personalEvents, ...classEvents];
+    }
+  );
 });
 
 // Provider for upcoming classes (next 7 days)

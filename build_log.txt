@@ -1,0 +1,492 @@
+
+┌─────────────────────────────────────────────────────────┐
+│ A new version of Flutter is available!                  │
+│                                                         │
+│ To update to the latest version, run "flutter upgrade". │
+└─────────────────────────────────────────────────────────┘
+Building macOS application...                                   
+--- xcodebuild: WARNING: Using the first of multiple matching destinations:
+{ platform:macOS, arch:arm64, id:00006001-0014594E3404801E, name:My Mac }
+{ platform:macOS, arch:x86_64, id:00006001-0014594E3404801E, name:My Mac }
+lib/screens/quick_log_screen.dart:359:5: Error: Expected a class member, but got 'super'.
+    super.didChangeDependencies();
+    ^^^^^
+lib/screens/quick_log_screen.dart:359:10: Error: Expected a class member, but got '.'.
+    super.didChangeDependencies();
+         ^
+lib/screens/quick_log_screen.dart:1367:1: Error: Expected a declaration, but got '}'.
+} 
+^
+lib/screens/quick_log_screen.dart:1107:10: Error: '_buildUpcomingClassesSection' is already declared in this scope.
+  Widget _buildUpcomingClassesSection() {
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:580:10: Context: Previous declaration of '_buildUpcomingClassesSection'.
+  Widget _buildUpcomingClassesSection() {
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:360:5: Error: '_loadUserName' is already declared in this scope.
+    _loadUserName(); // Refresh user name
+    ^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:321:16: Context: Previous declaration of '_loadUserName'.
+  Future<void> _loadUserName() async {
+               ^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:263:7: Error: The non-abstract class '_QuickLogScreenState' is missing implementations for these members:
+ - State.build
+Try to either
+ - provide an implementation,
+ - inherit an implementation from a superclass or mixin,
+ - mark the class as abstract, or
+ - provide a 'noSuchMethod' implementation.
+
+class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
+      ^^^^^^^^^^^^^^^^^^^^
+../flutter/packages/flutter/lib/src/widgets/framework.dart:1461:10: Context: 'State.build' is defined here.
+  Widget build(BuildContext context);
+         ^^^^^
+lib/screens/quick_log_screen.dart:318:5: Error: Can't use '_loadUserName' because it is declared more than once.
+    _loadUserName();
+    ^
+lib/screens/quick_log_screen.dart:365:5: Error: Undefined name '_pulseController'.
+    _pulseController.dispose();
+    ^^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:366:5: Error: Undefined name '_fadeController'.
+    _fadeController.dispose();
+    ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:367:5: Error: Undefined name '_slideController'.
+    _slideController.dispose();
+    ^^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:368:5: Error: Expected identifier, but got 'super'.
+    super.dispose();
+    ^^^^^
+lib/screens/quick_log_screen.dart:408:7: Error: Undefined name 'context'.
+      context,
+      ^^^^^^^
+lib/screens/quick_log_screen.dart:434:32: Error: Undefined name '_fadeAnimation'.
+                      opacity: _fadeAnimation,
+                               ^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:436:35: Error: Undefined name '_slideAnimation'.
+                        position: _slideAnimation,
+                                  ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:450:31: Error: Can't use '_buildUpcomingClassesSection' because it is declared more than once.
+                              _buildUpcomingClassesSection(),
+                              ^
+lib/screens/quick_log_screen.dart:468:25: Error: Undefined name 'ref'.
+    final eventsAsync = ref.watch(calendarEventsProvider);
+                        ^^^
+lib/screens/quick_log_screen.dart:526:15: Error: Undefined name 'context'.
+              context,
+              ^^^^^^^
+lib/screens/quick_log_screen.dart:535:41: Error: Member not found: 'activeHighlight'.
+                colors: [GhostRollTheme.activeHighlight.withOpacity(0.2), GhostRollTheme.activeHighlight.withOpacity(0.05)],
+                                        ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:535:90: Error: Member not found: 'activeHighlight'.
+                colors: [GhostRollTheme.activeHighlight.withOpacity(0.2), GhostRollTheme.activeHighlight.withOpacity(0.05)],
+                                                                                         ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:540:56: Error: Member not found: 'activeHighlight'.
+              border: Border.all(color: GhostRollTheme.activeHighlight.withOpacity(0.5)),
+                                                       ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:547:43: Error: Member not found: 'activeHighlight'.
+                    color: GhostRollTheme.activeHighlight,
+                                          ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:569:75: Error: Member not found: 'activeHighlight'.
+                const Icon(Icons.arrow_forward_ios, color: GhostRollTheme.activeHighlight, size: 16),
+                                                                          ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:581:34: Error: Undefined name 'ref'.
+    final upcomingClassesAsync = ref.watch(upcomingClassesProvider);
+                                 ^^^
+lib/screens/quick_log_screen.dart:674:37: Error: Member not found: 'surface'.
+              color: GhostRollTheme.surface,
+                                    ^^^^^^^
+lib/screens/quick_log_screen.dart:722:39: Error: Undefined name 'context'.
+    final screenWidth = MediaQuery.of(context).size.width;
+                                      ^^^^^^^
+lib/screens/quick_log_screen.dart:729:18: Error: Undefined name '_pulseAnimation'.
+          scale: _pulseAnimation,
+                 ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:772:18: Error: Undefined name '_userName'.
+          onTap: _userName == 'Guest' ? () {
+                 ^^^^^^^^^
+lib/screens/quick_log_screen.dart:774:13: Error: Undefined name 'widget'.
+            widget.onNavigateToProfile?.call();
+            ^^^^^^
+lib/screens/quick_log_screen.dart:786:25: Error: Undefined name '_userName'.
+                  text: _userName,
+                        ^^^^^^^^^
+lib/screens/quick_log_screen.dart:787:26: Error: Undefined name '_userName'.
+                  style: _userName == 'Guest' 
+                         ^^^^^^^^^
+lib/screens/quick_log_screen.dart:815:39: Error: Undefined name 'context'.
+    final screenWidth = MediaQuery.of(context).size.width;
+                                      ^^^^^^^
+lib/screens/quick_log_screen.dart:820:14: Error: Undefined name '_pulseAnimation'.
+      scale: _pulseAnimation,
+             ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:867:28: Error: Undefined name '_pulseAnimation'.
+                animation: _pulseAnimation,
+                           ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:884:64: Error: Undefined name '_pulseAnimation'.
+                          color: Colors.cyan.withOpacity(0.5 * _pulseAnimation.value),
+                                                               ^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:992:39: Error: Undefined name 'context'.
+    final screenWidth = MediaQuery.of(context).size.width;
+                                      ^^^^^^^
+lib/screens/quick_log_screen.dart:995:27: Error: Undefined name 'ref'.
+    final sessionsAsync = ref.watch(sessionListProvider);
+                          ^^^
+lib/screens/quick_log_screen.dart:1108:39: Error: Undefined name 'context'.
+    final screenWidth = MediaQuery.of(context).size.width;
+                                      ^^^^^^^
+lib/screens/quick_log_screen.dart:1152:15: Error: Undefined name '_isLoadingClasses'.
+          if (_isLoadingClasses)
+              ^^^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:1162:20: Error: Undefined name '_upcomingClasses'.
+          else if (_upcomingClasses.isEmpty)
+                   ^^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:1199:36: Error: Setter not found: '_isLoadingClasses'.
+                    setState(() => _isLoadingClasses = true);
+                                   ^^^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:1199:21: Error: Method not found: 'setState'.
+                    setState(() => _isLoadingClasses = true);
+                    ^^^^^^^^
+lib/screens/quick_log_screen.dart:1200:21: Error: Method not found: '_loadUpcomingClasses'.
+                    _loadUpcomingClasses();
+                    ^^^^^^^^^^^^^^^^^^^^
+lib/screens/quick_log_screen.dart:1236:25: Error: Undefined name '_upcomingClasses'.
+              children: _upcomingClasses.map((c) => Container(
+                        ^^^^^^^^^^^^^^^^
+lib/screens/log_session_form.dart:379:9: Error: Duplicated named argument 'duration'.
+        duration: 60, // Default to 60 for now
+        ^^^^^^^^
+lib/screens/profile_screen.dart:2402:39: Error: Member not found: 'activeHighlight'.
+                color: GhostRollTheme.activeHighlight.withOpacity(0.1),
+                                      ^^^^^^^^^^^^^^^
+lib/screens/profile_screen.dart:2407:39: Error: Member not found: 'activeHighlight'.
+                color: GhostRollTheme.activeHighlight,
+                                      ^^^^^^^^^^^^^^^
+lib/screens/profile_screen.dart:2421:45: Error: Member not found: 'textPrimary'.
+                      color: GhostRollTheme.textPrimary,
+                                            ^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:23:61: Error: Member not found: 'textTitle'.
+        title: const Text('My Clubs', style: GhostRollTheme.textTitle),
+                                                            ^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:26:72: Error: Member not found: 'textPrimary'.
+          icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
+                                                                       ^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:37:92: Error: Member not found: 'activeHighlight'.
+        loading: () => const Center(child: CircularProgressIndicator(color: GhostRollTheme.activeHighlight)),
+                                                                                          ^^^^^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:58:37: Error: Member not found: 'textTitle'.
+              style: GhostRollTheme.textTitle,
+                                    ^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:64:37: Error: Member not found: 'textBody'.
+              style: GhostRollTheme.textBody,
+                                    ^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:95:45: Error: Member not found: 'divider'.
+        const Divider(color: GhostRollTheme.divider),
+                                            ^^^^^^^
+lib/screens/community/my_clubs_screen.dart:99:33: Error: Member not found: 'textSectionHeader'.
+          style: GhostRollTheme.textSectionHeader,
+                                ^^^^^^^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:133:33: Error: Member not found: 'surface'.
+          color: GhostRollTheme.surface,
+                                ^^^^^^^
+lib/screens/community/my_clubs_screen.dart:147:47: Error: Member not found: 'surfaceHighlight'.
+              backgroundColor: GhostRollTheme.surfaceHighlight,
+                                              ^^^^^^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:155:47: Error: Member not found: 'activeHighlight'.
+                        color: GhostRollTheme.activeHighlight,
+                                              ^^^^^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:170:45: Error: Member not found: 'textPrimary'.
+                      color: GhostRollTheme.textPrimary,
+                                            ^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:186:45: Error: Member not found: 'activeHighlight'.
+                      color: GhostRollTheme.activeHighlight,
+                                            ^^^^^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:216:55: Error: Member not found: 'activeHighlight'.
+          backgroundColor: isPrimary ? GhostRollTheme.activeHighlight : Colors.transparent,
+                                                      ^^^^^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:217:70: Error: Member not found: 'activeHighlight'.
+          foregroundColor: isPrimary ? Colors.black : GhostRollTheme.activeHighlight,
+                                                                     ^^^^^^^^^^^^^^^
+lib/screens/community/my_clubs_screen.dart:221:88: Error: Member not found: 'activeHighlight'.
+            side: isPrimary ? BorderSide.none : const BorderSide(color: GhostRollTheme.activeHighlight, width: 1.5),
+                                                                                       ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:158:41: Error: Member not found: 'surface'.
+        backgroundColor: GhostRollTheme.surface,
+                                        ^^^^^^^
+lib/screens/community/join_club_screen.dart:159:65: Error: Member not found: 'textTitle'.
+        title: Text('Join ${club.name}?', style: GhostRollTheme.textTitle),
+                                                                ^^^^^^^^^
+lib/screens/community/join_club_screen.dart:162:33: Error: Member not found: 'textBody'.
+          style: GhostRollTheme.textBody,
+                                ^^^^^^^^
+lib/screens/community/join_club_screen.dart:175:47: Error: Member not found: 'activeHighlight'.
+              backgroundColor: GhostRollTheme.activeHighlight,
+                                              ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:192:64: Error: Member not found: 'textTitle'.
+        title: const Text('Join a Club', style: GhostRollTheme.textTitle),
+                                                               ^^^^^^^^^
+lib/screens/community/join_club_screen.dart:195:72: Error: Member not found: 'textPrimary'.
+          icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
+                                                                       ^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:200:42: Error: Member not found: 'activeHighlight'.
+          indicatorColor: GhostRollTheme.activeHighlight,
+                                         ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:201:38: Error: Member not found: 'activeHighlight'.
+          labelColor: GhostRollTheme.activeHighlight,
+                                     ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:226:58: Error: Member not found: 'textPrimary'.
+            style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                         ^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:232:41: Error: Member not found: 'surface'.
+              fillColor: GhostRollTheme.surface,
+                                        ^^^^^^^
+lib/screens/community/join_club_screen.dart:238:77: Error: Member not found: 'activeHighlight'.
+                icon: const Icon(Icons.arrow_forward, color: GhostRollTheme.activeHighlight),
+                                                                            ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:247:85: Error: Member not found: 'activeHighlight'.
+              ? const Center(child: CircularProgressIndicator(color: GhostRollTheme.activeHighlight))
+                                                                                    ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:252:61: Error: The method 'copyWith' isn't defined for the class 'Color'.
+ - 'Color' is from 'dart:ui'.
+Try correcting the name to the name of an existing method, or defining a method named 'copyWith'.
+                        style: GhostRollTheme.textSecondary.copyWith(fontSize: 16),
+                                                            ^^^^^^^^
+lib/screens/community/join_club_screen.dart:282:35: Error: Member not found: 'textTitle'.
+            style: GhostRollTheme.textTitle,
+                                  ^^^^^^^^^
+lib/screens/community/join_club_screen.dart:287:35: Error: Member not found: 'textBody'.
+            style: GhostRollTheme.textBody,
+                                  ^^^^^^^^
+lib/screens/community/join_club_screen.dart:293:58: Error: Member not found: 'textPrimary'.
+            style: const TextStyle(color: GhostRollTheme.textPrimary, fontSize: 24, letterSpacing: 2),
+                                                         ^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:299:41: Error: Member not found: 'surface'.
+              fillColor: GhostRollTheme.surface,
+                                        ^^^^^^^
+lib/screens/community/join_club_screen.dart:313:49: Error: Member not found: 'activeHighlight'.
+                backgroundColor: GhostRollTheme.activeHighlight,
+                                                ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:336:29: Error: Member not found: 'surface'.
+      color: GhostRollTheme.surface,
+                            ^^^^^^^
+lib/screens/community/join_club_screen.dart:342:43: Error: Member not found: 'surfaceHighlight'.
+          backgroundColor: GhostRollTheme.surfaceHighlight,
+                                          ^^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:345:95: Error: Member not found: 'activeHighlight'.
+              ? Text(club.name[0].toUpperCase(), style: const TextStyle(color: GhostRollTheme.activeHighlight))
+                                                                                          ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:348:77: Error: Member not found: 'textPrimary'.
+        title: Text(club.name, style: const TextStyle(color: GhostRollTheme.textPrimary, fontWeight: FontWeight.bold)),
+                                                                            ^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:353:45: Error: Member not found: 'activeHighlight'.
+            backgroundColor: GhostRollTheme.activeHighlight.withOpacity(0.1),
+                                            ^^^^^^^^^^^^^^^
+lib/screens/community/join_club_screen.dart:354:45: Error: Member not found: 'activeHighlight'.
+            foregroundColor: GhostRollTheme.activeHighlight,
+                                            ^^^^^^^^^^^^^^^
+lib/screens/community/create_club_screen.dart:117:66: Error: Member not found: 'textTitle'.
+        title: const Text('Create a Club', style: GhostRollTheme.textTitle),
+                                                                 ^^^^^^^^^
+lib/screens/community/create_club_screen.dart:120:72: Error: Member not found: 'textPrimary'.
+          icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
+                                                                       ^^^^^^^^^^^
+lib/screens/community/create_club_screen.dart:133:39: Error: Member not found: 'textSectionHeader'.
+                style: GhostRollTheme.textSectionHeader,
+                                      ^^^^^^^^^^^^^^^^^
+lib/screens/community/create_club_screen.dart:183:53: Error: Member not found: 'activeHighlight'.
+                    backgroundColor: GhostRollTheme.activeHighlight,
+                                                    ^^^^^^^^^^^^^^^
+lib/screens/community/create_club_screen.dart:214:52: Error: Member not found: 'textPrimary'.
+      style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                   ^^^^^^^^^^^
+lib/screens/community/create_club_screen.dart:220:35: Error: Member not found: 'surface'.
+        fillColor: GhostRollTheme.surface,
+                                  ^^^^^^^
+lib/screens/community/create_club_screen.dart:231:62: Error: Member not found: 'activeHighlight'.
+          borderSide: const BorderSide(color: GhostRollTheme.activeHighlight),
+                                                             ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:59:82: Error: Member not found: 'textPrimary'.
+                    icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
+                                                                                 ^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:77:63: Error: Member not found: 'surfaceHighlight'.
+                              backgroundColor: GhostRollTheme.surfaceHighlight,
+                                                              ^^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:82:127: Error: Member not found: 'activeHighlight'.
+                                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: GhostRollTheme.activeHighlight),
+                                                                                          ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:89:53: Error: Member not found: 'textTitle'.
+                              style: GhostRollTheme.textTitle.copyWith(fontSize: 24),
+                                                    ^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:113:52: Error: Member not found: 'activeHighlight'.
+                    indicatorColor: GhostRollTheme.activeHighlight,
+                                                   ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:114:48: Error: Member not found: 'activeHighlight'.
+                    labelColor: GhostRollTheme.activeHighlight,
+                                               ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:133:92: Error: Member not found: 'activeHighlight'.
+        loading: () => const Center(child: CircularProgressIndicator(color: GhostRollTheme.activeHighlight)),
+                                                                                          ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:95:53: Error: The argument type 'Color' can't be assigned to the parameter type 'TextStyle?'.
+ - 'Color' is from 'dart:ui'.
+ - 'TextStyle' is from 'package:flutter/src/painting/text_style.dart' ('../flutter/packages/flutter/lib/src/painting/text_style.dart').
+                              style: GhostRollTheme.textSecondary,
+                                                    ^
+lib/screens/community/club_detail_screen.dart:101:69: Error: The method 'copyWith' isn't defined for the class 'Color'.
+ - 'Color' is from 'dart:ui'.
+Try correcting the name to the name of an existing method, or defining a method named 'copyWith'.
+                                style: GhostRollTheme.textSecondary.copyWith(fontSize: 12),
+                                                                    ^^^^^^^^
+lib/screens/community/club_detail_screen.dart:163:41: Error: Member not found: 'activeHighlight'.
+        backgroundColor: GhostRollTheme.activeHighlight,
+                                        ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:215:90: Error: Member not found: 'activeHighlight'.
+      loading: () => const Center(child: CircularProgressIndicator(color: GhostRollTheme.activeHighlight)),
+                                                                                         ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:200:83: Error: The argument type 'Color' can't be assigned to the parameter type 'TextStyle?'.
+ - 'Color' is from 'dart:ui'.
+ - 'TextStyle' is from 'package:flutter/src/painting/text_style.dart' ('../flutter/packages/flutter/lib/src/painting/text_style.dart').
+                const Text('No classes scheduled recently', style: GhostRollTheme.textSecondary),
+                                                                                  ^
+lib/screens/community/club_detail_screen.dart:234:33: Error: Member not found: 'surface'.
+          color: GhostRollTheme.surface,
+                                ^^^^^^^
+lib/screens/community/club_detail_screen.dart:247:43: Error: Member not found: 'activeHighlight'.
+                    color: GhostRollTheme.activeHighlight,
+                                          ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:263:39: Error: Member not found: 'textPrimary'.
+                color: GhostRollTheme.textPrimary,
+                                      ^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:300:49: Error: Member not found: 'surfaceHighlight'.
+                backgroundColor: GhostRollTheme.surfaceHighlight,
+                                                ^^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:303:64: Error: Member not found: 'textPrimary'.
+                  style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                               ^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:308:62: Error: Member not found: 'textPrimary'.
+                style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                             ^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:319:55: Error: Member not found: 'activeHighlight'.
+                      backgroundColor: GhostRollTheme.activeHighlight,
+                                                      ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:328:90: Error: Member not found: 'activeHighlight'.
+      loading: () => const Center(child: CircularProgressIndicator(color: GhostRollTheme.activeHighlight)),
+                                                                                         ^^^^^^^^^^^^^^^
+lib/screens/community/club_detail_screen.dart:289:83: Error: The argument type 'Color' can't be assigned to the parameter type 'TextStyle?'.
+ - 'Color' is from 'dart:ui'.
+ - 'TextStyle' is from 'package:flutter/src/painting/text_style.dart' ('../flutter/packages/flutter/lib/src/painting/text_style.dart').
+          return const Center(child: Text('No members yet', style: GhostRollTheme.textSecondary));
+                                                                                  ^
+lib/screens/community/create_class_session_screen.dart:132:70: Error: Member not found: 'textTitle'.
+        title: const Text('New Class Session', style: GhostRollTheme.textTitle),
+                                                                     ^^^^^^^^^
+lib/screens/community/create_class_session_screen.dart:135:72: Error: Member not found: 'textPrimary'.
+          icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
+                                                                       ^^^^^^^^^^^
+lib/screens/community/create_class_session_screen.dart:146:65: Error: Member not found: 'textSectionHeader'.
+              const Text('Class Details', style: GhostRollTheme.textSectionHeader),
+                                                                ^^^^^^^^^^^^^^^^^
+lib/screens/community/create_class_session_screen.dart:152:47: Error: Member not found: 'surface'.
+                dropdownColor: GhostRollTheme.surface,
+                                              ^^^^^^^
+lib/screens/community/create_class_session_screen.dart:153:62: Error: Member not found: 'textPrimary'.
+                style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                             ^^^^^^^^^^^
+lib/screens/community/create_class_session_screen.dart:158:45: Error: Member not found: 'surface'.
+                  fillColor: GhostRollTheme.surface,
+                                            ^^^^^^^
+lib/screens/community/create_class_session_screen.dart:171:62: Error: Member not found: 'textPrimary'.
+                style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                             ^^^^^^^^^^^
+lib/screens/community/create_class_session_screen.dart:176:45: Error: Member not found: 'surface'.
+                  fillColor: GhostRollTheme.surface,
+                                            ^^^^^^^
+lib/screens/community/create_class_session_screen.dart:191:49: Error: Member not found: 'surface'.
+                          color: GhostRollTheme.surface,
+                                                ^^^^^^^
+lib/screens/community/create_class_session_screen.dart:200:76: Error: Member not found: 'textPrimary'.
+                              style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                                           ^^^^^^^^^^^
+lib/screens/community/create_class_session_screen.dart:214:49: Error: Member not found: 'surface'.
+                          color: GhostRollTheme.surface,
+                                                ^^^^^^^
+lib/screens/community/create_class_session_screen.dart:223:76: Error: Member not found: 'textPrimary'.
+                              style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                                           ^^^^^^^^^^^
+lib/screens/community/create_class_session_screen.dart:237:62: Error: Member not found: 'textPrimary'.
+                style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                             ^^^^^^^^^^^
+lib/screens/community/create_class_session_screen.dart:243:45: Error: Member not found: 'surface'.
+                  fillColor: GhostRollTheme.surface,
+                                            ^^^^^^^
+lib/screens/community/create_class_session_screen.dart:255:53: Error: Member not found: 'activeHighlight'.
+                    backgroundColor: GhostRollTheme.activeHighlight,
+                                                    ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:74:54: Error: The method 'addNote' isn't defined for the class 'ClassSessionRepository'.
+ - 'ClassSessionRepository' is from 'package:martial_arts_journal/repositories/class_session_repository.dart' ('lib/repositories/class_session_repository.dart').
+Try correcting the name to the name of an existing method, or defining a method named 'addNote'.
+      await ref.read(classSessionRepositoryProvider).addNote(note);
+                                                     ^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:106:66: Error: Member not found: 'textTitle'.
+        title: const Text('Class Session', style: GhostRollTheme.textTitle),
+                                                                 ^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:109:72: Error: Member not found: 'textPrimary'.
+          icon: const Icon(Icons.arrow_back_ios, color: GhostRollTheme.textPrimary),
+                                                                       ^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:116:84: Error: Member not found: 'activeHighlight'.
+                    icon: const Icon(Icons.add_box_outlined, color: GhostRollTheme.activeHighlight),
+                                                                                   ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:137:48: Error: Member not found: 'activeHighlight'.
+                indicatorColor: GhostRollTheme.activeHighlight,
+                                               ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:138:44: Error: Member not found: 'activeHighlight'.
+                labelColor: GhostRollTheme.activeHighlight,
+                                           ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:173:102: Error: Member not found: 'activeHighlight'.
+                  loading: () => const Center(child: CircularProgressIndicator(color: GhostRollTheme.activeHighlight)),
+                                                                                          ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:181:92: Error: Member not found: 'activeHighlight'.
+        loading: () => const Center(child: CircularProgressIndicator(color: GhostRollTheme.activeHighlight)),
+                                                                                          ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:157:67: Error: The method 'copyWith' isn't defined for the class 'Color'.
+ - 'Color' is from 'dart:ui'.
+Try correcting the name to the name of an existing method, or defining a method named 'copyWith'.
+                              style: GhostRollTheme.textSecondary.copyWith(color: GhostRollTheme.textSecondary.withOpacity(0.7)),
+                                                                  ^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:205:49: Error: Member not found: 'activeHighlight'.
+                backgroundColor: GhostRollTheme.activeHighlight,
+                                                ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:218:35: Error: Member not found: 'textTitle'.
+            style: GhostRollTheme.textTitle.copyWith(fontSize: 24),
+                                  ^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:245:31: Error: Member not found: 'surface'.
+        color: GhostRollTheme.surface,
+                              ^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:249:32: Error: Member not found: 'activeHighlight'.
+              ? GhostRollTheme.activeHighlight.withOpacity(0.3) 
+                               ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:263:52: Error: Member not found: 'activeHighlight'.
+                  color: isAuthor ? GhostRollTheme.activeHighlight : GhostRollTheme.textSecondary,
+                                                   ^^^^^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:277:58: Error: Member not found: 'textPrimary'.
+            style: const TextStyle(color: GhostRollTheme.textPrimary, height: 1.4),
+                                                         ^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:288:31: Error: Member not found: 'surface'.
+        color: GhostRollTheme.surface,
+                              ^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:303:62: Error: Member not found: 'textPrimary'.
+                style: const TextStyle(color: GhostRollTheme.textPrimary),
+                                                             ^^^^^^^^^^^
+lib/screens/community/class_session_detail_screen.dart:323:39: Error: Member not found: 'activeHighlight'.
+                color: GhostRollTheme.activeHighlight,
+                                      ^^^^^^^^^^^^^^^
+Target kernel_snapshot_program failed: Exception
+
+Command PhaseScriptExecution failed with a nonzero exit code
+warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'abseil' from project 'Pods')
+warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'BoringSSL-GRPC' from project 'Pods')
+warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-Core' from project 'Pods')
+warning: Run script build phase 'Create Symlinks to Header Folders' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'gRPC-C++' from project 'Pods')
+warning: Run script build phase 'Run Script' will be run during every build because it does not specify any outputs. To address this issue, either add output dependencies to the script phase, or configure it to run in every build by unchecking "Based on dependency analysis" in the script phase. (in target 'Flutter Assemble' from project 'Runner')
+** BUILD FAILED **
+
+Build process failed

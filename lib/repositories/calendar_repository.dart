@@ -25,12 +25,25 @@ class CalendarRepository {
 
   // Add a new event
   Future<void> addEvent(String userId, CalendarEvent event) async {
-    await _firestore
-        .collection('users')
-        .doc(userId)
-        .collection('calendar_events')
-        .doc(event.id)
-        .set(event.toJson());
+    try {
+      print('📝 CalendarRepository.addEvent called');
+      print('📝 User ID: $userId');
+      print('📝 Event ID: ${event.id}');
+      print('📝 Event Type: ${event.type.name}');
+      print('📝 Event JSON: ${event.toJson()}');
+      
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('calendar_events')
+          .doc(event.id)
+          .set(event.toJson());
+      
+      print('✅ Event successfully written to Firestore');
+    } catch (e) {
+      print('❌ Error in CalendarRepository.addEvent: $e');
+      rethrow;
+    }
   }
 
   // Update an existing event

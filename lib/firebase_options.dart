@@ -45,13 +45,13 @@ class DefaultFirebaseOptions {
   // You can get these values from your Firebase Console project settings
   
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY', // Replace with actual web API key
-    appId: 'YOUR_WEB_APP_ID', // Replace with actual web app ID
-    messagingSenderId: 'YOUR_SENDER_ID', // Replace with actual sender ID
-    projectId: 'ghostroll-app', // Replace with your actual project ID
-    authDomain: 'ghostroll-app.firebaseapp.com', // Replace with your actual auth domain
-    storageBucket: 'ghostroll-app.appspot.com', // Replace with your actual storage bucket
-    measurementId: 'YOUR_MEASUREMENT_ID', // Replace with actual measurement ID if using Analytics
+    apiKey: 'AIzaSyAxeQ_jfCVE0fFaQfh_jTwOR3xIkFzvc9I',
+    appId: '1:610274763374:web:46c9b78def2b3e9e8ffc7f',
+    messagingSenderId: '610274763374',
+    projectId: 'ghostroll-3800d',
+    authDomain: 'ghostroll-3800d.firebaseapp.com',
+    storageBucket: 'ghostroll-3800d.firebasestorage.app',
+    measurementId: 'G-VMQFZYRF0N',
   );
 
   static const FirebaseOptions android = FirebaseOptions(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
+import '../../repositories/auth_repository.dart';
 import '../../services/biometric_service.dart';
 import '../../theme/ghostroll_theme.dart';
 import 'register_screen.dart';
@@ -30,8 +31,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   bool _obscurePassword = true;
   String _errorMessage = '';
   bool _isGoogleLoading = false;
-  bool _isAppleLoading = false;
-  bool _isFacebookLoading = false;
   bool _isBiometricLoading = false;
 
   @override
@@ -132,7 +131,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     }
   }
 
-  // TODO: Implement social sign-in methods
   Future<void> _signInWithGoogle() async {
     setState(() {
       _isGoogleLoading = true;
@@ -140,61 +138,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     });
 
     try {
-      // TODO: Implement Google sign-in
-      await Future.delayed(const Duration(seconds: 1));
-      setState(() {
-        _errorMessage = 'Google sign-in not yet implemented';
-      });
+      await ref.read(authRepositoryProvider).signInWithGoogle();
     } catch (e) {
       setState(() {
         _errorMessage = 'Google sign in failed. Please try again.';
       });
     } finally {
-      setState(() {
-        _isGoogleLoading = false;
-      });
-    }
-  }
-
-  Future<void> _signInWithApple() async {
-    setState(() {
-      _isAppleLoading = true;
-      _errorMessage = '';
-    });
-
-    try {
-      // TODO: Implement Apple sign-in
-      await Future.delayed(const Duration(seconds: 1));
-      setState(() {
-        _errorMessage = 'Apple sign-in not yet implemented';
-      });
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Apple sign in failed. Please try again.';
-      });
-    } finally {
-      setState(() {
-        _isAppleLoading = false;
-      });
-    }
-  }
-
-  Future<void> _signInWithFacebook() async {
-    setState(() {
-      _isFacebookLoading = true;
-      _errorMessage = '';
-    });
-
-    try {
-      // TODO: Implement Facebook sign-in
-      await Future.delayed(const Duration(seconds: 1));
-      setState(() {
-        _errorMessage = 'Facebook sign-in not yet implemented';
-      });
-    } catch (e) {
-      setState(() {
-        _isFacebookLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isGoogleLoading = false;
+        });
+      }
     }
   }
 
@@ -645,39 +599,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           ],
         ),
         const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSocialButton(
-                icon: Icons.g_mobiledata,
-                label: 'Google',
-                isLoading: _isGoogleLoading,
-                onPressed: _signInWithGoogle,
-                color: Colors.red,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSocialButton(
-                icon: Icons.apple,
-                label: 'Apple',
-                isLoading: _isAppleLoading,
-                onPressed: _signInWithApple,
-                color: Colors.white,
-                backgroundColor: Colors.black,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildSocialButton(
-                icon: Icons.facebook,
-                label: 'Facebook',
-                isLoading: _isFacebookLoading,
-                onPressed: _signInWithFacebook,
-                color: Colors.blue,
-              ),
-            ),
-          ],
+        _buildSocialButton(
+          icon: Icons.g_mobiledata,
+          label: 'Continue with Google',
+          isLoading: _isGoogleLoading,
+          onPressed: _signInWithGoogle,
+          color: Colors.red,
         ),
       ],
     );
@@ -718,10 +645,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                     ),
                   )
-                : Icon(
-                    icon,
-                    color: color,
-                    size: 24,
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        color: color,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        label,
+                        style: GhostRollTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
           ),
         ),

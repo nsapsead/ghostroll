@@ -1,10 +1,13 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="GhostRoll - Martial Arts Training Journal">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="google-signin-client_id"
+    content="610274763374-8n1t6tfjenv3802ci9cmfo217semc5er.apps.googleusercontent.com">
   <title>GhostRoll</title>
   <link rel="manifest" href="manifest.json">
   <style>
@@ -20,6 +23,7 @@
       justify-content: center;
       flex-direction: column;
     }
+
     #splash {
       display: flex;
       flex-direction: column;
@@ -29,6 +33,7 @@
       width: 100vw;
       background: #111;
     }
+
     #splash img {
       width: clamp(180px, 40vw, 420px);
       height: clamp(180px, 40vw, 420px);
@@ -37,6 +42,7 @@
       margin-bottom: 24px;
       display: block;
     }
+
     #splash .app-title {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
       font-size: clamp(32px, 8vw, 64px);
@@ -52,28 +58,32 @@
       background-clip: text;
       animation: glow 2s ease-in-out infinite alternate;
     }
+
     @keyframes glow {
       from {
         filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
       }
+
       to {
         filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
       }
     }
   </style>
 </head>
+
 <body>
   <div id="splash">
     <img src="assets/images/GhostRollBeltMascot.png" alt="GhostRoll logo">
     <h1 class="app-title">GhostRoll</h1>
   </div>
   <script>
-    window.addEventListener('load', function() {
-      setTimeout(function() {
+    window.addEventListener('load', function () {
+      setTimeout(function () {
         document.getElementById('splash').style.display = 'none';
       }, 3000); // Show splash for at least 3 seconds
     });
   </script>
   <script src="main.dart.js" type="application/javascript"></script>
 </body>
+
 </html>

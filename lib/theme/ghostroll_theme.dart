@@ -17,6 +17,10 @@ class GhostRollTheme {
   static const Color textTertiary = Color(0xFF808080);
   static const Color overlayDark = Color(0xFF2A2A2A);
   static const Color accentLight = Color(0xFF4A9EFF);
+  static const Color surface = card; // Alias for surface color
+  static const Color activeHighlight = flowBlue; // Alias for active/selected items
+  static const Color surfaceHighlight = overlayDark; // Alias for highlighted surfaces
+  static const Color divider = Color(0xFF353535); // Divider color
 
   // Gradients
   static const List<Color> primaryGradient = [
@@ -157,6 +161,14 @@ class GhostRollTheme {
     color: textTertiary,
     height: 1.4,
   );
+
+  // Color aliases for backward compatibility
+  static const Color textPrimary = text; // Alias for primary text color
+
+  // TextStyle aliases for backward compatibility and convenience
+  static TextStyle get textTitle => titleLarge;
+  static TextStyle get textBody => bodyMedium;
+  static TextStyle get textSectionHeader => titleSmall;
 
   // Theme Data
   static ThemeData get dark {

@@ -708,7 +708,7 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
 
     await showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
@@ -959,6 +959,9 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
                       TextFormField(
                         initialValue: notes,
                         textDirection: TextDirection.ltr,
+                        minLines: 3,
+                        maxLines: 5,
+                        maxLength: 500,
                         decoration: InputDecoration(
                           labelText: 'Notes (optional)',
                           labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -977,7 +980,7 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(dialogContext),
                   child: Text('Cancel', style: TextStyle(color: GhostRollTheme.textSecondary)),
                 ),
                 ElevatedButton(
@@ -1054,8 +1057,10 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
                     try {
                       final user = ref.read(currentUserProvider);
                       if (user != null) {
+                        debugPrint('🔵 Saving recurring class: ${newEvent.title}');
                         await ref.read(calendarRepositoryProvider).addEvent(user.uid, newEvent);
-                        Navigator.pop(context);
+                        debugPrint('✅ Saved successfully');
+                        Navigator.pop(dialogContext);
                         // setState(() {}); // No need to setState, stream will update
                         
                         if (mounted) {
@@ -1116,7 +1121,7 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
 
     await showDialog(
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
@@ -1302,6 +1307,9 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
                       TextFormField(
                         controller: notesController,
                         textDirection: TextDirection.ltr,
+                        minLines: 3,
+                        maxLines: 5,
+                        maxLength: 500,
                         decoration: InputDecoration(
                           labelText: 'Notes (optional)',
                           labelStyle: TextStyle(color: GhostRollTheme.textSecondary),
@@ -1320,7 +1328,7 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => Navigator.pop(dialogContext),
                   child: Text('Cancel', style: TextStyle(color: GhostRollTheme.textSecondary)),
                 ),
                 ElevatedButton(
@@ -1344,7 +1352,7 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
                         final user = ref.read(currentUserProvider);
                         if (user != null) {
                           await ref.read(calendarRepositoryProvider).addEvent(user.uid, newEvent);
-                          Navigator.pop(context);
+                        Navigator.pop(dialogContext);
                           // setState(() {}); // Stream updates automatically
                           
                           if (mounted) {

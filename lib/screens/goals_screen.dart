@@ -736,19 +736,7 @@ class _GoalsScreenState extends State<GoalsScreen>
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
-        onPressed: () {
-          // TODO: Implement add goal functionality
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Add goal functionality coming soon!'),
-              backgroundColor: GhostRollTheme.flowBlue.withOpacity(0.9),
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-          );
-        },
+        onPressed: _showAddGoalModal,
         icon: const Icon(Icons.add, size: 24),
         label: Text(
           'Add New Goal',
@@ -766,6 +754,262 @@ class _GoalsScreenState extends State<GoalsScreen>
             borderRadius: BorderRadius.circular(32),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        ),
+      ),
+    );
+  }
+
+  void _showAddGoalModal() {
+    final titleController = TextEditingController();
+    final descriptionController = TextEditingController();
+    String selectedCategory = 'shortTerm';
+    DateTime selectedDate = DateTime.now().add(const Duration(days: 30));
+    
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Container(
+          height: MediaQuery.of(context).size.height * 0.85,
+          decoration: BoxDecoration(
+            color: GhostRollTheme.card,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: GhostRollTheme.large,
+          ),
+          child: Column(
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: GhostRollTheme.textSecondary.withOpacity(0.3),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              
+              // Header
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Row(
+                  children: [
+                    Text(
+                      'New Goal',
+                      style: GhostRollTheme.headlineSmall,
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(Icons.close),
+                      color: GhostRollTheme.textSecondary,
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Form Content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Title Input
+                      Text('Goal Title', style: GhostRollTheme.labelMedium),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: titleController,
+                        style: GhostRollTheme.bodyLarge,
+                        decoration: InputDecoration(
+                          hintText: 'e.g., Earn Blue Belt',
+                          hintStyle: GhostRollTheme.bodyLarge.copyWith(
+                            color: GhostRollTheme.textTertiary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Category Selection
+                      Text('Category', style: GhostRollTheme.labelMedium),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: _goalsService.getCategories().map((category) {
+                          final isSelected = selectedCategory == category;
+                          final color = _goalsService.getCategoryColor(category);
+                          
+                          return GestureDetector(
+                            onTap: () => setModalState(() => selectedCategory = category),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: isSelected ? color.withOpacity(0.2) : GhostRollTheme.overlayDark,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: isSelected ? color : Colors.transparent,
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _getGoalIcon(category),
+                                    size: 16,
+                                    color: isSelected ? color : GhostRollTheme.textSecondary,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    _goalsService.getCategoryDisplayName(category),
+                                    style: GhostRollTheme.bodySmall.copyWith(
+                                      color: isSelected ? color : GhostRollTheme.textSecondary,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Target Date
+                      Text('Target Date', style: GhostRollTheme.labelMedium),
+                      const SizedBox(height: 8),
+                      GestureDetector(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+                            builder: (context, child) {
+                              return Theme(
+                                data: GhostRollTheme.dark.copyWith(
+                                  colorScheme: const ColorScheme.dark(
+                                    primary: GhostRollTheme.flowBlue,
+                                    onPrimary: GhostRollTheme.text,
+                                    surface: GhostRollTheme.card,
+                                    onSurface: GhostRollTheme.text,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (date != null) {
+                            setModalState(() => selectedDate = date);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: GhostRollTheme.overlayDark,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: GhostRollTheme.textSecondary.withOpacity(0.2),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today, color: GhostRollTheme.flowBlue),
+                              const SizedBox(width: 12),
+                              Text(
+                                '${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                                style: GhostRollTheme.bodyLarge,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      
+                      // Description Input
+                      Text('Description', style: GhostRollTheme.labelMedium),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: descriptionController,
+                        style: GhostRollTheme.bodyLarge,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                          hintText: 'Describe what you want to achieve...',
+                          hintStyle: GhostRollTheme.bodyLarge.copyWith(
+                            color: GhostRollTheme.textTertiary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Save Button
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      if (titleController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Please enter a goal title'),
+                            backgroundColor: GhostRollTheme.grindRed,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                        return;
+                      }
+                      
+                      final newGoal = Goal(
+                        id: DateTime.now().millisecondsSinceEpoch.toString(),
+                        title: titleController.text,
+                        description: descriptionController.text,
+                        category: selectedCategory,
+                        createdAt: DateTime.now(),
+                        targetDate: selectedDate,
+                        color: _goalsService.getCategoryColor(selectedCategory),
+                      );
+                      
+                      await _goalsService.addGoal(newGoal);
+                      if (mounted) {
+                        Navigator.pop(context);
+                        _loadGoals(); // Refresh the list
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Goal added successfully!'),
+                            backgroundColor: GhostRollTheme.recoveryGreen,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: GhostRollTheme.flowBlue,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      'Save Goal',
+                      style: GhostRollTheme.titleMedium.copyWith(
+                        color: GhostRollTheme.text,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

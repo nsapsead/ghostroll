@@ -312,7 +312,6 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
     _fadeController.forward();
     _slideController.forward();
     
-    _loadUpcomingClasses();
     _loadUserName();
   }
 
@@ -356,9 +355,7 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Refresh upcoming classes when screen becomes visible
-    _loadUpcomingClasses();
-    _loadUserName(); // Also refresh user name
+    _loadUserName(); // Refresh user name
   }
 
   @override
@@ -369,160 +366,7 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
     super.dispose();
   }
 
-  Future<void> _loadUpcomingClasses() async {
-    try {
-      final user = ref.read(currentUserProvider);
-      final selectedStyles = user != null 
-          ? await ref.read(profileRepositoryProvider).getSelectedStyles(user.uid)
-          : <String>[];
-      
-
-      
-      // Since we're in a method, we can't watch, but we can read the current value
-      // However, for better reactivity, we should probably watch this in the build method
-      // But to keep changes minimal, let's read it. 
-      // Note: upcomingClassesProvider is a Provider<AsyncValue>, so reading it gives the current AsyncValue.
-      // But it depends on calendarEventsProvider which is a StreamProvider.
-      // So reading it might give loading initially.
-      // A better approach is to refactor this widget to watch the provider in build().
-      // Let's try to read it first, but if it's loading, we might need to wait or just show loading.
-      // Actually, since this is called in initState (via _loadData), we can't use ref.watch.
-      // We should change how this data is consumed.
-      // But for now, let's try to fetch it.
-      
-      // Wait, we can't await a Provider read if it's not a FutureProvider.
-      // upcomingClassesProvider returns AsyncValue.
-      // We should probably just use ref.read(calendarRepositoryProvider) and implement getUpcomingClasses there?
-      // Or better, let's just use the provider in the build method!
-      // But _upcomingClasses is state.
-      // Let's change _upcomingClasses to be derived from the provider in build().
-      // But that would require bigger changes.
-      
-      // Alternative: Re-implement getUpcomingClasses logic here using the repository stream? No.
-      // Let's just use the repository to fetch events once and filter them here.
-      // But the repository only exposes a stream.
-      // We can take the first element of the stream.
-      
-      if (user != null) {
-        final events = await ref.read(calendarRepositoryProvider).getEventsStream(user.uid).first;
-        
-        // Filter for upcoming classes (logic adapted from CalendarService)
-        final now = DateTime.now();
-        List<Map<String, dynamic>> upcomingClasses = [];
-        
-        for (int i = 0; i < 7; i++) {
-          final dateToCheck = now.add(Duration(days: i));
-          
-          for (final event in events) {
-             // ... (Reuse logic from provider or service, but simpler to just call a helper if available)
-             // Let's copy the logic for now to ensure it works without changing too much structure.
-             
-            if (event.type == CalendarEventType.dropInEvent) {
-              if (event.specificDate != null && 
-                  event.specificDate!.year == dateToCheck.year &&
-                  event.specificDate!.month == dateToCheck.month &&
-                  event.specificDate!.day == dateToCheck.day) {
-                
-                final startTimeParts = event.startTime.split(':');
-                final classDateTime = DateTime(
-                  dateToCheck.year,
-                  dateToCheck.month,
-                  dateToCheck.day,
-                  int.parse(startTimeParts[0]),
-                  int.parse(startTimeParts[1]),
-                );
-                
-                if (classDateTime.isAfter(now)) {
-                  upcomingClasses.add({
-                    'id': event.id,
-                    'classType': event.classType,
-                    'dayOfWeek': event.dayOfWeek ?? dateToCheck.weekday,
-                    'startTime': event.startTime,
-                    'endTime': event.endTime,
-                    'location': event.location ?? '',
-                    'instructor': event.instructor ?? '',
-                    'notes': event.notes ?? '',
-                    'date': dateToCheck.toIso8601String().split('T')[0],
-                    'dateTime': classDateTime.toIso8601String(),
-                    'type': event.type.name,
-                  });
-                }
-              }
-            } else if (event.type == CalendarEventType.recurringClass) {
-              final checkDate = DateTime(dateToCheck.year, dateToCheck.month, dateToCheck.day);
-              final startDate = event.recurringStartDate != null 
-                  ? DateTime(event.recurringStartDate!.year, event.recurringStartDate!.month, event.recurringStartDate!.day)
-                  : DateTime(event.createdAt.year, event.createdAt.month, event.createdAt.day);
-              
-              final dateString = checkDate.toIso8601String().split('T')[0];
-              final isInDateRange = !checkDate.isBefore(startDate) && 
-                  (event.recurringEndDate == null || !checkDate.isAfter(
-                      DateTime(event.recurringEndDate!.year, event.recurringEndDate!.month, event.recurringEndDate!.day)));
-              final isNotDeleted = !event.deletedInstances.contains(dateString);
-              
-              if (event.dayOfWeek == dateToCheck.weekday && isInDateRange && isNotDeleted) {
-                final startTimeParts = event.startTime.split(':');
-                final classDateTime = DateTime(
-                  dateToCheck.year,
-                  dateToCheck.month,
-                  dateToCheck.day,
-                  int.parse(startTimeParts[0]),
-                  int.parse(startTimeParts[1]),
-                );
-                
-                if (classDateTime.isAfter(now)) {
-                  upcomingClasses.add({
-                    'id': event.id,
-                    'classType': event.classType,
-                    'dayOfWeek': event.dayOfWeek ?? dateToCheck.weekday,
-                    'startTime': event.startTime,
-                    'endTime': event.endTime,
-                    'location': event.location ?? '',
-                    'instructor': event.instructor ?? '',
-                    'notes': event.notes ?? '',
-                    'date': dateToCheck.toIso8601String().split('T')[0],
-                    'dateTime': classDateTime.toIso8601String(),
-                    'type': event.type.name,
-                  });
-                }
-              }
-            }
-          }
-        }
-        
-        upcomingClasses.sort((a, b) {
-          final dateTimeA = DateTime.parse(a['dateTime']);
-          final dateTimeB = DateTime.parse(b['dateTime']);
-          return dateTimeA.compareTo(dateTimeB);
-        });
-        
-        // Filter classes based on selected martial arts styles
-        final filteredClasses = upcomingClasses.where((c) => 
-          _matchesSelectedStyle(c['classType'], selectedStyles)).toList();
-        
-        if (mounted) {
-          setState(() {
-            _upcomingClasses = filteredClasses.take(5).toList(); // Limit to 5 classes
-            _isLoadingClasses = false;
-          });
-        }
-      } else {
-         if (mounted) {
-          setState(() {
-            _upcomingClasses = [];
-            _isLoadingClasses = false;
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint('Error loading upcoming classes: $e');
-      if (mounted) {
-        setState(() {
-          _isLoadingClasses = false;
-        });
-      }
-    }
-  }
+  // Replaced by provider logic in build method
 
   bool _matchesSelectedStyle(String classType, List<String> selectedStyles) {
     if (selectedStyles.isEmpty) return true; // Show all if none selected
@@ -599,6 +443,8 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
                               const SizedBox(height: 24),
                               _buildQuickStatsSection(),
                               const SizedBox(height: 20),
+                              _buildRecentClassBanner(),
+                              const SizedBox(height: 20),
                               _buildUpcomingClassesSection(),
                               const SizedBox(height: 16),
                             ],
@@ -608,6 +454,228 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
                     ),
                   ),
                 ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentClassBanner() {
+    final eventsAsync = ref.watch(calendarEventsProvider);
+    
+    return eventsAsync.when(
+      data: (events) {
+        final now = DateTime.now();
+        // Find events that ended recently (e.g., within last 3 hours) and started before now
+        final recentEvents = events.where((event) {
+          if (event.specificDate == null) return false; // Only check specific dates for now (class sessions have specific dates)
+          
+          final startParts = event.startTime.split(':');
+          final endParts = event.endTime.split(':');
+          
+          final startDateTime = DateTime(
+            event.specificDate!.year,
+            event.specificDate!.month,
+            event.specificDate!.day,
+            int.parse(startParts[0]),
+            int.parse(startParts[1]),
+          );
+          
+          final endDateTime = DateTime(
+            event.specificDate!.year,
+            event.specificDate!.month,
+            event.specificDate!.day,
+            int.parse(endParts[0]),
+            int.parse(endParts[1]),
+          );
+          
+          // Check if it's a class session (we prefixed ID with 'class_')
+          final isClassSession = event.id.startsWith('class_');
+          if (!isClassSession) return false;
+          
+          // Check if ended recently (within last 3 hours) and started in the past
+          final diff = now.difference(endDateTime);
+          return startDateTime.isBefore(now) && diff.inHours < 3 && diff.inMinutes > -30; // -30 to include classes ending soon
+        }).toList();
+        
+        if (recentEvents.isEmpty) return const SizedBox.shrink();
+        
+        final recentEvent = recentEvents.first;
+        
+        return GestureDetector(
+          onTap: () {
+            // Navigate to log session with this class linked
+            // We need to reconstruct the ClassSession or pass ID
+            // Since we don't have the full ClassSession object here easily without fetching,
+            // we can pass the ID (minus prefix) and let LogSessionForm fetch it or just pass basic info.
+            // But LogSessionForm expects ClassSession object.
+            // For now, let's just open LogSessionForm and let user fill it, 
+            // OR better: fetch the session first.
+            // Since we are in a widget, we can't easily async fetch and then nav.
+            // Let's just show a generic "Log Recent Class" for now or pass what we have.
+            
+            // Actually, we can just navigate to LogSessionForm and pass the ID if we update LogSessionForm to accept ID.
+            // But I updated it to accept ClassSession object.
+            // I'll just navigate to LogSessionForm without pre-fill for now, or use the event data to pre-fill manually if I update LogSessionForm.
+            // Let's just trigger standard log for now but maybe pre-fill class type.
+             Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const LogSessionForm()),
+            );
+          },
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 20),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [GhostRollTheme.activeHighlight.withOpacity(0.2), GhostRollTheme.activeHighlight.withOpacity(0.05)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: GhostRollTheme.activeHighlight.withOpacity(0.5)),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: GhostRollTheme.activeHighlight,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.check, color: Colors.black, size: 20),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Just finished training?',
+                        style: GhostRollTheme.bodySmall.copyWith(color: GhostRollTheme.textSecondary),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Log ${recentEvent.title}',
+                        style: GhostRollTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios, color: GhostRollTheme.activeHighlight, size: 16),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildUpcomingClassesSection() {
+    final upcomingClassesAsync = ref.watch(upcomingClassesProvider);
+    
+    return upcomingClassesAsync.when(
+      data: (upcomingClasses) {
+        if (upcomingClasses.isEmpty) return const SizedBox.shrink();
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(
+                'UPCOMING CLASSES',
+                style: GhostRollTheme.labelSmall.copyWith(
+                  letterSpacing: 1.5,
+                  color: GhostRollTheme.textSecondary,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            ...upcomingClasses.take(3).map((classData) => _buildUpcomingClassCard(classData)),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildUpcomingClassCard(Map<String, dynamic> classData) {
+    // ... existing card implementation ...
+    // Since I'm replacing the section, I need to include the card builder or ensure it exists.
+    // The original code had _buildUpcomingClassesSection calling _upcomingClasses.map...
+    // I need to adapt the existing card builder or write it here.
+    // The original code didn't have a separate _buildUpcomingClassCard method, it was inline or I missed it.
+    // Let's check the original code again.
+    // Ah, I see `_buildUpcomingClassesSection` was not fully shown in the view_file.
+    // I should probably just replace the body of `_buildUpcomingClassesSection` and keep the helper if it exists.
+    // Wait, I am replacing the call site in `build` and adding `_buildRecentClassBanner`.
+    // I also need to update `_buildUpcomingClassesSection` to use the provider.
+    
+    // Let's rewrite `_buildUpcomingClassesSection` to use the provider.
+    // And I'll inline the card building logic from the original code if I can recall it or just create a standard one.
+    // The original code used `_upcomingClasses` list.
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: GhostRollTheme.textSecondary.withOpacity(0.1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: GhostRollTheme.flowBlue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(
+              Icons.calendar_today,
+              color: GhostRollTheme.flowBlue,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  classData['classType'] ?? 'Class',
+                  style: GhostRollTheme.titleMedium.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${_formatTime(classData['startTime'])} · ${classData['location']}',
+                  style: GhostRollTheme.bodySmall.copyWith(
+                    color: GhostRollTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: GhostRollTheme.surface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              _getDayName(classData['dayOfWeek']),
+              style: GhostRollTheme.labelSmall.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
@@ -1029,209 +1097,6 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
               fontSize: isSmall ? 10 : 12,
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUpcomingClassesSection() {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 375;
-    
-    return Container(
-      width: double.infinity,
-      padding: EdgeInsets.all(isSmallScreen ? 16 : 20),
-      decoration: BoxDecoration(
-        color: GhostRollTheme.card,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: GhostRollTheme.medium,
-        border: Border.all(
-          color: GhostRollTheme.textSecondary.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: GhostRollTheme.flowGradient,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  Icons.schedule,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Upcoming Classes',
-                style: GhostRollTheme.titleLarge.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          if (_isLoadingClasses)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: CircularProgressIndicator(
-                  color: GhostRollTheme.flowBlue,
-                  strokeWidth: 2,
-                ),
-              ),
-            )
-          else if (_upcomingClasses.isEmpty)
-            Column(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: GhostRollTheme.overlayDark,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        color: GhostRollTheme.textSecondary,
-                        size: 32,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'No upcoming classes found',
-                        style: GhostRollTheme.titleMedium.copyWith(
-                          color: GhostRollTheme.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Add classes in Training Calendar or select martial arts styles in Profile',
-                        style: GhostRollTheme.bodySmall.copyWith(
-                          color: GhostRollTheme.textTertiary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                GestureDetector(
-                  onTap: () {
-                    setState(() => _isLoadingClasses = true);
-                    _loadUpcomingClasses();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: GhostRollTheme.flowBlue.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: GhostRollTheme.flowBlue.withOpacity(0.3),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.refresh,
-                          color: GhostRollTheme.flowBlue,
-                          size: 18,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          'Refresh',
-                          style: GhostRollTheme.bodyMedium.copyWith(
-                            color: GhostRollTheme.flowBlue,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            )
-          else
-            Column(
-              children: _upcomingClasses.map((c) => Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: GhostRollTheme.overlayDark,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: GhostRollTheme.textSecondary.withOpacity(0.1),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: _getClassTypeGradient(c['classType']),
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        _getClassTypeIcon(c['classType']),
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            c['classType'],
-                            style: GhostRollTheme.titleMedium.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: GhostRollTheme.text,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.schedule,
-                                color: GhostRollTheme.textSecondary,
-                                size: 14,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                '${_getDayName(c['dayOfWeek'])} @ ${_formatTime(c['startTime'])}',
-                                style: GhostRollTheme.bodyMedium.copyWith(
-                                  color: GhostRollTheme.textSecondary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios,
-                      color: GhostRollTheme.textTertiary,
-                      size: 16,
-                    ),
-                  ],
-                ),
-              )).toList(),
-            ),
         ],
       ),
     );

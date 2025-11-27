@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/auth_provider.dart';
+import '../repositories/auth_repository.dart';
 import '../providers/profile_providers.dart';
 import '../theme/ghostroll_theme.dart';
+import 'community/my_clubs_screen.dart';
 
 import '../widgets/common/glow_text.dart';
 
@@ -32,6 +35,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
   late AnimationController _slideController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  // Debounce timer for auto-save
+  Timer? _debounceTimer;
+  bool _isLoading = true;
 
   // Profile data
   String _selectedGender = 'Prefer not to say';
@@ -125,6 +132,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     _weightController.removeListener(_autoSaveProfile);
     _heightController.removeListener(_autoSaveProfile);
     
+    _debounceTimer?.cancel();
     _fadeController.dispose();
     _slideController.dispose();
     _firstNameController.dispose();
@@ -182,49 +190,62 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     if (user == null) return;
 
     // Load saved profile data
-    final data = await ref.read(profileRepositoryProvider).getProfile(user.uid);
-    final displayName = user?.displayName;
-    
-    setState(() {
-      // Handle backward compatibility with existing 'name' field
-      if (data['firstName'] != null && data['surname'] != null) {
-        _firstNameController.text = data['firstName'] ?? '';
-        _surnameController.text = data['surname'] ?? '';
-      } else if (data['name'] != null) {
-        // Split existing full name into first and last name
-        final nameParts = data['name'].toString().trim().split(' ');
-        _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
-        _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-      } else if (displayName != null && displayName.isNotEmpty) {
-        // Use authentication display name if no saved profile data
-        final nameParts = displayName.trim().split(' ');
-        _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
-        _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-      }
+    try {
+      final data = await ref.read(profileRepositoryProvider).getProfile(user.uid);
       
-      _selectedGender = data['gender'] ?? 'Prefer not to say';
-      _weightController.text = data['weight'] ?? '';
-      _heightController.text = data['height'] ?? '';
-      if (data['dob'] != null) {
-        _dateOfBirth = DateTime.tryParse(data['dob']);
+      final displayName = user.displayName;
+      
+      if (mounted) {
+        setState(() {
+          // Handle backward compatibility with existing 'name' field
+          if (data['firstName'] != null && data['surname'] != null) {
+            _firstNameController.text = data['firstName'] ?? '';
+            _surnameController.text = data['surname'] ?? '';
+          } else if (data['name'] != null) {
+            // Split existing full name into first and last name
+            final nameParts = data['name'].toString().trim().split(' ');
+            _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
+            _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+          } else if (displayName != null && displayName.isNotEmpty) {
+            // Use authentication display name if no saved profile data
+            final nameParts = displayName.trim().split(' ');
+            _firstNameController.text = nameParts.isNotEmpty ? nameParts.first : '';
+            _surnameController.text = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+          }
+          
+          _selectedGender = data['gender'] ?? 'Prefer not to say';
+          _weightController.text = data['weight'] ?? '';
+          _heightController.text = data['height'] ?? '';
+          if (data['dob'] != null) {
+            _dateOfBirth = DateTime.tryParse(data['dob']);
+          }
+          if (data['beltRanks'] != null) {
+            _beltRanks.clear();
+            (data['beltRanks'] as Map<String, dynamic>).forEach((k, v) => _beltRanks[k] = v as String);
+          }
+          if (data['bjjStripes'] != null) {
+            _bjjStripes.clear();
+            (data['bjjStripes'] as Map<String, dynamic>).forEach((k, v) => _bjjStripes[k] = v as int);
+          }
+          if (data['bjjInstructor'] != null) {
+            _bjjInstructor.clear();
+            (data['bjjInstructor'] as Map<String, dynamic>).forEach((k, v) => _bjjInstructor[k] = v as bool);
+          }
+          if (data['customBeltOrders'] != null) {
+            _customBeltOrders.clear();
+            (data['customBeltOrders'] as Map<String, dynamic>).forEach((k, v) => _customBeltOrders[k] = List<Map<String, dynamic>>.from(v));
+          }
+          _isLoading = false;
+        });
       }
-      if (data['beltRanks'] != null) {
-        _beltRanks.clear();
-        (data['beltRanks'] as Map<String, dynamic>).forEach((k, v) => _beltRanks[k] = v as String);
+    } catch (e) {
+      debugPrint('Error loading profile data: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
-      if (data['bjjStripes'] != null) {
-        _bjjStripes.clear();
-        (data['bjjStripes'] as Map<String, dynamic>).forEach((k, v) => _bjjStripes[k] = v as int);
-      }
-      if (data['bjjInstructor'] != null) {
-        _bjjInstructor.clear();
-        (data['bjjInstructor'] as Map<String, dynamic>).forEach((k, v) => _bjjInstructor[k] = v as bool);
-      }
-      if (data['customBeltOrders'] != null) {
-        _customBeltOrders.clear();
-        (data['customBeltOrders'] as Map<String, dynamic>).forEach((k, v) => _customBeltOrders[k] = List<Map<String, dynamic>>.from(v));
-      }
-    });
+    }
   }
 
   Future<void> _saveSelectedStyles() async {
@@ -289,26 +310,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
 
   // Auto-save profile data without showing snackbar
   void _autoSaveProfile() {
-    try {
-      final data = {
-        'firstName': _firstNameController.text,
-        'surname': _surnameController.text,
-        'gender': _selectedGender,
-        'dob': _dateOfBirth?.toIso8601String(),
-        'weight': _weightController.text,
-        'height': _heightController.text,
-        'beltRanks': _beltRanks,
-        'bjjStripes': _bjjStripes,
-        'bjjInstructor': _bjjInstructor,
-        'customBeltOrders': _customBeltOrders,
-      };
-      final user = ref.read(currentUserProvider);
-      if (user != null) {
-        ref.read(profileRepositoryProvider).updateProfile(user.uid, data);
+    if (_isLoading) return;
+
+    // Cancel previous timer
+    if (_debounceTimer?.isActive ?? false) _debounceTimer!.cancel();
+
+    // Start new timer
+    _debounceTimer = Timer(const Duration(milliseconds: 1000), () {
+      try {
+        final data = {
+          'firstName': _firstNameController.text,
+          'surname': _surnameController.text,
+          'gender': _selectedGender,
+          'dob': _dateOfBirth?.toIso8601String(),
+          'weight': _weightController.text,
+          'height': _heightController.text,
+          'beltRanks': _beltRanks,
+          'bjjStripes': _bjjStripes,
+          'bjjInstructor': _bjjInstructor,
+          'customBeltOrders': _customBeltOrders,
+        };
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          ref.read(profileRepositoryProvider).updateProfile(user.uid, data);
+        }
+      } catch (e) {
+        debugPrint('Error auto-saving profile: $e');
       }
-    } catch (e) {
-      debugPrint('Error auto-saving profile: $e');
-    }
+    });
   }
 
   void _saveBeltConfiguration(String styleName) {
@@ -316,6 +345,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       _beltRanksSaved[styleName] = true;
       _beltEditingMode[styleName] = false;
     });
+    
+    // Trigger auto-save to persist changes to Firestore
+    _autoSaveProfile();
+
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text('Belt configuration saved for $styleName'),
@@ -666,45 +699,53 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
         child: SafeArea(
           child: Column(
             children: [
-                  _buildAppBar(),
+              _buildAppBar(),
               Expanded(
-                child: FadeTransition(
-                  opacity: _fadeAnimation,
-                  child: SlideTransition(
-                    position: _slideAnimation,
-                        child: SingleChildScrollView(
-                          padding: const EdgeInsets.all(24),
-                    child: Form(
-                      key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                                _buildPersonalInfoSection(),
-                                SizedBox(height: _isEditMode ? 24 : 16),
-                                if (_isEditMode) ...[
-                          _buildMartialArtsStylesSection(),
+                child: _isLoading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          valueColor: AlwaysStoppedAnimation<Color>(GhostRollTheme.flowBlue),
+                        ),
+                      )
+                    : FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(24),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildPersonalInfoSection(),
+                                  SizedBox(height: _isEditMode ? 24 : 16),
+                                  if (_isEditMode) ...[
+                                    _buildMartialArtsStylesSection(),
+                                    SizedBox(height: _isEditMode ? 24 : 16),
+                                  ],
+                                  _buildBeltRanksSection(),
+                                  SizedBox(height: _isEditMode ? 24 : 16),
+                                  _buildInstructorsSection(),
+                                  SizedBox(height: _isEditMode ? 24 : 16),
+                                  _buildCommunitySection(),
+                                  SizedBox(height: _isEditMode ? 24 : 16),
+                                  _buildNotificationSettingsSection(),
                                   SizedBox(height: _isEditMode ? 24 : 16),
                                 ],
-                          _buildBeltRanksSection(),
-                                SizedBox(height: _isEditMode ? 24 : 16),
-                          _buildInstructorsSection(),
-                                SizedBox(height: _isEditMode ? 24 : 16),
-                          _buildNotificationSettingsSection(),
-                                SizedBox(height: _isEditMode ? 24 : 16),
-                        ],
+                              ),
                             ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                ),
               ),
             ],
           ),
         ),
-          ),
-        ],
       ),
-    );
+    ],
+  ),
+);
   }
 
   Widget _buildAppBar() {
@@ -2332,6 +2373,74 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
       default:
         return Colors.grey;
     }
+  }
+
+  Widget _buildCommunitySection() {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyClubsScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: GhostRollTheme.card,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: GhostRollTheme.medium,
+          border: Border.all(
+            color: GhostRollTheme.textSecondary.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: GhostRollTheme.activeHighlight.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.groups,
+                color: GhostRollTheme.activeHighlight,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'My Clubs',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: GhostRollTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Join a gym, view shared classes & notes',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: GhostRollTheme.textSecondary.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios,
+              color: GhostRollTheme.textSecondary,
+              size: 16,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildNotificationSettingsSection() {

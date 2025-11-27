@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
-import '../../theme/app_theme.dart';
-import '../../widgets/common/app_components.dart';
+import '../../repositories/auth_repository.dart';
+import '../../theme/ghostroll_theme.dart';
 import 'login_screen.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -33,8 +33,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   String _errorMessage = '';
   String _passwordStrength = '';
   bool _isGoogleLoading = false;
-  bool _isAppleLoading = false;
-  bool _isFacebookLoading = false;
 
   @override
   void initState() {
@@ -136,17 +134,17 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   Color _getPasswordStrengthColor() {
     switch (_passwordStrength) {
       case 'Very Weak':
-        return AppColors.error;
+        return GhostRollTheme.grindRed;
       case 'Weak':
-        return AppColors.warning;
+        return Colors.orange;
       case 'Fair':
-        return AppColors.info;
+        return Colors.yellow;
       case 'Good':
-        return AppColors.success;
+        return GhostRollTheme.recoveryGreen;
       case 'Strong':
-        return AppColors.success;
+        return GhostRollTheme.recoveryGreen;
       default:
-        return AppColors.textSecondary;
+        return GhostRollTheme.textSecondary;
     }
   }
 
@@ -166,6 +164,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       
       if (user != null) {
         await user.updateDisplayName(_nameController.text.trim());
+        if (mounted) {
+          // Pop the register screen so AuthWrapper can show the MainNavigationScreen
+          Navigator.of(context).pop();
+        }
       }
     } catch (e) {
       setState(() {
@@ -184,300 +186,252 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       _errorMessage = '';
     });
 
-    // TODO: Implement Google Sign In
+    try {
+      final user = await ref.read(authRepositoryProvider).signInWithGoogle();
+      if (user != null && mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
       setState(() {
-        _errorMessage = 'Google Sign In not yet implemented';
-        _isGoogleLoading = false;
+        _errorMessage = 'Google sign up failed. Please try again.';
       });
-      /*
-      try {
-        await _authService.signInWithGoogle();
-      } catch (e) {
-        setState(() {
-          _errorMessage = 'Google sign up failed. Please try again.';
-        });
-      } finally {
+    } finally {
+      if (mounted) {
         setState(() {
           _isGoogleLoading = false;
         });
       }
-      */
-  }
-
-  Future<void> _signUpWithApple() async {
-    setState(() {
-      _isAppleLoading = true;
-      _errorMessage = '';
-    });
-
-    // TODO: Implement Apple Sign In
-      setState(() {
-        _errorMessage = 'Apple Sign In not yet implemented';
-        _isAppleLoading = false;
-      });
-      /*
-      try {
-        await _authService.signInWithApple();
-      } catch (e) {
-        setState(() {
-          _errorMessage = 'Apple sign up failed. Please try again.';
-        });
-      } finally {
-        setState(() {
-          _isAppleLoading = false;
-        });
-      }
-      */
-  }
-
-  Future<void> _signUpWithFacebook() async {
-    setState(() {
-      _isFacebookLoading = true;
-      _errorMessage = '';
-    });
-
-    // TODO: Implement Facebook Sign In
-      setState(() {
-        _errorMessage = 'Facebook Sign In not yet implemented';
-        _isFacebookLoading = false;
-      });
-      /*
-      try {
-        await _authService.signInWithFacebook();
-      } catch (e) {
-        setState(() {
-          _errorMessage = 'Facebook sign up failed. Please try again.';
-        });
-      } finally {
-        setState(() {
-          _isFacebookLoading = false;
-        });
-      }
-      */
-  }
-
-  String _getErrorMessage(String code) {
-    switch (code) {
-      case 'email-already-in-use':
-        return 'An account with this email already exists.';
-      case 'invalid-email':
-        return 'Please enter a valid email address.';
-      case 'weak-password':
-        return 'Password is too weak. Please choose a stronger password.';
-      case 'operation-not-allowed':
-        return 'Email/password accounts are not enabled.';
-      default:
-        return 'Registration failed. Please try again.';
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: AppColors.primaryGradient,
-            stops: [0.0, 0.5, 1.0],
+      body: Stack(
+        children: [
+          // Ghost watermark background
+          Positioned.fill(
+            child: Opacity(
+              opacity: 0.03,
+              child: Image.asset(
+                'assets/images/GhostRollBeltMascot.png',
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: FadeTransition(
-            opacity: _fadeAnimation,
-            child: SlideTransition(
-              position: _slideAnimation,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 20),
-                    _buildHeader(),
-                    const SizedBox(height: 40),
-                    _buildRegistrationForm(),
-                    const SizedBox(height: 24),
-                    _buildSignInLink(),
-                    const SizedBox(height: 40),
-                  ],
+          
+          // Main content
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: GhostRollTheme.primaryGradient,
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+            child: SafeArea(
+              child: FadeTransition(
+                opacity: _fadeAnimation,
+                child: SlideTransition(
+                  position: _slideAnimation,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 20),
+                        _buildLogo(),
+                        const SizedBox(height: 32),
+                        _buildWelcomeText(),
+                        const SizedBox(height: 32),
+                        _buildRegistrationForm(),
+                        const SizedBox(height: 24),
+                        _buildSignInLink(),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLogo() {
+    return ScaleTransition(
+      scale: _pulseAnimation,
+      child: Container(
+        height: 100,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: GhostRollTheme.glow,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.asset(
+            'assets/images/GhostRollBeltMascot.png',
+            fit: BoxFit.contain,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildWelcomeText() {
     return Column(
       children: [
-        AnimatedBuilder(
-          animation: _pulseAnimation,
-          builder: (context, child) {
-                          return Transform.scale(
-                scale: _pulseAnimation.value,
-                child: Container(
-                  height: 100,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    boxShadow: AppShadows.small,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.lg),
-                    child: Image.asset(
-                      'assets/images/GhostRollBeltMascot.png',
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                ),
-              );
-          },
+        Text(
+          'Join GhostRoll',
+          style: GhostRollTheme.headlineLarge,
         ),
-        const SizedBox(height: 24),
-        Column(
-          children: [
-            Text(
-              'Join GhostRoll',
-              style: Theme.of(context).textTheme.displayLarge,
+        const SizedBox(height: 12),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: GhostRollTheme.flowGradient,
             ),
-            const SizedBox(height: AppSpacing.sm),
-            GradientCard(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-              child: Text(
-                'Start tracking your martial arts journey',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.textSecondary,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: GhostRollTheme.small,
+          ),
+          child: Text(
+            'Start tracking your martial arts journey',
+            style: GhostRollTheme.bodyMedium.copyWith(
+              color: GhostRollTheme.text,
+              fontWeight: FontWeight.w500,
             ),
-          ],
+          ),
         ),
       ],
     );
   }
 
   Widget _buildRegistrationForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        children: [
-          _buildNameField(),
-          const SizedBox(height: AppSpacing.lg),
-          _buildEmailField(),
-          const SizedBox(height: AppSpacing.lg),
-          _buildPasswordField(),
-          const SizedBox(height: AppSpacing.lg),
-          _buildConfirmPasswordField(),
-          const SizedBox(height: AppSpacing.lg),
-          _buildErrorMessage(),
-          const SizedBox(height: AppSpacing.lg),
-          _buildSignUpButton(),
-          const SizedBox(height: AppSpacing.lg),
-          _buildSocialAuthSection(),
-          const SizedBox(height: AppSpacing.lg),
-        ],
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: GhostRollTheme.medium,
+        border: Border.all(
+          color: GhostRollTheme.textSecondary.withOpacity(0.1),
+          width: 1,
+        ),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            _buildNameField(),
+            const SizedBox(height: 16),
+            _buildEmailField(),
+            const SizedBox(height: 16),
+            _buildPasswordField(),
+            const SizedBox(height: 16),
+            _buildConfirmPasswordField(),
+            if (_errorMessage.isNotEmpty) ...[
+              const SizedBox(height: 16),
+              _buildErrorMessage(),
+            ],
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: _isLoading ? null : _signUp,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: GhostRollTheme.flowBlue,
+                  foregroundColor: GhostRollTheme.text,
+                  elevation: 12,
+                  shadowColor: GhostRollTheme.flowBlue.withOpacity(0.5),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: _isLoading
+                    ? SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(GhostRollTheme.text),
+                        ),
+                      )
+                    : Text(
+                        'Create Account',
+                        style: GhostRollTheme.labelLarge.copyWith(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            _buildSocialAuthSection(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildNameField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Full Name',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
+    return TextFormField(
+      controller: _nameController,
+      decoration: InputDecoration(
+        labelText: 'Full Name',
+        prefixIcon: Icon(Icons.person_outline, color: GhostRollTheme.textSecondary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.white.withOpacity(0.05),
-                Colors.white.withOpacity(0.02),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
-          child: TextFormField(
-            controller: _nameController,
-            style: const TextStyle(color: AppColors.textPrimary),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              hintText: 'Enter your full name',
-              hintStyle: TextStyle(color: AppColors.textTertiary),
-              contentPadding: EdgeInsets.all(AppSpacing.md),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your name';
-              }
-              return null;
-            },
-          ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: GhostRollTheme.flowBlue),
         ),
-      ],
+        filled: true,
+        fillColor: GhostRollTheme.overlayDark,
+      ),
+      style: TextStyle(color: GhostRollTheme.text),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your name';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildEmailField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Email',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      decoration: InputDecoration(
+        labelText: 'Email',
+        prefixIcon: Icon(Icons.email_outlined, color: GhostRollTheme.textSecondary),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.white.withOpacity(0.05),
-                Colors.white.withOpacity(0.02),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
-          child: TextFormField(
-            controller: _emailController,
-            style: const TextStyle(color: AppColors.textPrimary),
-            decoration: const InputDecoration(
-              border: InputBorder.none,
-              hintText: 'Enter your email',
-              hintStyle: TextStyle(color: AppColors.textTertiary),
-              contentPadding: EdgeInsets.all(AppSpacing.md),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: GhostRollTheme.flowBlue),
         ),
-      ],
+        filled: true,
+        fillColor: GhostRollTheme.overlayDark,
+      ),
+      style: TextStyle(color: GhostRollTheme.text),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please enter your email';
+        }
+        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+          return 'Please enter a valid email';
+        }
+        return null;
+      },
     );
   }
 
@@ -485,69 +439,53 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Password',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.white.withOpacity(0.05),
-                Colors.white.withOpacity(0.02),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
-          child: TextFormField(
-            controller: _passwordController,
-            obscureText: _obscurePassword,
-            style: const TextStyle(color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: 'Enter your password',
-              hintStyle: const TextStyle(color: AppColors.textTertiary),
-              contentPadding: const EdgeInsets.all(AppSpacing.md),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscurePassword ? Icons.visibility : Icons.visibility_off,
-                  color: AppColors.textSecondary,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscurePassword = !_obscurePassword;
-                  });
-                },
+        TextFormField(
+          controller: _passwordController,
+          obscureText: _obscurePassword,
+          decoration: InputDecoration(
+            labelText: 'Password',
+            prefixIcon: Icon(Icons.lock_outline, color: GhostRollTheme.textSecondary),
+            suffixIcon: IconButton(
+              icon: Icon(
+                _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                color: GhostRollTheme.textTertiary,
               ),
+              onPressed: () {
+                setState(() {
+                  _obscurePassword = !_obscurePassword;
+                });
+              },
             ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
-              return null;
-            },
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: GhostRollTheme.flowBlue),
+            ),
+            filled: true,
+            fillColor: GhostRollTheme.overlayDark,
           ),
+          style: TextStyle(color: GhostRollTheme.text),
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Please enter your password';
+            }
+            if (value.length < 6) {
+              return 'Password must be at least 6 characters';
+            }
+            return null;
+          },
         ),
         if (_passwordStrength.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.xs),
+          const SizedBox(height: 8),
           Row(
             children: [
               Text(
                 'Strength: ',
                 style: TextStyle(
-                  color: AppColors.textSecondary,
+                  color: GhostRollTheme.textSecondary,
                   fontSize: 12,
                 ),
               ),
@@ -567,113 +505,75 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   }
 
   Widget _buildConfirmPasswordField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Confirm Password',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
-            fontSize: 16,
+    return TextFormField(
+      controller: _confirmPasswordController,
+      obscureText: _obscureConfirmPassword,
+      decoration: InputDecoration(
+        labelText: 'Confirm Password',
+        prefixIcon: Icon(Icons.lock_outline, color: GhostRollTheme.textSecondary),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
+            color: GhostRollTheme.textTertiary,
           ),
+          onPressed: () {
+            setState(() {
+              _obscureConfirmPassword = !_obscureConfirmPassword;
+            });
+          },
         ),
-        const SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.white.withOpacity(0.05),
-                Colors.white.withOpacity(0.02),
-              ],
-            ),
-            borderRadius: BorderRadius.circular(AppRadius.md),
-            border: Border.all(
-              color: Colors.white.withOpacity(0.1),
-              width: 1,
-            ),
-          ),
-          child: TextFormField(
-            controller: _confirmPasswordController,
-            obscureText: _obscureConfirmPassword,
-            style: const TextStyle(color: AppColors.textPrimary),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: 'Confirm your password',
-              hintStyle: const TextStyle(color: AppColors.textTertiary),
-              contentPadding: const EdgeInsets.all(AppSpacing.md),
-              suffixIcon: IconButton(
-                icon: Icon(
-                  _obscureConfirmPassword ? Icons.visibility : Icons.visibility_off,
-                  color: AppColors.textSecondary,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscureConfirmPassword = !_obscureConfirmPassword;
-                  });
-                },
-              ),
-            ),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please confirm your password';
-              }
-              if (value != _passwordController.text) {
-                return 'Passwords do not match';
-              }
-              return null;
-            },
-          ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
         ),
-      ],
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: GhostRollTheme.flowBlue),
+        ),
+        filled: true,
+        fillColor: GhostRollTheme.overlayDark,
+      ),
+      style: TextStyle(color: GhostRollTheme.text),
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Please confirm your password';
+        }
+        if (value != _passwordController.text) {
+          return 'Passwords do not match';
+        }
+        return null;
+      },
     );
   }
 
   Widget _buildErrorMessage() {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            Colors.red.withOpacity(0.1),
-            Colors.red.withOpacity(0.05),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(AppRadius.md),
+        color: GhostRollTheme.grindRed.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: Colors.red.withOpacity(0.3),
-          width: 1,
+          color: GhostRollTheme.grindRed.withOpacity(0.3),
         ),
       ),
       child: Row(
         children: [
           Icon(
             Icons.error_outline,
-            color: Colors.red[300],
+            color: GhostRollTheme.grindRed,
             size: 20,
           ),
-          const SizedBox(width: AppSpacing.sm),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               _errorMessage,
-              style: TextStyle(
-                color: Colors.red[300],
-                fontSize: 14,
+              style: GhostRollTheme.bodyMedium.copyWith(
+                color: GhostRollTheme.grindRed,
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSignUpButton() {
-    return AppButton(
-      text: _isLoading ? 'Creating Account...' : 'Create Account',
-      onPressed: _isLoading ? null : _signUp,
-      isLoading: _isLoading,
-      backgroundColor: Colors.white,
-      textColor: AppColors.primary,
     );
   }
 
@@ -685,64 +585,93 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
             Expanded(
               child: Container(
                 height: 1,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      AppColors.textTertiary.withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
+                color: GhostRollTheme.textSecondary.withOpacity(0.3),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Text(
                 'or sign up with',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textTertiary,
+                style: GhostRollTheme.bodyMedium.copyWith(
+                  color: GhostRollTheme.textSecondary,
                 ),
               ),
             ),
             Expanded(
               child: Container(
                 height: 1,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      Colors.transparent,
-                      AppColors.textTertiary.withOpacity(0.3),
-                      Colors.transparent,
-                    ],
-                  ),
-                ),
+                color: GhostRollTheme.textSecondary.withOpacity(0.3),
               ),
             ),
           ],
         ),
-        const SizedBox(height: AppSpacing.lg),
-        SocialAuthButton(
-          text: 'Continue with Google',
-          provider: 'google',
-          onPressed: _signUpWithGoogle,
+        const SizedBox(height: 24),
+        _buildSocialButton(
+          icon: Icons.g_mobiledata,
+          label: 'Continue with Google',
           isLoading: _isGoogleLoading,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        SocialAuthButton(
-          text: 'Continue with Apple',
-          provider: 'apple',
-          onPressed: _signUpWithApple,
-          isLoading: _isAppleLoading,
-        ),
-        const SizedBox(height: AppSpacing.md),
-        SocialAuthButton(
-          text: 'Continue with Facebook',
-          provider: 'facebook',
-          onPressed: _signUpWithFacebook,
-          isLoading: _isFacebookLoading,
+          onPressed: _signUpWithGoogle,
+          color: Colors.red,
         ),
       ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required IconData icon,
+    required String label,
+    required bool isLoading,
+    required VoidCallback onPressed,
+    required Color color,
+    Color? backgroundColor,
+  }) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: backgroundColor != null 
+              ? Colors.transparent 
+              : GhostRollTheme.textSecondary.withOpacity(0.2),
+        ),
+        boxShadow: GhostRollTheme.small,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isLoading ? null : onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Center(
+            child: isLoading
+                ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                    ),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        color: color,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        label,
+                        style: GhostRollTheme.bodyMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -752,41 +681,19 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       children: [
         Text(
           'Already have an account? ',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: AppColors.textTertiary,
+          style: GhostRollTheme.bodyMedium.copyWith(
+            color: GhostRollTheme.textSecondary,
           ),
         ),
-        GestureDetector(
-          onTap: () {
-            Navigator.pushReplacement(
-              context,
-              PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) =>
-                    const LoginScreen(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                  return SlideTransition(
-                    position: Tween<Offset>(
-                      begin: const Offset(0, 1),
-                      end: Offset.zero,
-                    ).animate(CurvedAnimation(
-                      parent: animation,
-                      curve: Curves.easeOutCubic,
-                    )),
-                    child: child,
-                  );
-                },
-                transitionDuration: const Duration(milliseconds: 400),
-              ),
-            );
+        TextButton(
+          onPressed: () {
+            Navigator.pop(context);
           },
-          child: GradientCard(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm, vertical: AppSpacing.xs),
-            child: Text(
-              'Sign In',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
+          child: Text(
+            'Sign In',
+            style: GhostRollTheme.bodyMedium.copyWith(
+              color: GhostRollTheme.flowBlue,
+              fontWeight: FontWeight.bold,
             ),
           ),
         ),

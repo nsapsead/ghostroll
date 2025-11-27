@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/services.dart';
 import '../models/session.dart';
+import '../models/class_session.dart';
 import '../theme/ghostroll_theme.dart';
 import '../providers/calendar_providers.dart';
 import '../models/calendar_event.dart';
@@ -12,7 +13,9 @@ import '../providers/session_provider.dart';
 import '../widgets/common/glow_text.dart';
 
 class LogSessionForm extends ConsumerStatefulWidget {
-  const LogSessionForm({super.key});
+  final ClassSession? linkedClassSession;
+  
+  const LogSessionForm({super.key, this.linkedClassSession});
 
   @override
   ConsumerState<LogSessionForm> createState() => _LogSessionFormState();
@@ -102,7 +105,30 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
 
     _fadeController.forward();
     _slideController.forward();
-    _loadUpcomingClasses();
+    _fadeController.forward();
+    _slideController.forward();
+    
+    if (widget.linkedClassSession != null) {
+      _initializeWithLinkedSession();
+    } else {
+      _loadUpcomingClasses();
+    }
+  }
+
+  void _initializeWithLinkedSession() {
+    final session = widget.linkedClassSession!;
+    setState(() {
+      _isScheduledClass = false; // Treat as drop-in but pre-filled
+      _dropInClassType = session.classType;
+      _sessionDate = session.date;
+      _sessionTime = TimeOfDay.fromDateTime(session.date);
+      if (session.focusArea != null) {
+        _selectedFocusArea = session.focusArea!;
+      }
+      // TODO: Fetch instructor name if possible, for now leave empty or use ID
+      // _instructor = session.instructorId ?? ''; 
+      _isLoadingClasses = false;
+    });
   }
 
   @override
@@ -351,6 +377,7 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
         instructor: _instructorController.text.isNotEmpty ? _instructorController.text : null,
         duration: 60, // Default to 60 for now
         isScheduledClass: _isScheduledClass,
+        linkedClassSessionId: widget.linkedClassSession?.id,
       );
 
       try {
