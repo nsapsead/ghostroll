@@ -443,7 +443,7 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
                               const SizedBox(height: 24),
                               _buildQuickStatsSection(),
                               const SizedBox(height: 20),
-                              _buildRecentClassBanner(),
+                              _buildClassesNeedingLogSection(),
                               const SizedBox(height: 20),
                               _buildUpcomingClassesSection(),
                               const SizedBox(height: 16),
@@ -462,116 +462,129 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
     );
   }
 
-  Widget _buildRecentClassBanner() {
+  Widget _buildClassesNeedingLogSection() {
     final eventsAsync = ref.watch(calendarEventsProvider);
-    
+    final sessionsAsync = ref.watch(sessionListProvider);
+
     return eventsAsync.when(
       data: (events) {
-        final now = DateTime.now();
-        // Find events that ended recently (e.g., within last 3 hours) and started before now
-        final recentEvents = events.where((event) {
-          if (event.specificDate == null) return false; // Only check specific dates for now (class sessions have specific dates)
-          
-          final startParts = event.startTime.split(':');
-          final endParts = event.endTime.split(':');
-          
-          final startDateTime = DateTime(
-            event.specificDate!.year,
-            event.specificDate!.month,
-            event.specificDate!.day,
-            int.parse(startParts[0]),
-            int.parse(startParts[1]),
-          );
-          
-          final endDateTime = DateTime(
-            event.specificDate!.year,
-            event.specificDate!.month,
-            event.specificDate!.day,
-            int.parse(endParts[0]),
-            int.parse(endParts[1]),
-          );
-          
-          // Check if it's a class session (we prefixed ID with 'class_')
-          final isClassSession = event.id.startsWith('class_');
-          if (!isClassSession) return false;
-          
-          // Check if ended recently (within last 3 hours) and started in the past
-          final diff = now.difference(endDateTime);
-          return startDateTime.isBefore(now) && diff.inHours < 3 && diff.inMinutes > -30; // -30 to include classes ending soon
-        }).toList();
-        
-        if (recentEvents.isEmpty) return const SizedBox.shrink();
-        
-        final recentEvent = recentEvents.first;
-        
-        return GestureDetector(
-          onTap: () {
-            // Navigate to log session with this class linked
-            // We need to reconstruct the ClassSession or pass ID
-            // Since we don't have the full ClassSession object here easily without fetching,
-            // we can pass the ID (minus prefix) and let LogSessionForm fetch it or just pass basic info.
-            // But LogSessionForm expects ClassSession object.
-            // For now, let's just open LogSessionForm and let user fill it, 
-            // OR better: fetch the session first.
-            // Since we are in a widget, we can't easily async fetch and then nav.
-            // Let's just show a generic "Log Recent Class" for now or pass what we have.
-            
-            // Actually, we can just navigate to LogSessionForm and pass the ID if we update LogSessionForm to accept ID.
-            // But I updated it to accept ClassSession object.
-            // I'll just navigate to LogSessionForm without pre-fill for now, or use the event data to pre-fill manually if I update LogSessionForm.
-            // Let's just trigger standard log for now but maybe pre-fill class type.
-             Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const LogSessionForm()),
+        return sessionsAsync.when(
+          data: (sessions) {
+            final pendingClasses = _findClassesNeedingLogs(events, sessions);
+            if (pendingClasses.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Text(
+                    'Classes waiting to be logged',
+                    style: GhostRollTheme.titleSmall.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ...pendingClasses.map(_buildPendingClassCard),
+                const SizedBox(height: 4),
+              ],
             );
           },
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 20),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [GhostRollTheme.activeHighlight.withOpacity(0.2), GhostRollTheme.activeHighlight.withOpacity(0.05)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: GhostRollTheme.activeHighlight.withOpacity(0.5)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: GhostRollTheme.activeHighlight,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.check, color: Colors.black, size: 20),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Just finished training?',
-                        style: GhostRollTheme.bodySmall.copyWith(color: GhostRollTheme.textSecondary),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Log ${recentEvent.title}',
-                        style: GhostRollTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                const Icon(Icons.arrow_forward_ios, color: GhostRollTheme.activeHighlight, size: 16),
-              ],
-            ),
-          ),
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
         );
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildPendingClassCard(_PendingClassLog pendingClass) {
+    final event = pendingClass.event;
+    final start = pendingClass.start;
+    final range = CalendarUtils.formatTimeRange(event.startTime, event.endTime);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: GhostRollTheme.textSecondary.withOpacity(0.15)),
+        boxShadow: GhostRollTheme.medium,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: GhostRollTheme.activeHighlight.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.alarm, color: Colors.white, size: 20),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event.title,
+                      style: GhostRollTheme.titleMedium.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${CalendarUtils.getDayName(start.weekday)} · $range',
+                      style: GhostRollTheme.bodySmall.copyWith(
+                        color: GhostRollTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                _formatRelativeTime(start),
+                style: GhostRollTheme.labelSmall.copyWith(color: GhostRollTheme.textSecondary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: GhostRollTheme.surface,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              'No session logged yet',
+              style: GhostRollTheme.labelSmall.copyWith(color: GhostRollTheme.textSecondary),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _onLogSession,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: GhostRollTheme.flowBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: const Text('Log this class'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

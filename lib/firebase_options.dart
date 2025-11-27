@@ -41,34 +41,46 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // IMPORTANT: Replace these placeholder values with your actual Firebase configuration
-  // You can get these values from your Firebase Console project settings
-  
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAxeQ_jfCVE0fFaQfh_jTwOR3xIkFzvc9I',
-    appId: '1:610274763374:web:46c9b78def2b3e9e8ffc7f',
-    messagingSenderId: '610274763374',
-    projectId: 'ghostroll-3800d',
-    authDomain: 'ghostroll-3800d.firebaseapp.com',
-    storageBucket: 'ghostroll-3800d.firebasestorage.app',
-    measurementId: 'G-VMQFZYRF0N',
-  );
+  static FirebaseOptions get web => FirebaseOptions(
+        apiKey: _requireEnv('FIREBASE_WEB_API_KEY', _webApiKey),
+        appId: '1:610274763374:web:46c9b78def2b3e9e8ffc7f',
+        messagingSenderId: '610274763374',
+        projectId: 'ghostroll-3800d',
+        authDomain: 'ghostroll-3800d.firebaseapp.com',
+        storageBucket: 'ghostroll-3800d.firebasestorage.app',
+        measurementId: 'G-VMQFZYRF0N',
+      );
 
-  static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBvDhjhAMv0GPJMvxvROHb4SC2DNBVShYM', // Real Android API key from your google-services.json
-    appId: '1:610274763374:android:3d4db7ca14cdaaf58ffc7f', // Real Android app ID from your google-services.json
-    messagingSenderId: '610274763374', // Real sender ID from your iOS plist
-    projectId: 'ghostroll-3800d', // Your actual Firebase project ID
-    storageBucket: 'ghostroll-3800d.firebasestorage.app', // Your actual storage bucket
-    // Note: Android package name is now com.nick.ghostroll
-  );
+  static FirebaseOptions get android => FirebaseOptions(
+        apiKey: _requireEnv('FIREBASE_ANDROID_API_KEY', _androidApiKey),
+        appId: '1:610274763374:android:3d4db7ca14cdaaf58ffc7f',
+        messagingSenderId: '610274763374',
+        projectId: 'ghostroll-3800d',
+        storageBucket: 'ghostroll-3800d.firebasestorage.app',
+      );
 
-  static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyAg1nJhraZW7it0qAseiUqHmb-VO3EhKHQ', // Real iOS API key from your plist
-    appId: '1:610274763374:ios:63ec1b7db438bbd68ffc7f', // Real iOS app ID from your plist
-    messagingSenderId: '610274763374', // Real sender ID from your plist
-    projectId: 'ghostroll-3800d', // Your actual Firebase project ID
-    storageBucket: 'ghostroll-3800d.firebasestorage.app', // Your actual storage bucket
-    iosBundleId: 'com.nick.ghostroll', // This matches your actual iOS bundle ID
-  );
-} 
+  static FirebaseOptions get ios => FirebaseOptions(
+        apiKey: _requireEnv('FIREBASE_IOS_API_KEY', _iosApiKey),
+        appId: '1:610274763374:ios:63ec1b7db438bbd68ffc7f',
+        messagingSenderId: '610274763374',
+        projectId: 'ghostroll-3800d',
+        storageBucket: 'ghostroll-3800d.firebasestorage.app',
+        iosBundleId: 'com.nick.ghostroll',
+      );
+
+  static const String _webApiKey =
+      String.fromEnvironment('FIREBASE_WEB_API_KEY', defaultValue: '');
+  static const String _androidApiKey =
+      String.fromEnvironment('FIREBASE_ANDROID_API_KEY', defaultValue: '');
+  static const String _iosApiKey =
+      String.fromEnvironment('FIREBASE_IOS_API_KEY', defaultValue: '');
+}
+
+String _requireEnv(String name, String value) {
+  if (value.isEmpty) {
+    throw StateError(
+      'Missing $name. Pass it via --dart-define=$name=YOUR_VALUE when running Flutter.',
+    );
+  }
+  return value;
+}

@@ -50,26 +50,33 @@ A modern, dark-themed Flutter app designed to help martial artists track their t
    flutter pub get
    ```
 
-3. **Run the app**
+3. **Configure Firebase API keys**
+
    ```bash
-   flutter run
+   cp env/firebase_keys.env.example env/firebase_keys.env
+   # edit env/firebase_keys.env with the rotated keys from Firebase Console
+   ```
+
+4. **Run the app (loads keys from the env file)**
+   ```bash
+   flutter run --dart-define-from-file=env/firebase_keys.env
    ```
 
 ### Building for Production
 
-**Android APK:**
+**Android APK (remember to include the env file):**
 ```bash
-flutter build apk --release
+flutter build apk --release --dart-define-from-file=env/firebase_keys.env
 ```
 
 **iOS:**
 ```bash
-flutter build ios --release
+flutter build ios --release --dart-define-from-file=env/firebase_keys.env
 ```
 
 **Web:**
 ```bash
-flutter build web --release
+flutter build web --release --dart-define-from-file=env/firebase_keys.env
 ```
 
 ## 📁 Project Structure
