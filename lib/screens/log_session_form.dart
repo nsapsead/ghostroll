@@ -116,18 +116,113 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
     }
   }
 
-  void _initializeWithLinkedSession() {
+  void _initializeWithLinkedSession() async {
     final session = widget.linkedClassSession!;
+    
+    // Check if this is from a recurring class (ID starts with 'calendar_')
+    final isRecurringClass = session.id.startsWith('calendar_');
+    
+    if (isRecurringClass) {
+      // Load upcoming classes first
+      await _loadUpcomingClasses();
+      
+      // For recurring classes, create a synthetic scheduled class entry
+      // This allows the form to treat it as a scheduled class
+      final sessionDate = session.date;
+      final sessionTime = TimeOfDay.fromDateTime(sessionDate);
+      final sessionTimeStr = '${sessionDate.hour.toString().padLeft(2, '0')}:${sessionDate.minute.toString().padLeft(2, '0')}';
+      
+      // Calculate end time (default to 1 hour if duration not available)
+      final durationMinutes = session.duration ?? 60;
+      final endDateTime = sessionDate.add(Duration(minutes: durationMinutes));
+      final endTimeStr = '${endDateTime.hour.toString().padLeft(2, '0')}:${endDateTime.minute.toString().padLeft(2, '0')}';
+      
+      // Create synthetic scheduled class entry
+      final syntheticClass = {
+        'id': session.id,
+        'classType': session.classType,
+        'dayOfWeek': sessionDate.weekday,
+        'startTime': sessionTimeStr,
+        'endTime': endTimeStr,
+        'location': '', // Will be filled from event if available
+        'instructor': '', // Will be filled from event if available
+        'notes': session.focusArea ?? '',
+        'date': sessionDate.toIso8601String().split('T')[0],
+        'dateTime': sessionDate.toIso8601String(),
+        'type': 'recurringClass',
+      };
+      
+      // Try to find matching event to get location/instructor
+      try {
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          final events = await ref.read(calendarRepositoryProvider).getEventsStream(user.uid).first;
+          if (events.isNotEmpty) {
+            // Extract event ID from session ID (format: 'calendar_{eventId}_{timestamp}')
+            final eventIdParts = session.id.split('_');
+            final eventId = eventIdParts.length > 1 ? eventIdParts[1] : null;
+            
+            CalendarEvent? matchingEvent;
+            
+            // First try to match by event ID
+            if (eventId != null) {
+              try {
+                matchingEvent = events.firstWhere((e) => e.id == eventId);
+              } catch (e) {
+                // Not found by ID, try other methods
+              }
+            }
+            
+            // If not found, try to match by class type, day, and time
+            if (matchingEvent == null) {
+              try {
+                matchingEvent = events.firstWhere(
+                  (e) => e.type == CalendarEventType.recurringClass &&
+                         e.classType.toLowerCase() == session.classType.toLowerCase() &&
+                         e.dayOfWeek == sessionDate.weekday &&
+                         e.startTime == sessionTimeStr,
+                );
+              } catch (e) {
+                // Not found
+              }
+            }
+            
+            if (matchingEvent != null) {
+              syntheticClass['location'] = matchingEvent.location ?? '';
+              syntheticClass['instructor'] = matchingEvent.instructor ?? '';
+            }
+          }
+        }
+      } catch (e) {
+        // If we can't find the event, use empty strings
+      }
+      
+      // Add to upcoming classes list and select it
+      setState(() {
+        _isScheduledClass = true;
+        _upcomingClasses.insert(0, syntheticClass); // Add at beginning
+        _selectedScheduledClass = syntheticClass;
+        _sessionDate = sessionDate;
+        _sessionTime = sessionTime;
+        _instructor = (syntheticClass['instructor'] as String?) ?? '';
+        _instructorController.text = _instructor;
+        if (session.focusArea != null) {
+          _selectedFocusArea = session.focusArea!;
+        }
+        _isLoadingClasses = false;
+      });
+      return;
+    }
+    
+    // Not a recurring class - treat as drop-in
     setState(() {
-      _isScheduledClass = false; // Treat as drop-in but pre-filled
+      _isScheduledClass = false;
       _dropInClassType = session.classType;
       _sessionDate = session.date;
       _sessionTime = TimeOfDay.fromDateTime(session.date);
       if (session.focusArea != null) {
         _selectedFocusArea = session.focusArea!;
       }
-      // TODO: Fetch instructor name if possible, for now leave empty or use ID
-      // _instructor = session.instructorId ?? ''; 
       _isLoadingClasses = false;
     });
   }
@@ -433,6 +528,25 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
     return '${date.day.toString().padLeft(2, '0')} ${months[date.month - 1]} ${date.year}';
   }
 
+  String _formatClassDateTime(Map<String, dynamic> classEntry) {
+    // Try to parse the full dateTime first
+    try {
+      final dateTimeStr = classEntry['dateTime'];
+      if (dateTimeStr != null) {
+        final dateTime = DateTime.tryParse(dateTimeStr);
+        if (dateTime != null) {
+          // Show full date + time: "25 Nov 2025 @ 6:30 PM"
+          return '${_formatSessionDate(dateTime)} @ ${CalendarUtils.formatTime(classEntry['startTime'])}';
+        }
+      }
+    } catch (e) {
+      // Fall through to day of week format
+    }
+    
+    // Fallback to day of week format if dateTime not available
+    return '${CalendarUtils.getDayName(classEntry['dayOfWeek'])} @ ${CalendarUtils.formatTime(classEntry['startTime'])}';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -708,6 +822,17 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
     final screenWidth = MediaQuery.of(context).size.width;
     final isSmallScreen = screenWidth < 375;
     
+    // Get selected class date/time for display
+    DateTime? selectedClassDateTime;
+    if (_selectedScheduledClass != null) {
+      try {
+        selectedClassDateTime = DateTime.tryParse(_selectedScheduledClass!['dateTime'] ?? '');
+      } catch (e) {
+        // Fallback to session date if parsing fails
+        selectedClassDateTime = _sessionDate;
+      }
+    }
+    
     return Container(
       padding: EdgeInsets.all(isSmallScreen ? 16 : 24),
       decoration: BoxDecoration(
@@ -737,14 +862,69 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
                 ),
               ),
               const SizedBox(width: 12),
-              Text(
-                'Select Scheduled Class',
-                style: GhostRollTheme.titleLarge.copyWith(
-                  fontWeight: FontWeight.bold,
+              Expanded(
+                child: Text(
+                  'Select Scheduled Class',
+                  style: GhostRollTheme.titleLarge.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
+          // Show selected class date/time prominently
+          if (_selectedScheduledClass != null && selectedClassDateTime != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: GhostRollTheme.flowBlue.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: GhostRollTheme.flowBlue.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.calendar_today,
+                    color: GhostRollTheme.flowBlue,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Selected Class',
+                          style: GhostRollTheme.bodySmall.copyWith(
+                            color: GhostRollTheme.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _formatSessionDate(selectedClassDateTime),
+                          style: GhostRollTheme.titleMedium.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: GhostRollTheme.flowBlue,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${CalendarUtils.getDayName(selectedClassDateTime.weekday)} @ ${CalendarUtils.formatTime(_selectedScheduledClass!['startTime'])} - ${CalendarUtils.formatTime(_selectedScheduledClass!['endTime'])}',
+                          style: GhostRollTheme.bodySmall.copyWith(
+                            color: GhostRollTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           const SizedBox(height: 20),
           if (_isLoadingClasses)
             const Center(
@@ -793,8 +973,22 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
                   onTap: () {
                     setState(() {
                       _selectedScheduledClass = classEntry;
-                      _instructor = classEntry['instructor'] ?? '';
+                      _instructor = (classEntry['instructor'] as String?) ?? '';
                       _instructorController.text = _instructor;
+                      
+                      // Update session date/time from selected class
+                      try {
+                        final dateTimeStr = classEntry['dateTime'];
+                        if (dateTimeStr != null) {
+                          final dateTime = DateTime.tryParse(dateTimeStr);
+                          if (dateTime != null) {
+                            _sessionDate = dateTime;
+                            _sessionTime = TimeOfDay.fromDateTime(dateTime);
+                          }
+                        }
+                      } catch (e) {
+                        // Keep current date/time if parsing fails
+                      }
                     });
                     HapticFeedback.lightImpact();
                   },
@@ -852,10 +1046,12 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
                                     color: GhostRollTheme.textSecondary,
                                   ),
                                   const SizedBox(width: 4),
-                                  Text(
-                                    '${CalendarUtils.getDayName(classEntry['dayOfWeek'])} @ ${CalendarUtils.formatTime(classEntry['startTime'])}',
-                                    style: GhostRollTheme.bodySmall.copyWith(
-                                      color: GhostRollTheme.textSecondary,
+                                  Expanded(
+                                    child: Text(
+                                      _formatClassDateTime(classEntry),
+                                      style: GhostRollTheme.bodySmall.copyWith(
+                                        color: GhostRollTheme.textSecondary,
+                                      ),
                                     ),
                                   ),
                                 ],

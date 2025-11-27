@@ -1,11 +1,12 @@
 import 'dart:ui';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
+import 'utils/crashlytics.dart';
 import 'screens/auth/auth_wrapper.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/quick_log_screen.dart';
@@ -18,17 +19,11 @@ import 'theme/ghostroll_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('Running on web: $kIsWeb');
   
-  // Pass all uncaught "fatal" errors from the framework to Crashlytics
-  FlutterError.onError = (errorDetails) {
-    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
-  };
-  
-  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
-  PlatformDispatcher.instance.onError = (error, stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+  if (!kIsWeb) {
+    Crashlytics.setupErrorHandlers();
+  }
   
   try {
     // Initialize Firebase
@@ -49,9 +44,12 @@ void main() async {
       debugPrint('This is normal if Firestore database hasn\'t been created yet.');
     }
     
-    // Initialize Crashlytics
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-    debugPrint('Firebase Crashlytics initialized');
+    if (!kIsWeb) {
+      await Crashlytics.enableCollection();
+      debugPrint('Firebase Crashlytics initialized');
+    } else {
+      debugPrint('Skipping Crashlytics initialization on web.');
+    }
     
     // Initialize notification service
     // final notificationService = SimpleNotificationService();
@@ -62,8 +60,9 @@ void main() async {
     debugPrint('Error initializing services: $e');
     debugPrint('Stack trace: $stackTrace');
     
-    // Record error to Crashlytics
-    FirebaseCrashlytics.instance.recordError(e, stackTrace, fatal: false);
+    if (!kIsWeb) {
+      await Crashlytics.logError(e, stackTrace, fatal: false);
+    }
     
     // Check if it's a Firebase configuration error
     if (e.toString().contains('API_KEY') || 

@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/session_provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/session.dart';
+import '../models/class_session.dart';
 import 'dart:math' as math;
 
 // Custom clipper for radical button shape
@@ -399,12 +400,38 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
   }
 
 
-  void _onLogSession() {
+  void _onLogSession([_PendingClassLog? pendingClass]) {
     HapticFeedback.mediumImpact();
+    
+    ClassSession? linkedSession;
+    if (pendingClass != null) {
+      // Create a synthetic ClassSession from the CalendarEvent with the specific date/time
+      final event = pendingClass.event;
+      final startDateTime = pendingClass.start;
+      
+      // Calculate duration from start and end times
+      final endDateTime = pendingClass.end;
+      final durationMinutes = endDateTime.difference(startDateTime).inMinutes;
+      
+      linkedSession = ClassSession(
+        id: 'calendar_${event.id}_${startDateTime.millisecondsSinceEpoch}',
+        clubId: 'personal', // Dummy value for personal calendar events
+        date: startDateTime,
+        classType: event.classType,
+        focusArea: event.title,
+        instructorId: null,
+        duration: durationMinutes > 0 ? durationMinutes : 60, // Default to 60 minutes if calculation fails
+        templateName: null,
+        createdByUserId: '', // Will be set when saving
+        createdAt: DateTime.now(),
+      );
+    }
     
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const LogSessionForm()),
+      MaterialPageRoute(
+        builder: (context) => LogSessionForm(linkedClassSession: linkedSession),
+      ),
     );
   }
 
@@ -571,7 +598,7 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: _onLogSession,
+              onPressed: () => _onLogSession(pendingClass),
               style: ElevatedButton.styleFrom(
                 backgroundColor: GhostRollTheme.flowBlue,
                 foregroundColor: Colors.white,
@@ -586,6 +613,148 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
         ],
       ),
     );
+  }
+
+  List<_PendingClassLog> _findClassesNeedingLogs(
+    List<CalendarEvent> events,
+    List<Session> sessions,
+  ) {
+    final now = DateTime.now();
+    final List<_PendingClassLog> pending = [];
+
+    // Expand recurring events into instances and combine with drop-in events
+    final allEventInstances = <CalendarEvent>[];
+    for (final event in events) {
+      if (event.type == CalendarEventType.recurringClass) {
+        // Expand recurring events into past instances (last 7 days)
+        final instances = _expandRecurringEventForPastInstances(event, now);
+        allEventInstances.addAll(instances);
+      } else if (event.specificDate != null) {
+        // Drop-in events already have specificDate
+        allEventInstances.add(event);
+      }
+    }
+
+    for (final event in allEventInstances) {
+      if (event.specificDate == null) continue;
+      final start = _composeDateTime(event.specificDate!, event.startTime);
+      final end = _composeDateTime(event.specificDate!, event.endTime);
+      if (!_isWithinTrainingHours(start)) continue;
+      if (!start.isBefore(now)) continue;
+      if (now.difference(start).inHours > 72) continue;
+
+      final alreadyLogged = sessions.any(
+        (session) => _sessionMatchesEvent(session, event, start),
+      );
+
+      if (!alreadyLogged) {
+        pending.add(_PendingClassLog(event: event, start: start, end: end));
+      }
+    }
+
+    pending.sort((a, b) => a.start.compareTo(b.start));
+    return pending.take(3).toList();
+  }
+
+  List<CalendarEvent> _expandRecurringEventForPastInstances(
+    CalendarEvent event,
+    DateTime now,
+  ) {
+    final instances = <CalendarEvent>[];
+    // Look back 7 days to find past instances
+    final startRange = now.subtract(const Duration(days: 7));
+    final recurringStart = event.recurringStartDate ?? event.createdAt;
+    final recurringEnd = event.recurringEndDate;
+
+    var current = DateTime(
+      startRange.year,
+      startRange.month,
+      startRange.day,
+    );
+
+    // Only check dates up to now (past instances only)
+    while (current.isBefore(now) || current.isAtSameMomentAs(now)) {
+      if (event.dayOfWeek != null && current.weekday == event.dayOfWeek) {
+        final withinStart = !current.isBefore(DateTime(
+          recurringStart.year,
+          recurringStart.month,
+          recurringStart.day,
+        ));
+        final withinEnd = recurringEnd == null ||
+            !current.isAfter(DateTime(
+              recurringEnd.year,
+              recurringEnd.month,
+              recurringEnd.day,
+            ));
+
+        if (withinStart && withinEnd) {
+          final dateString = current.toIso8601String().split('T')[0];
+          if (!event.deletedInstances.contains(dateString)) {
+            instances.add(
+              event.copyWith(
+                specificDate: current,
+                startTime: event.startTime,
+                endTime: event.endTime,
+              ),
+            );
+          }
+        }
+      }
+      current = current.add(const Duration(days: 1));
+    }
+
+    return instances;
+  }
+
+  bool _sessionMatchesEvent(
+    Session session,
+    CalendarEvent event,
+    DateTime eventStart,
+  ) {
+    final sessionDate = session.date;
+    final sameDay = sessionDate.year == eventStart.year &&
+        sessionDate.month == eventStart.month &&
+        sessionDate.day == eventStart.day;
+    if (!sameDay) return false;
+
+    final diffMinutes = (sessionDate.difference(eventStart)).inMinutes.abs();
+    if (diffMinutes > 180) return false;
+
+    final eventClass = event.classType.toLowerCase();
+    final sessionClass = session.classType.name.toLowerCase();
+    return eventClass.contains(sessionClass) || sessionClass.contains(eventClass);
+  }
+
+  DateTime _composeDateTime(DateTime date, String time) {
+    final parts = time.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+    return DateTime(date.year, date.month, date.day, hour, minute);
+  }
+
+  String _formatRelativeTime(DateTime target) {
+    final now = DateTime.now();
+    final diff = now.difference(target);
+    if (diff.isNegative) {
+      final positive = diff.abs();
+      if (positive.inHours >= 1) {
+        return 'in ${positive.inHours}h';
+      }
+      return 'in ${positive.inMinutes}m';
+    }
+
+    if (diff.inDays >= 1) {
+      return '${diff.inDays}d ago';
+    }
+    if (diff.inHours >= 1) {
+      return '${diff.inHours}h ago';
+    }
+    return '${diff.inMinutes}m ago';
+  }
+
+  bool _isWithinTrainingHours(DateTime dateTime) {
+    final hour = dateTime.hour;
+    return hour >= 6 && hour < 22;
   }
 
   Widget _buildUpcomingClassesSection() {
@@ -1173,3 +1342,15 @@ class _QuickLogScreenState extends ConsumerState<QuickLogScreen>
     }
   }
 } 
+
+class _PendingClassLog {
+  final CalendarEvent event;
+  final DateTime start;
+  final DateTime end;
+
+  const _PendingClassLog({
+    required this.event,
+    required this.start,
+    required this.end,
+  });
+}

@@ -88,7 +88,8 @@ final upcomingClassesProvider = Provider<AsyncValue<List<Map<String, dynamic>>>>
               int.parse(startTimeParts[1]),
             );
             
-            if (classDateTime.isAfter(now)) {
+            if (classDateTime.isAfter(now) &&
+                _isWithinTrainingWindow(classDateTime)) {
               upcomingClasses.add(_createClassMap(event, dateToCheck, classDateTime));
             }
           }
@@ -116,7 +117,8 @@ final upcomingClassesProvider = Provider<AsyncValue<List<Map<String, dynamic>>>>
               int.parse(startTimeParts[1]),
             );
             
-            if (classDateTime.isAfter(now)) {
+            if (classDateTime.isAfter(now) &&
+                _isWithinTrainingWindow(classDateTime)) {
               upcomingClasses.add(_createClassMap(event, dateToCheck, classDateTime));
             }
           }
@@ -149,4 +151,9 @@ Map<String, dynamic> _createClassMap(CalendarEvent event, DateTime date, DateTim
     'dateTime': dateTime.toIso8601String(),
     'type': event.type.name,
   };
+}
+
+bool _isWithinTrainingWindow(DateTime dateTime) {
+  final hour = dateTime.hour;
+  return hour >= 6 && hour < 22;
 }
