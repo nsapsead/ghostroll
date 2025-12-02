@@ -1889,3 +1889,208 @@ class _LogSessionFormState extends ConsumerState<LogSessionForm>
     );
   }
 } 
+
+                        : Colors.transparent,
+                    border: isSelected ? Border.all(
+                      color: GhostRollTheme.flowBlue,
+                      width: 3,
+                    ) : null,
+                    boxShadow: [
+                      BoxShadow(
+                        color: isSelected 
+                            ? GhostRollTheme.flowBlue.withOpacity(0.3)
+                            : GhostRollTheme.flowBlue.withOpacity(0.1),
+                        blurRadius: isSelected ? 20 : 8,
+                        spreadRadius: isSelected ? 2 : 1,
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    mood['emoji']!,
+                    style: const TextStyle(fontSize: 36),
+                  ),
+                ).animate().scale(
+                  duration: const Duration(milliseconds: 200),
+                  begin: const Offset(1.0, 1.0),
+                  end: Offset(isSelected ? 1.1 : 1.0, isSelected ? 1.1 : 1.0),
+                ),
+              );
+            }).toList(),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Wins section
+          Row(
+            children: [
+              Icon(
+                Icons.emoji_events,
+                color: GhostRollTheme.flowBlue,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'What wins did I take away from this class?',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _winsController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'What went well? What are you proud of?',
+              hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: GhostRollTheme.flowBlue, width: 2),
+              ),
+              prefixIcon: Icon(Icons.celebration, color: GhostRollTheme.textSecondary),
+              filled: true,
+              fillColor: GhostRollTheme.overlayDark.withOpacity(0.3),
+            ),
+            style: TextStyle(color: GhostRollTheme.text),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Got stuck section
+          Row(
+            children: [
+              Icon(
+                Icons.help_outline,
+                color: GhostRollTheme.grindRed,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Where did I get stuck?',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _stuckController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'What was hard? What needs more work?',
+              hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: GhostRollTheme.flowBlue, width: 2),
+              ),
+              prefixIcon: Icon(Icons.block, color: GhostRollTheme.textSecondary),
+              filled: true,
+              fillColor: GhostRollTheme.overlayDark.withOpacity(0.3),
+            ),
+            style: TextStyle(color: GhostRollTheme.text),
+          ),
+          
+          const SizedBox(height: 20),
+          
+          // Questions section
+          Row(
+            children: [
+              Icon(
+                Icons.quiz,
+                color: GhostRollTheme.recoveryGreen,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'What questions did I ask?',
+                    style: GhostRollTheme.titleMedium.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          TextFormField(
+            controller: _questionsController,
+            maxLines: 3,
+            decoration: InputDecoration(
+              hintText: 'What did you ask your instructor or training partners?',
+              hintStyle: TextStyle(color: GhostRollTheme.textSecondary),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: GhostRollTheme.textSecondary.withOpacity(0.3)),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: GhostRollTheme.flowBlue, width: 2),
+              ),
+              prefixIcon: Icon(Icons.contact_support, color: GhostRollTheme.textSecondary),
+              filled: true,
+              fillColor: GhostRollTheme.overlayDark.withOpacity(0.3),
+            ),
+            style: TextStyle(color: GhostRollTheme.text),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSaveButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _save,
+        icon: const Icon(Icons.save, size: 24),
+        label: Text(
+          'Save Session',
+          style: GhostRollTheme.labelLarge.copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: GhostRollTheme.flowBlue,
+          foregroundColor: GhostRollTheme.text,
+          elevation: 12,
+          shadowColor: GhostRollTheme.flowBlue.withOpacity(0.5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(32),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 20),
+        ),
+      ).animate().scale(
+        duration: const Duration(milliseconds: 200),
+        begin: const Offset(1.0, 1.0),
+        end: const Offset(1.05, 1.05),
+      ),
+    );
+  }
+} 

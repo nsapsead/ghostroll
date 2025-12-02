@@ -184,3 +184,10 @@ If you have any questions or need help with the app, please:
 ---
 
 **GhostRoll** - Track your martial arts journey with style and precision. 🥋👻 
+- Open an issue on GitHub
+- Check the documentation
+- Review the code comments
+
+---
+
+**GhostRoll** - Track your martial arts journey with style and precision. 🥋👻 

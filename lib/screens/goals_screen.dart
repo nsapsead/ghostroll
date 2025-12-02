@@ -1088,3 +1088,16 @@ class _GoalsScreenState extends ConsumerState<GoalsScreen>
     }
   }
 } 
+      case 'longTerm':
+        return Icons.timeline;
+      case 'competition':
+        return Icons.emoji_events;
+      case 'skill':
+        return Icons.sports_martial_arts;
+      case 'fitness':
+        return Icons.fitness_center;
+      default:
+        return Icons.flag;
+    }
+  }
+} 

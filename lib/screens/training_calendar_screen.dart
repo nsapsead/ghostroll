@@ -1851,3 +1851,12 @@ class _TrainingCalendarScreenState extends ConsumerState<TrainingCalendarScreen>
     }
   }
 } 
+            backgroundColor: GhostRollTheme.grindRed.withOpacity(0.9),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    }
+  }
+} 

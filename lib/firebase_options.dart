@@ -84,3 +84,15 @@ String _requireEnv(String name, String value) {
   }
   return value;
 }
+  static const String _iosApiKey =
+      String.fromEnvironment('FIREBASE_IOS_API_KEY', defaultValue: '');
+}
+
+String _requireEnv(String name, String value) {
+  if (value.isEmpty) {
+    throw StateError(
+      'Missing $name. Pass it via --dart-define=$name=YOUR_VALUE when running Flutter.',
+    );
+  }
+  return value;
+}

@@ -27,7 +27,8 @@ dependencies:
   flutter_riverpod: ^2.6.1
 
   # Local storage and authentication
-  shared_preferences: ^2.2.2
+  shared_preferences: 2.2.2
+  path_provider: 2.1.1
   local_auth: ^2.1.8
 
   # Notifications

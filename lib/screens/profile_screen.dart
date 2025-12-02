@@ -2739,3 +2739,60 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen>
     );
   }
 } 
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.settings,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                        SizedBox(width: 8),
+                        Text(
+                          'Configure Notifications',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: GhostRollTheme.overlayDark.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: GhostRollTheme.textSecondary.withOpacity(0.2),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(
+                  Icons.info_outline,
+                  color: GhostRollTheme.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Customize your notification preferences to stay motivated with helpful reminders and celebrate your progress! 👻',
+                    style: GhostRollTheme.bodySmall.copyWith(
+                      color: GhostRollTheme.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+} 

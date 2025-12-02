@@ -1354,3 +1354,197 @@ class _PendingClassLog {
     required this.end,
   });
 }
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickStatsSection() {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 375;
+    
+    final sessionsAsync = ref.watch(sessionListProvider);
+    
+    return sessionsAsync.when(
+      data: (sessions) {
+        final now = DateTime.now();
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        
+        final thisWeekSessions = sessions.where((s) => s.date.isAfter(weekStart)).length;
+        final totalSessions = sessions.length;
+        
+        final thisWeek = thisWeekSessions.toString();
+        final total = totalSessions.toString();
+        
+        // Calculate streak (simplified - just show days since last session)
+        final streakText = total == '0' ? '0' : '1+'; // Placeholder for streak logic
+        
+        return Row(
+          children: [
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.trending_up,
+                label: 'This Week',
+                value: thisWeek,
+                color: GhostRollTheme.flowBlue,
+                isSmall: isSmallScreen,
+              ),
+            ),
+            SizedBox(width: isSmallScreen ? 8 : 12),
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.local_fire_department,
+                label: 'Streak',
+                value: '${streakText} day${streakText != '1' ? 's' : ''}',
+                color: GhostRollTheme.grindRed,
+                isSmall: isSmallScreen,
+              ),
+            ),
+            SizedBox(width: isSmallScreen ? 8 : 12),
+            Expanded(
+              child: _buildStatCard(
+                icon: Icons.emoji_events,
+                label: 'Total',
+                value: total,
+                color: GhostRollTheme.recoveryGreen,
+                isSmall: isSmallScreen,
+              ),
+            ),
+          ],
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildStatCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+    required bool isSmall,
+  }) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        vertical: isSmall ? 12 : 16,
+        horizontal: isSmall ? 8 : 12,
+      ),
+      decoration: BoxDecoration(
+        color: GhostRollTheme.card,
+        borderRadius: BorderRadius.circular(isSmall ? 12 : 16),
+        border: Border.all(
+          color: color.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: isSmall ? 4 : 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            color: color,
+            size: isSmall ? 16 : 20,
+          ),
+          SizedBox(height: isSmall ? 4 : 6),
+          Text(
+            value,
+            style: GhostRollTheme.titleMedium.copyWith(
+              color: color,
+              fontWeight: FontWeight.bold,
+              fontSize: isSmall ? 14 : 16,
+            ),
+          ),
+          SizedBox(height: isSmall ? 2 : 4),
+          Text(
+            label,
+            style: GhostRollTheme.bodySmall.copyWith(
+              color: GhostRollTheme.textSecondary,
+              fontSize: isSmall ? 10 : 12,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getClassTypeIcon(String classType) {
+    switch (classType.toLowerCase()) {
+      case 'bjj':
+      case 'brazilian jiu-jitsu':
+        return Icons.sports_martial_arts;
+      case 'muay thai':
+      case 'boxing':
+        return Icons.sports_mma;
+      case 'wrestling':
+        return Icons.fitness_center;
+      case 'judo':
+        return Icons.self_improvement;
+      case 'karate':
+      case 'taekwondo':
+        return Icons.sports_kabaddi;
+      case 'kickboxing':
+        return Icons.sports_martial_arts;
+      case 'krav maga':
+        return Icons.security;
+      case 'aikido':
+        return Icons.self_improvement;
+      case 'seminar':
+        return Icons.school;
+      default:
+        return Icons.sports_martial_arts;
+    }
+  }
+
+  List<Color> _getClassTypeGradient(String classType) {
+    switch (classType.toLowerCase()) {
+      case 'bjj':
+      case 'brazilian jiu-jitsu':
+        return [Colors.purple.shade600, Colors.purple.shade800];
+      case 'muay thai':
+        return [Colors.red.shade600, Colors.red.shade800];
+      case 'boxing':
+        return [Colors.orange.shade600, Colors.orange.shade800];
+      case 'wrestling':
+        return [Colors.blue.shade600, Colors.blue.shade800];
+      case 'judo':
+        return [Colors.green.shade600, Colors.green.shade800];
+      case 'karate':
+        return [Colors.amber.shade600, Colors.amber.shade800];
+      case 'taekwondo':
+        return [Colors.indigo.shade600, Colors.indigo.shade800];
+      case 'kickboxing':
+        return [Colors.teal.shade600, Colors.teal.shade800];
+      case 'krav maga':
+        return [Colors.grey.shade600, Colors.grey.shade800];
+      case 'aikido':
+        return [Colors.cyan.shade600, Colors.cyan.shade800];
+      case 'seminar':
+        return [const Color(0xFF9C27B0), const Color(0xFF7B1FA2)]; // Purple gradient for seminars
+      default:
+        return GhostRollTheme.flowGradient;
+    }
+  }
+} 
+
+class _PendingClassLog {
+  final CalendarEvent event;
+  final DateTime start;
+  final DateTime end;
+
+  const _PendingClassLog({
+    required this.event,
+    required this.start,
+    required this.end,
+  });
+}
